@@ -1968,8 +1968,7 @@ function LandFillCheck(event)
 				end
 				
 				
-				--local position_one = {x=global.WaterGlobalArea[a]["WaterEdgeArea"][1]["position"]["x"], y=global.WaterGlobalArea[a]["WaterEdgeArea"][1]["position"]["y"]}
-				--global.WaterGlobalArea[a]["ToSearch"][#global.WaterGlobalArea[a]["ToSearch"]+1] = position_one
+
 				if reset_edge == true then
 					for e = 1, #global.WaterGlobalArea[a]["WaterEdgeArea"], 1 do
 						local position = {x=global.WaterGlobalArea[a]["WaterEdgeArea"][e]["position"]["x"], y=global.WaterGlobalArea[a]["WaterEdgeArea"][e]["position"]["y"]}
@@ -1978,8 +1977,8 @@ function LandFillCheck(event)
 						local tile = game.surfaces[surface].get_tile(position.x, position.y)
 						local fluidname = tile.name
 						
-																						-- ELSE IsWater is TRUE then
-						if fluidname == "water" or fluidname == "water-green" or fluidname == "water-shallow" or fluidname == "water-mud" then					-- IF Water Type is "water"
+																						
+						if fluidname == "water" or fluidname == "water-green" or fluidname == "water-shallow" or fluidname == "water-mud" then
 							if fluidname == "water" or fluidname == "water-green" then
 								global.WaterGlobalArea[a]["ShallowWater"] = global.WaterGlobalArea[a]["ShallowWater"] - 1
 							elseif fluidname == "water-shallow" then
