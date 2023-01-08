@@ -1212,48 +1212,15 @@ end
 
 function DepleatedWaterArea(a)
 	local WGA = global.WaterGlobalArea
-	if WGA[a]["Depleted"] ~= 1 and WGA[a]["ToSearch"] == nil then
-		local Percent = WGA[a]["Percent"]
-		local LowAlarmEnabled = settings.global["Alarms-Low-Level (50/75/90%)"].value
-		local HighAlarmEnabled = settings.global["Alarms-High-Level (95/97/98/99%)"].value
-		local WA = WGA[a]
-		if Percent <= 49 then
-			--game.print("IN NORMAL BOUNDS")
-		elseif Percent >= 50 and WA["Fired50"] == false and LowAlarmEnabled == true then
-			for b = 1, #global.PlayerForces, 1 do
-				for c = 1, #WGA[a]["OPsA"], 1 do
-					if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
-						game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
-					end
-				end
-			end
-			WA["Fired50"] = true
-		elseif Percent >= 75 and WA["Fired75"] == false and LowAlarmEnabled == true then
-			for b = 1, #global.PlayerForces, 1 do
-				for c = 1, #WGA[a]["OPsA"], 1 do
-					if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
-						game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
-					end
-				end
-			end
-			WA["Fired75"] = true
-		elseif Percent >= 80 and Percent < 100 then
-			WA["Below80"] = 0
-			local RP = WA["RandPercent"]
-			if Percent >= 80 + WGA[a]["BTFE"] then
-				Method = settings.global["FluidArea-Replace-Method"].value
-				if #WGA[a]["WaterRepArea"] > 0 then
-					if Method == "Random" then
-						WaterRandom(a)
-					elseif Method == "From/To Pump" then
-						BackToFront(a)
-					end
-				else
-					BackToFrontEdge(a)
-				end
-				WA["RandPercent"] = Percent
-			end
-			if Percent >= 90 and WA["Fired90"] == false and LowAlarmEnabled == true then
+	if WGA[a]["ToSearch"] == nil then
+		if WGA[a]["Depleted"] ~= 1 then
+			local Percent = WGA[a]["Percent"]
+			local LowAlarmEnabled = settings.global["Alarms-Low-Level (50/75/90%)"].value
+			local HighAlarmEnabled = settings.global["Alarms-High-Level (95/97/98/99%)"].value
+			local WA = WGA[a]
+			if Percent <= 49 then
+				
+			elseif Percent >= 50 and WA["Fired50"] == false and LowAlarmEnabled == true then
 				for b = 1, #global.PlayerForces, 1 do
 					for c = 1, #WGA[a]["OPsA"], 1 do
 						if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
@@ -1261,8 +1228,8 @@ function DepleatedWaterArea(a)
 						end
 					end
 				end
-				WA["Fired90"] = true
-			elseif Percent >= 95 and WA["Fired95"] == false and HighAlarmEnabled == true then
+				WA["Fired50"] = true
+			elseif Percent >= 75 and WA["Fired75"] == false and LowAlarmEnabled == true then
 				for b = 1, #global.PlayerForces, 1 do
 					for c = 1, #WGA[a]["OPsA"], 1 do
 						if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
@@ -1270,134 +1237,163 @@ function DepleatedWaterArea(a)
 						end
 					end
 				end
-				WA["Fired95"] = true
-			elseif Percent >= 97 and WA["Fired97"] == false and HighAlarmEnabled == true then
-				for b = 1, #global.PlayerForces, 1 do
-					for c = 1, #WGA[a]["OPsA"], 1 do
-						if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
-							game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
+				WA["Fired75"] = true
+			elseif Percent >= 80 and Percent < 100 then
+				WA["Below80"] = 0
+				local RP = WA["RandPercent"]
+				if Percent >= 80 + WGA[a]["BTFE"] then
+					Method = settings.global["FluidArea-Replace-Method"].value
+					if #WGA[a]["WaterRepArea"] > 0 then
+						if Method == "Random" then
+							WaterRandom(a)
+						elseif Method == "From/To Pump" then
+							BackToFront(a)
+						end
+					else
+						BackToFrontEdge(a)
+					end
+					WA["RandPercent"] = Percent
+				end
+				if Percent >= 90 and WA["Fired90"] == false and LowAlarmEnabled == true then
+					for b = 1, #global.PlayerForces, 1 do
+						for c = 1, #WGA[a]["OPsA"], 1 do
+							if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
+								game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
+							end
 						end
 					end
-				end
-				WA["Fired97"] = true
-			elseif Percent >= 98 and WA["Fired98"] == false and HighAlarmEnabled == true then
-				for b = 1, #global.PlayerForces, 1 do
-					for c = 1, #WGA[a]["OPsA"], 1 do
-						if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
-							game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
+					WA["Fired90"] = true
+				elseif Percent >= 95 and WA["Fired95"] == false and HighAlarmEnabled == true then
+					for b = 1, #global.PlayerForces, 1 do
+						for c = 1, #WGA[a]["OPsA"], 1 do
+							if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
+								game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
+							end
 						end
 					end
-				end
-				WA["Fired98"] = true
-			elseif Percent >= 99 and WA["Fired99"] == false and HighAlarmEnabled == true then
-				for b = 1, #global.PlayerForces, 1 do
-					for c = 1, #WGA[a]["OPsA"], 1 do
-						if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
-							game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
+					WA["Fired95"] = true
+				elseif Percent >= 97 and WA["Fired97"] == false and HighAlarmEnabled == true then
+					for b = 1, #global.PlayerForces, 1 do
+						for c = 1, #WGA[a]["OPsA"], 1 do
+							if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
+								game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
+							end
 						end
 					end
-				end
-				WA["Fired99"] = true
-			end		
-		elseif Percent >= 100 then 
-			if global.NewInstall == false then
-				for z = 1, #global.OPLocate, 1 do
-					local OP = global.OPLocate[z]
-					if OP["WA"] == WGA[a]["WGAID"] and OP["name"] ~= "offshore-pump-nofluid" then
-						local OPD = OP["direction"]
-						local OPE = OP["entity"]
-						local OPP = OP["position"]
-						local OPSp = OP["spritepos"]
-						local OPS = OP["surface"]
-						local OPF = OPE.force
-						local OPPl = OPE.last_user
-						if OP["Active"] == 1 then
-							OP["Active"] = 0
-							ActiveOPs = ActiveOPs - 1
-							for y =1, #global.WaterGlobalArea[a]["OPsA"], 1 do
-								if global.WaterGlobalArea[a]["OPsA"][y]["force"] == OP["force"] then
-									WA["OPsA"][y]["count"] = WA["OPsA"][y]["count"] - 1
+					WA["Fired97"] = true
+				elseif Percent >= 98 and WA["Fired98"] == false and HighAlarmEnabled == true then
+					for b = 1, #global.PlayerForces, 1 do
+						for c = 1, #WGA[a]["OPsA"], 1 do
+							if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
+								game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
+							end
+						end
+					end
+					WA["Fired98"] = true
+				elseif Percent >= 99 and WA["Fired99"] == false and HighAlarmEnabled == true then
+					for b = 1, #global.PlayerForces, 1 do
+						for c = 1, #WGA[a]["OPsA"], 1 do
+							if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
+								game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has used %.0f %% of available %s.",WA["WtrName"], WA["Percent"], WA["FluidType"]))
+							end
+						end
+					end
+					WA["Fired99"] = true
+				end		
+			elseif Percent >= 100 then 
+				if global.NewInstall == false then
+					for z = 1, #global.OPLocate, 1 do
+						local OP = global.OPLocate[z]
+						if OP["WA"] == WGA[a]["WGAID"] and OP["name"] ~= "offshore-pump-nofluid" then
+							local OPD = OP["direction"]
+							local OPE = OP["entity"]
+							local OPP = OP["position"]
+							local OPSp = OP["spritepos"]
+							local OPS = OP["surface"]
+							local OPF = OPE.force
+							local OPPl = OPE.last_user
+							if OP["Active"] == 1 then
+								OP["Active"] = 0
+								ActiveOPs = ActiveOPs - 1
+								for y =1, #global.WaterGlobalArea[a]["OPsA"], 1 do
+									if global.WaterGlobalArea[a]["OPsA"][y]["force"] == OP["force"] then
+										WA["OPsA"][y]["count"] = WA["OPsA"][y]["count"] - 1
+									end
+								end								
+							end
+							if game.active_mods["aai-industry"] then
+								local x = OPP.x
+								local y = OPP.y
+								if OPD == 0 then
+									AS = game.surfaces[OPS.name].find_entities_filtered{position=OPSp,radius=1, name = "offshore-pump-output"}
+								elseif OPD == 4 then
+									AS = game.surfaces[OPS.name].find_entities_filtered{position=OPSp,radius=1, name = "offshore-pump-output"}
+								elseif OPD == 2 then
+									AS = game.surfaces[OPS.name].find_entities_filtered{position=OPSp,radius=1, name = "offshore-pump-output"}
+								elseif OPD == 6 then
+									AS = game.surfaces[OPS.name].find_entities_filtered{position=OPSp,radius=1, name = "offshore-pump-output"}
 								end
-							end								
-						end
-						if game.active_mods["aai-industry"] then -- MOD Compat with AAI, remove the additional sprites
-							local x = OPP.x
-							local y = OPP.y
-							if OPD == 0 then
-								--AS = game.surfaces[OPS.name].find_entities_filtered{area={{x-1, 0},{x+1,y+1}}, name = "offshore-pump-output"}
-								AS = game.surfaces[OPS.name].find_entities_filtered{position=OPSp,radius=1, name = "offshore-pump-output"}
-							elseif OPD == 4 then
-								--AS = game.surfaces[OPS.name].find_entities_filtered{area={{x-1, y-1},{x+1,0}}, name = "offshore-pump-output"}
-								AS = game.surfaces[OPS.name].find_entities_filtered{position=OPSp,radius=1, name = "offshore-pump-output"}
-							elseif OPD == 2 then
-								--AS = game.surfaces[OPS.name].find_entities_filtered{area={{0, y-1},{x+1,y+1}}, name = "offshore-pump-output"}
-								AS = game.surfaces[OPS.name].find_entities_filtered{position=OPSp,radius=1, name = "offshore-pump-output"}
-							elseif OPD == 6 then
-								--AS = game.surfaces[OPS.name].find_entities_filtered{area={{0, y-1},{x+1,y+1}}, name = "offshore-pump-output"}
-								AS = game.surfaces[OPS.name].find_entities_filtered{position=OPSp,radius=1, name = "offshore-pump-output"}
+								local Entity = AS[1]
+								if Entity ~= nil then
+									Entity.destroy()
+								end
 							end
-							local Entity = AS[1]
-							if Entity ~= nil then
-								Entity.destroy()
-							end
+							OPE.destroy()
+							local OPNF = game.surfaces[OPS.name].create_entity{name="offshore-pump-nofluid",position = OPSp,direction = OPD,player = OPPl, force = "neutral"}
+							global.OPLocate[z]["entity"] = OPNF
 						end
-						OPE.destroy()
-						local OPNF = game.surfaces[OPS.name].create_entity{name="offshore-pump-nofluid",position = OPSp,direction = OPD,player = OPPl, force = "neutral"}
-						global.OPLocate[z]["entity"] = OPNF
 					end
-				end
-				WGA[a]["Depleted"] = 1
-				WGA[a]["Percent"] = 100
-				WGA[a]["PercentPrev"] = 100
-				WGA[a]["RandPercent"] = 100
-				if #WGA[a]["WaterRepArea"] > 0 then
-					game.surfaces[WA["Surface"].name].set_tiles(WGA[a]["WaterRepArea"])													-- Set Tiles to those in WaterArea Table
+					WGA[a]["Depleted"] = 1
+					WGA[a]["Percent"] = 100
+					WGA[a]["PercentPrev"] = 100
+					WGA[a]["RandPercent"] = 100
+					if #WGA[a]["WaterRepArea"] > 0 then
+						game.surfaces[WA["Surface"].name].set_tiles(WGA[a]["WaterRepArea"])													
+					else
+						BackToFrontEdge(a)
+					end
+					WGA[a]["BTFE"] = 20
+					WGA[a]["WtrUsed"] = WGA[a]["AmountWtr"]
+					for b = 1, #global.PlayerForces, 1 do
+						for c = 1, #WGA[a]["OPsA"], 1 do
+							if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
+								game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has been depleted of %s.",WA["WtrName"], WA["FluidType"]))
+							end
+						end
+					end
+					WGA[a]["FluidType"] = "None"
+					WGA[a]["BTF"] = 0
 				else
-					--game.surfaces[WA["Surface"].name].set_tiles(WGA[a]["WaterEdgeArea"])
-					BackToFrontEdge(a)
-				end
-				WGA[a]["BTFE"] = 20
-				WGA[a]["WtrUsed"] = WGA[a]["AmountWtr"]
-				for b = 1, #global.PlayerForces, 1 do
-					for c = 1, #WGA[a]["OPsA"], 1 do
-						if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
-							game.forces[global.PlayerForces[b]["name"]].print(string.format("%s has been depleted of %s.",WA["WtrName"], WA["FluidType"]))
-						end
-					end
-				end
-				WGA[a]["FluidType"] = "None"
-				WGA[a]["BTF"] = 0
-			else
-				local CurrentTick = game.tick
-				if CurrentTick < (global.InstallTick + 18000) and global.ITMessage == true then
-					for b = 1, #global.PlayerForces, 1 do
-						for c = 1, #WGA[a]["OPsA"], 1 do
-							if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
-								game.forces[global.PlayerForces[b]["name"]].print(string.format("Fluid Area Depletion Stopped on New/Mid Game Install. 5 Minutes from install till depletion."))
+					local CurrentTick = game.tick
+					if CurrentTick < (global.InstallTick + 18000) and global.ITMessage == true then
+						for b = 1, #global.PlayerForces, 1 do
+							for c = 1, #WGA[a]["OPsA"], 1 do
+								if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
+									game.forces[global.PlayerForces[b]["name"]].print(string.format("Fluid Area Depletion Stopped on New/Mid Game Install. 5 Minutes from install till depletion."))
+								end
 							end
 						end
+						global.ITMessage = false
 					end
-					global.ITMessage = false
-				end
-				if CurrentTick >= (global.InstallTick + 18000) then
-					for b = 1, #global.PlayerForces, 1 do
-						for c = 1, #WGA[a]["OPsA"], 1 do
-							if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
-								game.forces[global.PlayerForces[b]["name"]].print(string.format("Fluid Area 5 Mins Over. Depleting Fluid Area."))
+					if CurrentTick >= (global.InstallTick + 18000) then
+						for b = 1, #global.PlayerForces, 1 do
+							for c = 1, #WGA[a]["OPsA"], 1 do
+								if global.PlayerForces[b]["name"] == WGA[a]["OPsA"][c]["force"] then
+									game.forces[global.PlayerForces[b]["name"]].print(string.format("Fluid Area 5 Mins Over. Depleting Fluid Area."))
+								end
 							end
 						end
+						WGA[a]["Percent"] = 99
+						global.NewInstall = false
+						global.ITMessage = false
 					end
-					WGA[a]["Percent"] = 99
-					global.NewInstall = false
-					global.ITMessage = false
 				end
 			end
-		end
-	else
-		-- AREA DEPLETED
-		local RemoveFromTable = settings.global["FluidArea-RemoveFromTable"].value
-		if RemoveFromTable == true and global.NewInstall == false then
-			RemoveWAOPOD(a)
+		else
+			local RemoveFromTable = settings.global["FluidArea-RemoveFromTable"].value
+			if RemoveFromTable == true and global.NewInstall == false then
+				RemoveWAOPOD(a)
+			end
 		end
 	end
 end
@@ -1936,19 +1932,37 @@ function LandFillCheck(event)
 				for t = 1, #tiles, 1 do
 					local position = {x=tiles[t]["position"].x, y=tiles[t]["position"].y}
 					
-					global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
-					if global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(position)] == true then
+					local EDPA = {position}
+					local north = {x = position.x, y = position.y-1}				
+					local northeast = {x = position.x+1, y = position.y-1}
+					local east  = {x = position.x+1, y = position.y}				
+					local southeast = {x = position.x+1, y = position.y+1}
+					local south = {x = position.x, y = position.y+1}				
+					local southwest = {x = position.x-1, y = position.y+1}
+					local west  = {x = position.x-1, y = position.y}				
+					local northwest = {x = position.x-1, y = position.y-1}
+					EDPA[#EDPA+1] = north
+					EDPA[#EDPA+1] = northeast
+					EDPA[#EDPA+1] = east
+					EDPA[#EDPA+1] = southeast
+					EDPA[#EDPA+1] = south
+					EDPA[#EDPA+1] = southwest
+					EDPA[#EDPA+1] = west
+					EDPA[#EDPA+1] = northwest
+					for tt = 1, #EDPA, 1 do
 						
 
-						reset_edge = true
-						if global.WaterGlobalArea[a]["ToSearch"] == nil or global.WaterGlobalArea[a]["ToSearch"] == 0 then
-							global.WaterGlobalArea[a]["ToSearch"] = {}
-						end
-						global.WaterGlobalArea[a]["WaterEdgeGrid"][position] = nil
-						if reset_edge == false then
-							global.WaterGlobalArea[a]["ToSearch"][#global.WaterGlobalArea[a]["ToSearch"]+1] = position
-						end
-						global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
+						global.WaterGlobalArea[a]["HasSearched"][GridRef(EDPA[tt])] = false
+						if global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(EDPA[tt])] == true then
+							global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(EDPA[tt])] = nil
+							if reset_edge == false then
+								if global.WaterGlobalArea[a]["ToSearch"] == nil or global.WaterGlobalArea[a]["ToSearch"] == 0 then
+									global.WaterGlobalArea[a]["ToSearch"] = {}
+								end
+								global.WaterGlobalArea[a]["ToSearch"][#global.WaterGlobalArea[a]["ToSearch"]+1] = EDPA[tt]
+								reset_edge = true
+							end
+							global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
 						
 					end
 					
