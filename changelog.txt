@@ -1,0 +1,646 @@
+---------------------------------------------------------------------------------------------------
+Version: 1.0.13
+Date: 08. 01. 2023
+  Changes:
+    - Bugfixes
+---------------------------------------------------------------------------------------------------
+Version: 1.0.12
+Date: 08. 01. 2023
+  Changes:
+    - Improvements and bugfixes
+---------------------------------------------------------------------------------------------------
+Version: 1.0.11
+Date: 08. 01. 2023
+  Changes:
+    - Additional quality improvements
+---------------------------------------------------------------------------------------------------
+Version: 1.0.10
+Date: 08. 01. 2023
+  Bug Fix:
+    - Fixed error in control script
+---------------------------------------------------------------------------------------------------
+Version: 1.0.9
+Date: 08. 01. 2023
+  Changes:
+    - Futher optimizations
+	- Landfill now decreases regen of water area too
+---------------------------------------------------------------------------------------------------
+Version: 1.0.8
+Date: 08. 01. 2023
+  Changes:
+    - Optimizations for water area reevaluation
+---------------------------------------------------------------------------------------------------
+Version: 1.0.7
+Date: 07. 01. 2023
+  Bug Fix:
+    - Removed reseting of HasSearched structure upon finishing scanning - it is later used to reevaluate after landfill is placed
+---------------------------------------------------------------------------------------------------
+Version: 1.0.6
+Date: 07. 01. 2023
+  Bug Fix:
+    - Fixed a bug in control script
+---------------------------------------------------------------------------------------------------
+Version: 1.0.5
+Date: 07. 01. 2023
+  Bug Fix:
+    - Fixed a bug in control script
+---------------------------------------------------------------------------------------------------
+Version: 1.0.4
+Date: 07. 01. 2023
+  Bug Fix:
+    - Fixed a bug in control script
+---------------------------------------------------------------------------------------------------
+Version: 1.0.3
+Date: 07. 01. 2023
+  Bug Fix:
+    - Fixed a bug in control script
+---------------------------------------------------------------------------------------------------
+Version: 1.0.2
+Date: 07. 01. 2023
+  Bug Fix:
+    - Fixed a bug in control script
+---------------------------------------------------------------------------------------------------
+Version: 1.0.1
+Date: 07. 01. 2023
+  Bug Fix:
+    - Fixed graphics paths that cause startup crash
+---------------------------------------------------------------------------------------------------
+Version: 1.0.0
+Date: 07. 01. 2023
+  Bug Fix:
+    - Additional tiles per second while scanning is properly used now
+  Mod Feature(s):
+	- Added compatibility with 'waterfill' - rescanning edges to potentially increase area of fluid areas
+---------------------------------------------------------------------------------------------------
+Version: 0.8.7
+Date: 08. 03. 2022
+  Bug Fix:
+    - ScanOffshores error looking across multiple surfaces in looking for pumpjacks
+    - UpdateScript trying to use a table instead of a value for PlayerForces number check
+---------------------------------------------------------------------------------------------------
+Version: 0.8.6
+Date: 03. 03. 2022
+  Bug Fix:
+    - Changed Krastorio 2 Offshore Pump Detection so that it can run along side other Mods
+    - Fixed K2 logic so that it fully works as a standalone alongside this mod
+    - Map Markers are created on the surface that the WaterArea is on, rather then always "Nauvis"
+  Mod Change(s):
+    - Offshore Drain will be unlocked, if the research has been completed when Mod is first loaded into save
+    - Industrial Revolution 2 Compatibility with Copper Pumps
+    - Merged CheckEdge and SearchPattern into EdgePattern (Improves Script Performance)
+---------------------------------------------------------------------------------------------------
+Version: 0.8.5
+Date: 06. 04. 2021
+  Bug Fix:
+    - Changed DeapletedWater Area game.prints to use force name rather then ID
+    - Changed DepleatedWater Area to run through Active Pumps forces
+    - Corrected Typo in CorrrectPump variable when assigning Player
+---------------------------------------------------------------------------------------------------
+Version: 0.8.4
+Date: 03. 04. 2021
+  Bug Fix(s):
+    - On FluidArea Deletion check for valid MapMarkers before removing them
+    - Assign WGAID to OPLocate WA for first found WA
+    - Typo in DepleatedWA variable
+    - PumpJacks entity creation checks for force instead of last_user.force
+  Mod Change(s):
+    - Reworked ScanOffshores so it makes a queue, and goes through Offshores 1 at a time
+    - Adjusted Offshore Drains and Regen to calculate to 6th ticks instead of every tick
+    - EverySec now activated once CheckWater has gone through 10 times, prevent potential race condition with MapMarkers
+    - RemoveWAOPOD moved inside DepleatedArea function, eliminating a loop
+---------------------------------------------------------------------------------------------------
+Version: 0.8.3
+Date: 23. 03. 2021
+  Bug Fix(s):
+    - Added exception for AbandondedRuins Mod
+    - Changed ScanOffshores so its also entity.force removing player
+---------------------------------------------------------------------------------------------------
+Version: 0.8.2
+Date: 22. 03. 2021
+  Mod Change(s):
+    - 5.6x Active Performance Improvement moving to every 6th Tick instead of Every Tick (0.17ms to 0.03ms)
+    - Built & Destroy Offshore uses entity.force removing player
+---------------------------------------------------------------------------------------------------
+Version: 0.8.1
+Date: 19. 03. 2021
+  Mod Change(s):
+    - Removed Sorting Function, amended to direct comparisons, to get around nil positions
+    - Modified Update Script, so that it also includes these functions
+    - Added Player set upper limit on FluidAreas so that is stops scanning past Ocean Detection as minimum
+    - Upper Thresholds now stop the scanning, but allow the found edge areas to be added
+    - Added Command To stop all active scans (/StopScan)
+    - Updated some game.print to game.force.print
+    - Mapmakers use thousands separator (e.g 10,000)
+    - Rewrote detection of events for building entities via scripting
+  Bug Fix(s):
+    - RemoveWaterAreaOffshorePumpOffhoreDrain wasn't using variable, rather table reference
+    - MapMarker removal now working on RemoveWAOPOD
+    - Correctly Assign Player and Force to Offshore entities when upgrading
+    - WaterAreas to show if Drain built first
+    - Destroy Offshore Drain logic fix
+    - Offshore Drains no longer create erroneous WaterAreas via being attempted to be built on land
+---------------------------------------------------------------------------------------------------
+Version: 0.8.0
+Date: 20. 01. 2021
+  Mod Feature(s):
+    - Factorio 1.1.0 Support
+    - Now Supports Multiple Playerforces, i.e. Multiplayer Support
+    - PlayerForces command to track the different forces, there Pump and Flow amounts
+  Mod Change(s):
+    - Split Map Marker creation and update into separate tasks, for better MP support
+    - Mod Compatibility (Krastorio 2)
+  Bug Fix(s):
+    - If Krastorio2 and AAI Industries are installed, Offshore Drain is put into correct technology
+    - Removing a Pump after using RestoreWater whilst mod still active, would cause a crash as it couldn't find a player whom built the pump
+---------------------------------------------------------------------------------------------------
+Version: 0.7.7
+Date: 30. 05. 2020
+  Bug Fix(s):
+    - Removed FluidProducers update in update script as its done on runtime
+---------------------------------------------------------------------------------------------------
+Version: 0.7.6
+Date: 24. 05. 2020
+  Mod Feature(s):
+    - Added Map Markers, indicate the Name, and real time Amount and Percentage left in fluidarea
+    - Setting to disable Map Markers
+  Mod Change(s):
+    - Offshore Drain is now locked behind fluid handling technology
+  Mod Compatibility (AAI Industry):
+    - Offshore Drain locked behind basic fluid handling, also changed recipe to match offshore pump
+  Bug Fix(s):
+    - RegenWater replaces tiles in fluid areas after change to edgearea 
+    - Removed changing forces on the update script
+    - Offshore Pump spritepos is now correct for upgrading 0.17 saves
+    - Offshore Drain Direction was trying to use Offshore Pump direction in GetWater function
+    - Offshore Pump WA only update if nil or 0
+    - Offshore Drains check for fluidarea edge before being built
+    - AddedWaterArea function had missing table variable when Below 0 replacing tiles from WaterRepArea table
+---------------------------------------------------------------------------------------------------
+Version: 0.7.5
+Date: 01. 04. 2020
+  Bug Fix(s):
+    - Added in IF statement to search for pumpjacks when doing mod update
+    - Pumps now copy the original builders force
+    - Offshore Pump No Fluids are "neutral" force
+    - Player ran commands only print to the player typing
+---------------------------------------------------------------------------------------------------
+Version: 0.7.4
+Date: 04. 03. 2020
+  Bug Fix(s):
+    - Replaced game.print with game.player.print on commands to try and prevent desyncs
+    - Update Script incorrectly overriding some current fluid areas data causing issues
+    - CalcWater accepts FluidType "None" as Type
+    - Placing Offshore Pumps Assigns FluidType from tile to WaterFluidArea
+    - Drains places deepwater if nothing else can be placed rather then water
+---------------------------------------------------------------------------------------------------
+Version: 0.7.3
+Date: 04. 03. 2020
+  Mod Change(s):
+    - Removed WaaRs Icon from Offshore Pump
+    - Removed event handler for PlayerID
+  Bug Fix(s):
+    - Landfill Message no longer appears if not found in any area and respects setting
+    - RestoreWater fixes for issues if used and attempted to build new offshore pumps
+    - RestoreWater correctly restores crude oil fluid areas to water
+  Factorio Compatibility:
+    - Find Water Tile after OffshorePump entity changes
+---------------------------------------------------------------------------------------------------
+Version: 0.7.2
+Date: 05. 02. 2020
+  Bug Fix(s):
+    - Update Script required reworking with WaterEdgeArea
+---------------------------------------------------------------------------------------------------
+Version: 0.7.1
+Date: 03. 02. 2020 
+  Bug Fix(s):
+    - Filtered Out Creative Mods Event with the use of the Magic Wand
+---------------------------------------------------------------------------------------------------
+Version: 0.7.0
+Date: 26. 01. 2020 
+  Major Feature:
+    - Uses Edge Detection on FluidAreas, rather then saving the entire area to a table, improves save/load times
+    - Uses Circle equation and edge to replace tiles (Random & FromToPump are only for 0.6.XX and below)
+    - Mod Setting to allow depleted FluidAreas to be removed from mods data table (Prevents Refilling FluidArea & Restoring FluidAreas)
+    - Alien Biomes Support
+    - Bob's Electronics Support (Changed Recipe of Offshore Drain Replacing electronic circuits with basic circuit boards)
+    - Custom Terrain Generation Support (Like SeaBlocks restricts FluidAreas to 60K tiles)
+  Mod Change(s):
+    - WaterAreas Command now includes a total tile count
+    - Added Lake-Shallow and Lake-Deep tiles, deep copied so that depleted FluidAreas have tiles to use if other mods change base tiles
+    - Added on_entity_died event just in case an offshore pump/drains gets destroyed by biters/player so correctly decreases the count of the pump/drains
+    - Added WaterEdgeArea as new table within WaterGlobalArea table
+    - Created separate functions, allowing old and new fluid area depletion methods to work together
+    - Restore Water updated to new replacement method and will only activate the tile replacement if over 80% used
+    - Take into account script raised / destroy events to catch if other mods build / remove offshore pumps and pump jacks
+    - Number of settings changes to be global, so server admins can only change. Alarms are the only Per Player setting
+    - Re arranged GetWater so it performs as well as previous version and respects SearchAmount values set by player
+    - Find OPs That may have offset positions for new OP assignment into FluidAreas
+    - WaterAreas now have a unique ID
+    - Removed Offshore Drains emptying neighbours fluidbox, Fluid Mixing is now prevented as Base Factorio Feature
+    - Updated old depletion methods and other various functions for backwards compatibility with 0.6.XX and below
+    - Added Debug option to view FluidAreas Search Queue remaining when scanning
+  Bug Fix(s):
+    - Assigns a value to Shallow and Mud water if present, Shallow is /2 and Mud is /4 of shallow water variable
+    - An Offshore Pump, that had been converted to a Crude Oil Pump, that was being placed next to a pipe/tank with a different fluid no longer crashes the game
+    - Placing Landfill no longer crashes the game, picks up the landfill tile instead of item
+    - SearchPattern was ignoring Water-Shallow, Water-Mud, Water-Green and Deepwater-Green
+    - Infinite Scanning Fix
+    - If Drains Fluid is not either water or crude-oil, assume its water when replacing tiles 
+  Factorio Compatibility:
+    - Changed Icon Sprites for Pumps and Drains, as well as entity and icon data properties
+    - Added Pollution Absorption Per Tile for Crude Oil tiles
+---------------------------------------------------------------------------------------------------
+Version: 0.6.17
+Date: 30. 03. 2019
+  Bug Fix(s):
+    - Offshore Drains East-West connections covered by sprite, amended and changed bounding and collision box
+    - Pump rereplace amended, to search for pumps at end of the list rather then the 1st
+  Mod Change(s):
+    - Regen moved to 1 per second as too powerful being 1 per tick
+    - Changed Tiles.lua to only include the crude-oil tiles, cleaned up the other code
+    - Data.lua updated to insert new tiles in water types table, borders now work correctly
+    - Added fluidlist.lua to support all base fluids (Green/Shallow/Mud)
+    - Removed unneeded graphics, saving 14 mb :)
+---------------------------------------------------------------------------------------------------
+Version: 0.6.16
+Date: 29. 03. 2019
+  Bug Fix(s):
+    - Moved around global references so that /RestoreWater works as required in all cases
+---------------------------------------------------------------------------------------------------
+Version: 0.6.15
+Date: 28. 03. 2019
+  Bug Fix(s):
+    - Changed tables that store surfaces to store the surface, instead of just the name
+    - Typo in Compare function would have assigned surface of an offshore pump not drain
+    - Changed functions to use surface.name
+    - Pump replace takes into account neighbours in case of fluidmix errors
+    - Removed Drains Deactivate % as causing issues with reactivation
+    - Drains now clear there contents when inactive and no neighbours, to allow easy reconnection to the fluid network
+    - Restore Water now clears oil fluid areas
+---------------------------------------------------------------------------------------------------
+Version: 0.6.14
+Date: 26. 03. 2019
+  Mod Change(s):
+    - Landfill Task Now Runs 1 per second instead of on every tick
+  Bug Fix{s}:
+    - Now marks landfilled tiles as landfill, meaning no issues with finding tiles
+    - Landfill takes into account the bonus value applied and correctly recalculates the fluidarea size
+    - GlobalWaterArea stores the bonus amount in case required, Update script updated
+    - Immediately deals with tiles outside area so UPS isn't affected over a long period
+    - Only landfill tiles are considered, all other tile placement is ignored
+    - Removed message about updating mod internals
+    - Added surface to continuing search function in case required
+---------------------------------------------------------------------------------------------------
+Version: 0.6.13
+Date: 25. 03. 2019
+  Mod Change(s):
+    - Offshore Pumps/Drains take into account the surface they are created on
+    - WaterGlobalArea takes into account the surface it is created on
+    - Other Functions take into account the surface for calculations etc
+  Bug Fix(s):
+    - Removed Debug message "Found In Area"
+---------------------------------------------------------------------------------------------------
+Version: 0.6.12
+Date: 24. 03. 2019
+  Bug Fix(s):
+    - Removed Landfill size message, Check message and count message
+---------------------------------------------------------------------------------------------------
+Version: 0.6.11
+Date: 24. 03. 2019
+  Bug Fix(s):
+    - Fixed New/Mid game variables not linking correctly, now reference the global
+---------------------------------------------------------------------------------------------------
+Version: 0.6.10
+Date: 22. 03. 2019
+  Mod Change(s):
+    - Changed Mod Init, splitting Globals and there References
+    - Added 4 More Compass Points to search 
+    - Removed unrequired search in GlobalWaterArea function
+    - Changed FoundExt to a boolean
+    - Removed RegenWater and unrequired variable from CreateWaterArea
+    - Removed unrequired checking in FluidAreaContinue
+    - Renamed local variables in CalculatedWaterTotal
+    - RegenWater variable names changed
+    - EverySec function has logic checks applied
+    - Rebuilt New/Mid Game logic checks
+    - FluidRate Checks readded to stop high usage just after load game
+    - Removed unrequired logic checks in Landfill function
+    - CheckWater uses more logic checks
+    - Many variable name changes to link with globals
+    - Added function to clear landfill table if used in a scenario
+---------------------------------------------------------------------------------------------------
+Version: 0.6.01
+Date: 13. 03. 2019
+  Bug Fix(s):
+    - Added check for no nil InstallTick variable, and to set it if so
+---------------------------------------------------------------------------------------------------
+Version: 0.6.0
+Date: 12. 03. 2019
+  Major Feature:
+    - 0.17 Compatibility
+  New Factorio Version Fix(s):
+    - Remove Flag "Goes to Quickbar" from Item Prototypes
+    - Remove Count from Crude-Oil HR sprite settings
+    - Fixed Offshore Pump not removing water from pipes
+    - Offshore Drain is now a "pipe-to-ground" entity to work around fluid mixing logic
+    - Offshore Crude Oil Pump set output filter to crude-oil
+    - Fluidentities calculation amended to use new get method
+  Minor Feature:
+    - Offshore Drain / Pump Item Icons updated to easily tell them apart
+  Bug Fix(s):
+    - Reference Global.NewInstall not NewInstall so OP/OD's remove on reload of save game
+    - OD's get replaced on mod update to update the entity saved in global.ODLocate
+    - OP's get replaced on mod update to update the entity and prevent fluid mixing issues, offshore pump gets refunded
+---------------------------------------------------------------------------------------------------
+Version: 0.5.16
+Date: 16. 02. 2019
+  Minor Features:
+    - Warning Prompt on Mid-Game Install about depleting FluidArea
+  Bug Fix(s):
+    - On Mid-Game Install don't instantly deplete the FluidAreas
+    - The fluid "Fluid" cannot be barrelled
+    - Mod Update Script wont affect active OP/OD count on install
+    - Mod Update Script replaces OPs to correct FluidArea type
+    - Mod Update Script other misc fixes
+---------------------------------------------------------------------------------------------------
+Version: 0.5.15
+Date: 05. 02. 2019
+  Minor Features:
+    - Offshore Pumps NoFluid Replace themselves with Offshore Pumps when FluidArea refills to players chosen percentage
+    - Offshore Drains deactivate at 0% used, then reactivate after a FluidArea has been drained on player chosen percentage
+  Bug Fix(s):
+    - Water Calcs off through unrequired checking of flow rate
+    - Offshore Drain depletion message on 100% & 0%
+    - Offshore Drains no longer drain more per tick then a Pump provides
+---------------------------------------------------------------------------------------------------
+Version: 0.5.14
+Date: 08. 01. 2019
+  Bug Fix(s):
+    - Removing Landfilled Tiles from table only happens after searching through all FluidAreas
+    - No Longer displays Landfill message if not affected a FluidArea
+---------------------------------------------------------------------------------------------------
+Version: 0.5.13
+Date: 08. 01. 2019
+  Bug Fix(s):
+    - Remove landfill from table if not found in any FluidAreas
+---------------------------------------------------------------------------------------------------
+Version: 0.5.12
+Date: 30. 12. 2018
+  Major Features:
+    - Landfill Support (FluidAreas will now ignore landfilled tiles)
+  Minor Features:
+    - Rewrote Mod Update script to avoid issue with Mod numbering scheme
+  Bug Fix(s):
+    - Added Entity valid check for FluidProducers and initial scans on mod added to game
+    - Back/To Method Kept ground tiles when more then 1 fluidarea was present
+---------------------------------------------------------------------------------------------------
+Version: 0.5.11
+Date: 28. 11. 2018
+  Minor Features:
+    - Added Pumpjacks command to see how many pump jacks you have in the world
+  Bug Fix(s):
+    - Fixed issue with Mod Update script, removed unneeded code
+---------------------------------------------------------------------------------------------------
+Version: 0.5.10
+Date: 28. 11. 2018
+  Bug Fix(s):
+    - Fixed issue in Mod Update Script not correctly getting the Entity from find_entities_filtered for pumpjacks
+---------------------------------------------------------------------------------------------------
+Version: 0.5.9
+Date: 27. 11. 2018
+  Bug Fix(s):
+    - On Robot Placement/Removal of Pumps/Drains/Jacks Mod will check for these and run the correct functions
+---------------------------------------------------------------------------------------------------
+Version: 0.5.8
+Date: 25. 11. 2018
+  Bug Fix(s):
+    - Fixed issue with Detecting PumpJacks
+---------------------------------------------------------------------------------------------------
+Version: 0.5.7
+Date: 24. 11. 2018
+  Major Features:
+    - On First Install Scans for Offshore Pumps and Pumpjacks and sets up FluidAreas
+    - Can Choose Tile Replacement Method, either Random or From/To Pump
+    - Compatibility with SeaBlock, Limits Area to 60,000 tiles (A Sea!)
+  Bug Fix(s):
+    - Offshore Pump No Fluids would continue to Pump, Fixed DeepCopy
+---------------------------------------------------------------------------------------------------
+Version: 0.5.6
+Date: 14. 11. 2018
+  Major Features:
+    - Offshore Pump No Fluid and Crude-oil are now deep copied for Mod Compatibility Support
+    - Compatibility with AAI Industry for the Gfx + Power on Offshore Pumps
+    - WaterAreas now Regenerate a fixed amount per tick
+  Minor Features:
+    - Added Per Player Setting for Alarm - Continuing Search
+    - Added Global Setting for the Regenerative amount
+    - Added Global Setting to Enable Regeneration of WaterAreas
+---------------------------------------------------------------------------------------------------
+Version: 0.5.5
+Date: 03. 11. 2018
+  Minor Features:
+    - Added alert to show scan is continuing, triggers every 20 seconds
+  Bug Fix(s):
+    - Check for Valid tile before using it in the search function
+---------------------------------------------------------------------------------------------------
+Version: 0.5.4
+Date: 01. 11. 2018
+  Minor Features:
+    - Nth Ticks function to continue searching for tiles after the initial area is created
+    - GetWater Function amended to support continued tile searching
+    - FluidArea Name + Amount Popup delayed on a continuing search, new popup to say a search is ongoing
+    - Modified boundaries for fluid area type (Pond/Lake/Great Lake/Sea/Ocean)
+    - Warning Alarms and Commands have correct fluid types
+    - Per Player Settings for the FluidArea - Initial Size (Tiles) and FluidArea - Additional Tiles per Second in Mod Settings
+    - Per Map Settings for the Tile Fluid Amounts for Shallow and Deep tiles 
+  Bug Fix(s):
+    - Max Tile Limit Removed, No More Diamond areas
+    - AssignTiles only runs once, instead of on every tick
+    - AssignFluid no longer double loops, so existing areas don't change to new area fluid type
+    - FluidAreas, Pumps and Drains have had there FluidType and PipeFluid checked for Nil and amended in Mod Update Script
+    - AddedWaterArea now only changes tiles for every 0.1% change between 100 and 80 instead of on every tick
+---------------------------------------------------------------------------------------------------
+Version: 0.5.3
+Date: 25. 10. 2018
+  Minor Changes:
+    - CorrectPump now runs without a loop and checks for a valid entity
+    - Entity Creation checks for validity before setting up tables
+---------------------------------------------------------------------------------------------------
+Version: 0.5.2
+Date: 25. 10. 2018
+  Bug Fix(s):
+    - Tile Correction only took Deepwater into account, now accesses both types and returns a fluid name
+---------------------------------------------------------------------------------------------------
+Version: 0.5.1
+Date: 25. 10. 2018
+  Bug Fix(s):
+    - Mod Update Script would crash if you had no PumpJacks in the world, now checks before using entity value
+---------------------------------------------------------------------------------------------------
+Version: 0.5.0
+Date: 24. 10. 2018
+  Major Features:
+    - Drains/Pumps can now use Crude Oil 
+    - Created Crude-oil and Crude-oil tiles types
+    - FluidProducers table created to track pumpjacks crude oil fluid production, and will track other entities soon
+    - FluidEntities.lua created to calculate fluid being created by external entities that would effect calcs
+    - Rewrote Calcs and many other functions to take into account multiple fluid types
+  Minor Features:
+    - Updated Mod Update Script
+  Bug Fix(s):
+    - Multiple Drains will now correctly stop/fill depleted fluid areas
+    - Storage Tanks no longer empty instantly when connected to Drains, empty at rate of 20 per tick
+    - Drains now partially fill a fluid area instead of 0% it when pipe runs dry
+    - Drains now reset the fluid area Warning Alarm flags
+    - Prevent Crude Oil tiles from generating at map creation
+    - Pumps and Drains can run at the same time and not cause loss of fluid
+---------------------------------------------------------------------------------------------------
+Version: 0.4.0
+Date: 16. 10. 2018
+  Major Features:
+    - Added Offshore Drain to fill up fluid areas (Water Only)
+    - Added Offshore Drain Command to see number of Drains, position etc
+  Minor Features:
+    - Mod Update Script updated to force a check on active OP areas, resetting it
+    - Rewrote Many functions to enable them to be used for both pumps and drains
+  Bug Fix(s):
+    - Infinite water if removed an inactive pump before any were active
+    - DesOP function had typo, would always find its own Y co-ord
+    - Other Bug issues relating to the new feature
+---------------------------------------------------------------------------------------------------
+Version: 0.3.4
+Date: 26. 09. 2018
+  Other Features:
+    - Reduced Number of calls to global variables, trying to improve performance
+  Bug Fix(s):
+    - Removed Player Mod settings as not working
+    - Adding the Mod mid-game would throw an error in the Mod Update routine
+---------------------------------------------------------------------------------------------------
+Version: 0.3.3
+Date: 25. 09. 2018
+  Bug(s):
+    - Player Specified Map Settings aren't Remembered between Save/Load
+  Bug Fix(s):
+    - Fixed ActiveOPs Bug, rewrote the function and now reinitialises the ActiveOPs variable during OnTick
+---------------------------------------------------------------------------------------------------
+Version: 0.3.2
+Date: 24. 09. 2018
+  Minor Features:
+    - WaterNames are now there own names, without the WaterArea prefix
+    - Added Configurable Shallow & Deep water volumes
+  Bug Fix(s):
+    - Massive Waterbodies cause the game to hang, then the mod fails to generate an area and crashes (Now has a slight pause on 3000+ tile WaterAreas)
+---------------------------------------------------------------------------------------------------
+Version: 0.3.1
+Date: 23. 09. 2018
+  Minor Features:
+    - Removed Unneeded files from inside mod, reducing the file size.
+---------------------------------------------------------------------------------------------------
+Version: 0.3.0
+Date: 23. 09. 2018
+  Major Features:
+    - Added Offshores command to show the position of all the Offshore Pumps
+    - Added WaterAreas command to show the % Used of all Water Areas 
+    - MOD Configuration Changed Script for updating of the mod
+  Minor Features:
+    - Add Notification on WaterBody creation, its name and size
+    - Add Notification on additional Offshores added, will show % depletion of built into WaterArea
+    - Add Notifications on 50/75/90/95 to 100% Depletion
+    - Add on screen text when command RestoreWater is used
+    - Add Mod Settings so player can turn on/off RestoreWater Command, High and Low Alarms on WaterAreas
+  Bug Fix(s):
+    - Fixed errors with Offshore Pump Deletion Code
+    - Fixed errors in checking for the same location in Offshore Pump function
+    - Fixed Restoring Water on Partially Filled in WaterAreas Fails
+    - Fixed trying to remove an offshore from a partially filled WaterArea crashes game
+    - Fixed RestoreWater command now correctly removes Inactive OffshorePump artefacts
+    - Fixed Calc errors when more then 1 offshore in/and more then 1 WaterArea
+    - Fixed wrong number of active offshores when offshores are removed
+  Other Changes:
+    - Saves OPsurface into OPLocate if required for future reference
+    - Created WtrName in WaterGlobalArea & WaterBodies.lua to give large water bodies their own names
+    - Reworked the WaterArea/OffshorePumps Functions to reduce delay when building into the same body of water
+    - Removed unneeded functions & variables
+    - Rebuilt CheckWater OnTick Calcs 3 times, Now Assumes Factorios Calcs are always 100% accurate
+---------------------------------------------------------------------------------------------------
+Version: 0.2.0
+Date: 03. 05. 2018
+  Major Features:
+    - MOD Portal Release
+  Changes:
+    - Amended Shallow and Deepwater Amounts (Attempt at Balance)
+---------------------------------------------------------------------------------------------------
+Version: 0.1.10
+Date: 26. 04. 2018
+  Major Features:
+    - ReWrote OnTick Functions
+    - Added Command "RestoreWater" - Restores All depleted areas back to water 
+  Changes:
+    - ReWrote Many Functions to do with calcs of WaterAmounts
+    - Offshores only count fluid if connected to a fluidbox entity (Work Around for lack of entity.active on Offshores)
+    - Amended Random Function
+---------------------------------------------------------------------------------------------------
+Version: 0.1.9
+Date: 22. 04. 2018
+  Major Features:
+    - Works with any number of Offshore Pumps in any number of Water Areas
+    - Changelog now works from within Factorio!
+    - Save/Load Support
+  Changes:
+    - Fixed Pump Removal for Multiple Offshores in same Water Area
+    - Added Entity Name
+---------------------------------------------------------------------------------------------------
+Version: 0.1.8
+Date: 21. 04. 2018
+  Changes:
+    - Get Count of How Many Offshore Pumps Assigned to Which WaterArea
+    - Removed Loop in Depleted function
+---------------------------------------------------------------------------------------------------
+Version: 0.1.7
+Date: 21. 04. 2018
+  Changes:
+    - Random Function Amended
+    - Changed How Offshore Pumps and WaterAreas Are stored, now separate from one another
+    - Only stores the unique water areas, reducing table size
+---------------------------------------------------------------------------------------------------
+Version: 0.1.6
+Date: 12. 04. 2018
+  Major Features:
+    - Mod Working Using 1 Offshore Pump
+  Changes:
+    - Random Function Added
+    - Fixes to Add/Removing Offshore Pumps
+---------------------------------------------------------------------------------------------------
+Version: 0.1.5
+Date: 11. 04. 2018
+  Major Features:
+    - Mod Now Works at a Basic Level
+    - Changed to using FlowStatistics
+  Changes:
+    - Get FlowStatistics for Water Amount
+    - Replace Used WaterPump with Non Working Version
+---------------------------------------------------------------------------------------------------
+Version: 0.1.4
+Date: 07. 04. 2018
+  Changes:
+    - Control Offshore Pump Refill Rate
+    - Access Offshore Pump Water Amount
+---------------------------------------------------------------------------------------------------
+Version: 0.1.3
+Date: 02. 04. 2018
+  Changes:
+    - Rebuilt WaterSearch functions
+    - Finding & Replacing Tiles Works
+---------------------------------------------------------------------------------------------------
+Version: 0.1.2
+Date: 22. 03. 2018
+  Changes:
+    - Added Changelog
+    - Stores Offshore Pump Location in table
+---------------------------------------------------------------------------------------------------
+Version: 0.1.1
+Date: 18. 03. 2018
+  Major Features:
+    - Initial Mod Creation
+  Changes:
+    - Detect Pumps Being Created
+    - Detect Pump Creation Location 
