@@ -1957,8 +1957,7 @@ function LandFillCheck(event)
 								global.WaterGlobalArea[a]["ToSearch"][#global.WaterGlobalArea[a]["ToSearch"]+1] = EDPA[tt]
 								reset_edge = true
 							end
-							global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
-						
+						end
 					end
 					
 				end
