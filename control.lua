@@ -1926,69 +1926,59 @@ function LandFillCheck(event)
 				local reset_edge = false
 				for t = 1, #tiles, 1 do
 					local position = {x=tiles[t]["position"].x, y=tiles[t]["position"].y}
-					
-					local EDPA = {position}
-					local north = {x = position.x, y = position.y-1}				
-					local northeast = {x = position.x+1, y = position.y-1}
-					local east  = {x = position.x+1, y = position.y}				
-					local southeast = {x = position.x+1, y = position.y+1}
-					local south = {x = position.x, y = position.y+1}				
-					local southwest = {x = position.x-1, y = position.y+1}
-					local west  = {x = position.x-1, y = position.y}				
-					local northwest = {x = position.x-1, y = position.y-1}
-					EDPA[#EDPA+1] = north
-					EDPA[#EDPA+1] = northeast
-					EDPA[#EDPA+1] = east
-					EDPA[#EDPA+1] = southeast
-					EDPA[#EDPA+1] = south
-					EDPA[#EDPA+1] = southwest
-					EDPA[#EDPA+1] = west
-					EDPA[#EDPA+1] = northwest
-					for tt = 1, #EDPA, 1 do
-						
-
-						global.WaterGlobalArea[a]["HasSearched"][GridRef(EDPA[tt])] = false
-						if global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(EDPA[tt])] == true then
-							global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(EDPA[tt])] = nil
-							if reset_edge == false then
-								if global.WaterGlobalArea[a]["ToSearch"] == nil or global.WaterGlobalArea[a]["ToSearch"] == 0 then
-									global.WaterGlobalArea[a]["ToSearch"] = {}
-								end
-								global.WaterGlobalArea[a]["ToSearch"][#global.WaterGlobalArea[a]["ToSearch"]+1] = EDPA[tt]
-								reset_edge = true
+					game.print(string.format("Tile put: %s", GridRef(position)))
+					if global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(position)] == true then
+						game.print(string.format("EdgeGrid hit: %s", GridRef(position)))
+						global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(position)] = nil
+						if reset_edge == false then
+							if global.WaterGlobalArea[a]["ToSearch"] == nil or global.WaterGlobalArea[a]["ToSearch"] == 0 then
+								global.WaterGlobalArea[a]["ToSearch"] = {}
 							end
+							global.WaterGlobalArea[a]["ToSearch"][#global.WaterGlobalArea[a]["ToSearch"]+1] = position
+							reset_edge = true
 						end
 					end
+					
+					global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
+
+
 					
 				end
 				
 				
 
 				if reset_edge == true then
+					game.print("Reset Edge")
+					local new_water_edge_area = {}
 					for e = 1, #global.WaterGlobalArea[a]["WaterEdgeArea"], 1 do
 						local position = {x=global.WaterGlobalArea[a]["WaterEdgeArea"][e]["position"]["x"], y=global.WaterGlobalArea[a]["WaterEdgeArea"][e]["position"]["y"]}
-						global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
 						
-						local tile = game.surfaces[surface].get_tile(position.x, position.y)
-						local fluidname = tile.name
+						if global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] ~= true then
+							game.print(GridRef(position))
+						
+							local tile = game.surfaces[surface].get_tile(position.x, position.y)
+							local fluidname = tile.name
 						
 																						
-						if fluidname == "water" or fluidname == "water-green" or fluidname == "water-shallow" or fluidname == "water-mud" then
-							if fluidname == "water" or fluidname == "water-green" then
-								global.WaterGlobalArea[a]["ShallowWater"] = global.WaterGlobalArea[a]["ShallowWater"] - 1
-							elseif fluidname == "water-shallow" then
-								global.WaterGlobalArea[a]["ShallowWater-Shallow"] = global.WaterGlobalArea[a]["ShallowWater-Shallow"] - 1
-							elseif fluidname == "water-mud" then
-								global.WaterGlobalArea[a]["ShallowWater-Mud"] = global.WaterGlobalArea[a]["ShallowWater-Mud"] - 1
+							if fluidname == "water" or fluidname == "water-green" or fluidname == "water-shallow" or fluidname == "water-mud" then
+								if fluidname == "water" or fluidname == "water-green" then
+									global.WaterGlobalArea[a]["ShallowWater"] = global.WaterGlobalArea[a]["ShallowWater"] - 1
+								elseif fluidname == "water-shallow" then
+									global.WaterGlobalArea[a]["ShallowWater-Shallow"] = global.WaterGlobalArea[a]["ShallowWater-Shallow"] - 1
+								elseif fluidname == "water-mud" then
+									global.WaterGlobalArea[a]["ShallowWater-Mud"] = global.WaterGlobalArea[a]["ShallowWater-Mud"] - 1
+								end
+							elseif fluidname == "deepwater" or fluidname == "deepwater-green" then
+								global.WaterGlobalArea[a]["DeepWater"] = global.WaterGlobalArea[a]["DeepWater"] - 1
 							end
-						elseif fluidname == "deepwater" or fluidname == "deepwater-green" then
-							global.WaterGlobalArea[a]["DeepWater"] = global.WaterGlobalArea[a]["DeepWater"] - 1
+						else
+							new_water_edge_area[#new_water_edge_area+1] = global.WaterGlobalArea[a]["WaterEdgeArea"][e]
 						end
 						
 
 
 					end
-					global.WaterGlobalArea[a]["WaterEdgeArea"] = {}
+					global.WaterGlobalArea[a]["WaterEdgeArea"] = new_water_edge_area
 				end
 				
 			end

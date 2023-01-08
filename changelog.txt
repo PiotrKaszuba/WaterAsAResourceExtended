@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.0.15
+Date: 08. 01. 2023
+  Changes:
+    - Further work on bugs - initial tests show that it might be quite stable with waterfill, finally
+---------------------------------------------------------------------------------------------------
 Version: 1.0.14
 Date: 08. 01. 2023
   Changes:
