@@ -1931,9 +1931,9 @@ function LandFillCheck(event)
 				local reset_edge = false
 				for t = 1, #tiles, 1 do
 					local position = {x=tiles[t]["position"].x, y=tiles[t]["position"].y}
-					game.print(string.format("Tile put: %s", GridRef(position)))
+					-- game.print(string.format("Tile put: %s", GridRef(position)))
 					if global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(position)] == true then
-						game.print(string.format("EdgeGrid hit: %s", GridRef(position)))
+						-- game.print(string.format("EdgeGrid hit: %s", GridRef(position)))
 						global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(position)] = nil
 						if reset_edge == false then
 							if global.WaterGlobalArea[a]["ToSearch"] == nil or global.WaterGlobalArea[a]["ToSearch"] == 0 then
@@ -1953,13 +1953,13 @@ function LandFillCheck(event)
 				
 
 				if reset_edge == true then
-					game.print("Reset Edge")
+					-- game.print("Reset Edge")
 					local new_water_edge_area = {}
 					for e = 1, #global.WaterGlobalArea[a]["WaterEdgeArea"], 1 do
 						local position = {x=global.WaterGlobalArea[a]["WaterEdgeArea"][e]["position"]["x"], y=global.WaterGlobalArea[a]["WaterEdgeArea"][e]["position"]["y"]}
 						
 						if global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] ~= true then
-							game.print(GridRef(position))
+							-- game.print(GridRef(position))
 						
 							local tile = game.surfaces[surface].get_tile(position.x, position.y)
 							local fluidname = tile.name
