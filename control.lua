@@ -2009,22 +2009,21 @@ end
 
 function BuiltOffShore(event) 					-- Script Event On Built
 	if event.created_entity.name == "offshore-pump" and event.created_entity.force.name ~= "neutral" or event.created_entity.name == "offshore-drain" or event.created_entity.name =="pumpjack" or event.created_entity.name == "kr-electric-offshore-pump" or event.created_entity.name == "copper-pump"then
+		OPentity = event.created_entity
+		global.Player = OPentity.last_user
 		if game.active_mods["Krastorio2"] then
 			if event.created_entity.name == "offshore-pump" then 
 				-- IGNORE FIRST OFFSHORE TRIGGER UNLESS AAI IS ACTIVE
 				if game.active_mods["aai-industry"] then
-					OPentity = event.created_entity
-					global.Player = OPentity.last_user
+					
 				else
 					goto NOTVALID
 				end
 			elseif event.created_entity.name == "kr-electric-offshore-pump" then
-				OPentity = event.created_entity
-				global.Player = OPentity.last_user
+				
 			end
 		else
-			OPentity = event.created_entity
-			global.Player = OPentity.last_user
+			
 		end
 	else
 		goto NOTVALID
