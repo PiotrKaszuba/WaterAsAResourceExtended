@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 0.8.8
+Date: 04. 07. 2023
+  Mod Feature(s):
+    - Added Infinite research to boost the amount of fluid and regen rate of fluid areas
+    - /WAARClearData added to remove all data tables with no restoration
+---------------------------------------------------------------------------------------------------
 Version: 0.8.7
 Date: 08. 03. 2022
   Bug Fix:

@@ -1,5 +1,5 @@
 -- WATER AS A RESOURCE MAIN LUA CONTROL PROGRAM -- 
---    CREATED BY TREEFROGGREAKEN 2018 - 2021    --
+--    CREATED BY TREEFROGGREAKEN 2018 - 2023    --
 
 -- REQUIRED ADDITIONAL LUA FILES -- 
 
@@ -283,7 +283,7 @@ function CompareAssign()
 end
 
 function CreateWaterArea()
-	global.WaterGlobalArea[#global.WaterGlobalArea+1] = {["WGAID"] = 0, ["WtrName"] = "None",["Surface"] = nil, ["ToSearch"] = nil, ["HasSearched"] = nil,["LoopCount"] = 0, ["AmountWtr"] = 0,["AmountBonusValue"] = 0,["RegenAmount"] = 0,["Depleted"] = 0,["ShallowWater"] = 0, ["DeepWater"] = 0,["ShallowWater-Shallow"] = 0,["ShallowWater-Mud"] = 0,["Percent"] = 0,["PercentPrev"] = 0,["Fired50"] = false, ["Fired75"] = false, ["Fired90"] = false, ["Fired95"] = false, ["Fired97"] = false,["Fired98"] = false,["Fired99"] = false,["RandPercent"] = 79, ["BTF"] = 0,["BTFE"] = 0,["Below80"] = 0, ["WaterRepArea"] = {},["WaterEdgeArea"] = {},["WaterEdgeAreaY"] = {},["WaterEdgeAreaX"] = {},["MinX"] = 0, ["MaxX"] = 0, ["MinY"] = 0, ["MaxY"] = 0, ["Hdif"] = 0, ["Vdif"] = 0, ["Hyp"] = 0, ["TilesSet"] = "N",["OPs"] = {},["OPsA"] = {},["ODs"] = {}, ["ODsA"] = {}, ["WtrUsed"] = 0,["WtrAdd"] = {}, ["WaterBodyType"] = 0, ["FluidType"] = nil, ["MapMarker"] = {}, ["MapMarkerPlaced"] = false}
+	global.WaterGlobalArea[#global.WaterGlobalArea+1] = {["WGAID"] = 0, ["WtrName"] = "None",["Surface"] = nil, ["ToSearch"] = nil, ["HasSearched"] = nil,["LoopCount"] = 0, ["AmountWtr"] = 0,["AmountBonusValue"] = 0,["RegenAmount"] = 0,["Depleted"] = 0,["ShallowWater"] = 0, ["DeepWater"] = 0,["ShallowWater-Shallow"] = 0,["ShallowWater-Mud"] = 0,["Percent"] = 0,["PercentPrev"] = 0,["Fired50"] = false, ["Fired75"] = false, ["Fired90"] = false, ["Fired95"] = false, ["Fired97"] = false,["Fired98"] = false,["Fired99"] = false,["RandPercent"] = 79, ["BTF"] = 0,["BTFE"] = 0,["Below80"] = 0, ["WaterRepArea"] = {},["WaterEdgeArea"] = {},["WaterEdgeAreaY"] = {},["WaterEdgeAreaX"] = {},["MinX"] = 0, ["MaxX"] = 0, ["MinY"] = 0, ["MaxY"] = 0, ["Hdif"] = 0, ["Vdif"] = 0, ["Hyp"] = 0, ["TilesSet"] = "N",["OPs"] = {},["OPsA"] = {},["ODs"] = {}, ["ODsA"] = {}, ["WtrUsed"] = 0,["WtrAdd"] = {}, ["WaterBodyType"] = 0, ["FluidType"] = nil, ["MapMarker"] = {}, ["MapMarkerPlaced"] = false, ["TechYRBoost"] = 1}
 	a = #global.WaterGlobalArea
 	global.WGAID = global.WGAID + 1
 	global.WaterGlobalArea[a]["WGAID"] = global.WGAID
@@ -582,9 +582,8 @@ function CalculatedWaterTotal(a)
 	local ShallowS = global.WaterGlobalArea[a]["ShallowWater-Shallow"]
 	local ShallowM = global.WaterGlobalArea[a]["ShallowWater-Mud"]
 	local Deep = global.WaterGlobalArea[a]["DeepWater"]
-	local ShallowShallow = global.WaterGlobalArea[a]["ShallowWater-Shallow"]
-	local ShallowMud = global.WaterGlobalArea[a]["ShallowWater-Mud"]
-	local TotalArea = Shallow + ShallowS + ShallowM + Deep
+	local TechYRBoost = global.WaterGlobalArea[a]["TechYRBoost"]
+	local TotalArea = (Shallow + ShallowS + ShallowM + Deep)
 	global.WaterGlobalArea[a]["BTF"] = TotalArea
 	local WATER = settings.global["TileFluidAmount-Shallow"].value
 	local DEEPWATER = settings.global["TileFluidAmount-Deep"].value
@@ -595,39 +594,39 @@ function CalculatedWaterTotal(a)
 	local GLBonus = 2 
 	local SBonus = 2.5 
     local OBonus = 3 
-	local WaterTotal = (Shallow * WATER) + (Deep * DEEPWATER) + (ShallowShallow * (WATER/2)) + (ShallowMud * (WATER/4))
+	local WaterTotal = (Shallow * WATER) + (Deep * DEEPWATER) + (ShallowS * (WATER/2)) + (ShallowM * (WATER/4))
 	local WaterBodyType = 0
 	if TotalArea < 4 then
 		--game.print("PUDDLE")
-		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * PBonus
+		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * PBonus * TechYRBoost
 		global.WaterGlobalArea[a]["AmountBonusValue"] = PBonus
 		global.WaterGlobalArea[a]["WtrName"] = "Puddle"
 		global.WaterGlobalArea[a]["WaterBodyType"] = 0
 	elseif TotalArea == 4 then
 		--game.print("WELL")
-		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * WBonus
+		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * WBonus * TechYRBoost
 		global.WaterGlobalArea[a]["AmountBonusValue"] = WBonus
 		global.WaterGlobalArea[a]["WtrName"] = "Well"
 		global.WaterGlobalArea[a]["WaterBodyType"] = 1
 	elseif TotalArea > 4 and TotalArea <= 200 then
 		--game.print("POND")
-		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * PDBonus
+		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * PDBonus * TechYRBoost
 		global.WaterGlobalArea[a]["AmountBonusValue"] = PDBonus
 		global.WaterGlobalArea[a]["WtrName"] = "Pond"
 		global.WaterGlobalArea[a]["WaterBodyType"] = 2
 	elseif TotalArea > 200 and TotalArea <= 6000 then
 		--game.print("LAKE")
-		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * LBonus
+		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * LBonus * TechYRBoost
 		global.WaterGlobalArea[a]["AmountBonusValue"] = LBonus
 		global.WaterGlobalArea[a]["WaterBodyType"] = 3
 	elseif TotalArea > 6000 and TotalArea <= 60000 then
 		--game.print("GREAT LAKE")
-		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * GLBonus
+		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * GLBonus * TechYRBoost
 		global.WaterGlobalArea[a]["AmountBonusValue"] = GLBonus
 		global.WaterGlobalArea[a]["WaterBodyType"] = 4
 	elseif TotalArea > 60000 and TotalArea <= 600000 then
 		--game.print("SEA")
-		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * SBonus
+		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * SBonus * TechYRBoost
 		global.WaterGlobalArea[a]["AmountBonusValue"] = SBonus
 		global.WaterGlobalArea[a]["WaterBodyType"] = 5
 	else
@@ -639,7 +638,7 @@ function CalculatedWaterTotal(a)
 	local RegenOff = settings.global["Disable-FluidArea-RegenRate"].value
 	if RegenOff == false then
 		local RegenRate = settings.global["FluidArea-RegenRate"].value / 10000
-		RegenAmount = (RegenRate * TotalArea)
+		RegenAmount = (RegenRate * TotalArea) * TechYRBoost
 	else
 		RegenAmount = 0
 	end
@@ -757,7 +756,7 @@ function OffshoreForce(OPforce,ODforce)
 		Force = ODforce
 	end
 	if global.PlayerForces == nil or #global.PlayerForces == 0 then
-		global.PlayerForces[#global.PlayerForces+1] = {["name"] = Force, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0}
+		global.PlayerForces[#global.PlayerForces+1] = {["name"] = Force, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0, ["TechYRBoost"] = 0}
 		if global.Type == 1 then
 			global.PlayerForces[1]["OPcount"] = 1
 		elseif global.Type == 2 then
@@ -779,7 +778,7 @@ function OffshoreForce(OPforce,ODforce)
 		::Found::
 	end
 	if InitalForce == false and NotFound == true then
-		global.PlayerForces[#global.PlayerForces+1] = {["name"] = OPforce, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0}
+		global.PlayerForces[#global.PlayerForces+1] = {["name"] = OPforce, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0, ["TechYRBoost"] = 0}
 		if global.Type == 1 then
 			global.PlayerForces[#global.PlayerForces]["OPcount"] = global.PlayerForces[#global.PlayerForces]["OPcount"] + 1
 		elseif global.Type == 2 then
@@ -1400,7 +1399,7 @@ function CalcWaterUse(a)
 	TotalWaterAreaActivePumps = 0
 	TotalWaterAreaActiveDrains = 0
 	for b = 1, LGPF, 1 do
-		TotalWaterFlowRate = TotalWaterFlowRate + GPF[b]["WaterFlow"] - GPF[b]["LastWaterFlow"]
+		TotalWaterFlowRate = TotalWaterFlowRate + GPF[b]["WaterFlow"] -- GPF[b]["LastWaterFlow"]
 		for c = 1, #global.FluidProducers, 1 do
 			if global.FluidProducers[c]["force"] == GPF[b]["name"] then
 				ForceCrudeAdjust = ForceCrudeAdjust + global.FluidProducers[c]["LastAmount"]
@@ -1807,19 +1806,25 @@ end
 function FluidFlow()
 	GPF = global.PlayerForces
 	LGPF = #global.PlayerForces
-	if Skip ~= true or Skip == nil then
-		for a = 1, LGPF, 1 do							
-			GPF[a]["WaterFlow"] = math.ceil(game.forces[GPF[a]["name"]].fluid_production_statistics.get_input_count("water"))
-			GPF[a]["CrudeFlow"] = math.ceil(game.forces[GPF[a]["name"]].fluid_production_statistics.get_input_count("crude-oil"))
-		end
-		Skip = true
-	else
-		for a = 1, LGPF, 1 do
-			GPF[a]["LastWaterFlow"] = GPF[a]["WaterFlow"]
-			GPF[a]["LastCrudeFlow"] = GPF[a]["CrudeFlow"]
-		end
-		Skip = false
+	-- if Skip ~= true or Skip == nil then
+		-- for a = 1, LGPF, 1 do							
+			-- GPF[a]["WaterFlow"] = math.ceil(game.forces[GPF[a]["name"]].fluid_production_statistics.get_input_count("water"))
+			-- GPF[a]["CrudeFlow"] = math.ceil(game.forces[GPF[a]["name"]].fluid_production_statistics.get_input_count("crude-oil"))
+		-- end
+		-- Skip = true
+	-- else
+		-- for a = 1, LGPF, 1 do
+			-- GPF[a]["LastWaterFlow"] = GPF[a]["WaterFlow"]
+			-- GPF[a]["LastCrudeFlow"] = GPF[a]["CrudeFlow"]
+		-- end
+		-- Skip = false
+	-- end
+	for a = 1, LGPF, 1 do							
+		GPF[a]["WaterFlow"] = math.ceil(game.forces[GPF[a]["name"]].fluid_production_statistics.get_flow_count{name="water",input=1,precision_index=0,count=0})/50
+		GPF[a]["CrudeFlow"] = math.ceil(game.forces[GPF[a]["name"]].fluid_production_statistics.get_flow_count{name="crude-oil",input=1,precision_index=0,count=0})/50
+		--game.print(string.format("Water Flow Rate: %s",GPF[a]["WaterFlow"]))
 	end
+	
 end
 
 function CheckWater()
@@ -1868,7 +1873,7 @@ function CheckWater()
 				EmptyDrainPipes(a)
 			end
 		end
-		FluidFlow()
+		--FluidFlow()
 		if global.LoopTick < 10 then
 			global.LoopTick = global.LoopTick + 1
 		elseif global.LoopTick == 10 then
@@ -2347,6 +2352,9 @@ function UpdateMod(data)
 						global.WaterGlobalArea[a]["MapMarker"].destroy()
 						global.WaterGlobalArea[a]["MapMarkerPlaced"] = nil
 					end
+					if global.WaterGlobalArea[a]["TechYRBoost"] == nil then
+						global.WaterGlobalArea[a]["TechYRBoost"] = 0 
+					end
 				end
 			end
 			if #global.OPLocate > 0 then
@@ -2586,7 +2594,7 @@ function UpdateMod(data)
 			if Players <= 1 then
 				if global.PlayerForces == nil or #global.PlayerForces < 1 then
 					Force = game.players[1].force.name
-					global.PlayerForces[#global.PlayerForces+1] = {["name"] = Force, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0}
+					global.PlayerForces[#global.PlayerForces+1] = {["name"] = Force, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0, ["TechYRBoost"] = 0}
 					for a = 1, #global.WaterGlobalArea, 1 do
 						OPs = 0
 						ODs = 0
@@ -2631,7 +2639,7 @@ function UpdateMod(data)
 				for a = 1, Players, 1 do
 					Force = game.players[a].force.name
 					if global.PlayerForces == nil or #global.PlayerForces < 1 then
-						global.PlayerForces[#global.PlayerForces+1] = {["name"] = Force, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0}
+						global.PlayerForces[#global.PlayerForces+1] = {["name"] = Force, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0, ["TechYRBoost"] = 0}
 						for b = 1, #global.WaterGlobalArea, 1 do
 							OPs = 0
 							ODs = 0
@@ -2685,7 +2693,7 @@ function UpdateMod(data)
 							end
 						end
 						if NewForce == true then
-							global.PlayerForces[#global.PlayerForces+1] = {["name"] = Force, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0}
+							global.PlayerForces[#global.PlayerForces+1] = {["name"] = Force, ["OPcount"] = 0, ["ODcount"] = 0, ["WaterFlow"] = 0, ["LastWaterFlow"] = 0, ["CrudeFlow"] = 0, ["LastCrudeFlow"] = 0, ["TechYRBoost"] = 0}
 							--for f = 1, #global.PlayerForces, 1 do
 								for g = 1, #global.WaterGlobalArea, 1 do
 									OPs = 0
@@ -2725,6 +2733,12 @@ function UpdateMod(data)
 									end
 								end
 							--end
+						else
+							for f = 1, #global.PlayerForces, 1 do
+								if global.PlayerForces[f]["TechYRBoost"] == nil then
+									global.PlayerForces[f]["TechYRBoost"] = 1
+								end
+							end
 						end
 					end
 				end
@@ -2754,6 +2768,38 @@ function UpdateMod(data)
 end
 
 -- COMMAND FUNCTIONS -- 
+function WAARClearData()
+	if global.WaterGlobalArea then
+		for a = #global.WaterGlobalArea, 1, -1 do
+			table.remove(global.WaterGlobalArea,a)
+		end
+	end
+	if global.OPLocate then	
+		for a = #global.OPLocate, 1, -1 do
+			table.remove(global.OPLocate,a)
+		end
+	end
+	if global.ODLocate then
+		for a = #global.ODLocate,1, -1 do
+			table.remove(global.ODLocate,a)
+		end
+	end
+	if global.FluidProducers then
+		for a = #global.FluidProducers,1, -1 do
+			table.remove(global.ODLocate,a)
+		end
+	end
+	global.PercentChange = 0
+	global.WaterFlow = 0
+	global.CrudeFlow = 0
+	global.LastWaterFlow = 0
+	global.LastCrudeFlow = 0
+	global.WGAID = 0
+	global.Type = 0
+	global.ActiveOPs = 0
+	global.ActiveODs = 0
+	game.print("WAAR Data Cleared!")
+end
 
 function RestoreWater()
 	local RWDisabled = settings.global["Disable-RestoreWater-Command"].value
@@ -3010,6 +3056,51 @@ function PumpJacks()
 	end
 end
 
+function TechTrack(event)
+	if event.research.name == "waar-yield-regen-boost-1" or event.research.name == "waar-yield-regen-boost-2" or event.research.name == "waar-yield-regen-boost-3" or event.research.name == "waar-yield-regen-boost-4" or event.research.name == "waar-yield-regen-boost-5" or event.research.name == "waar-yield-regen-boost-6" or event.research.name == "waar-yield-regen-boost-7" then
+		for a = 1, #global.PlayerForces, 1 do
+			if event.research.force.name == global.PlayerForces[a].name then
+				if event.research.name == "waar-yield-regen-boost-1" then
+					global.PlayerForces[a]["TechYRBoost"] = 1.2
+				elseif event.research.name == "waar-yield-regen-boost-2" then
+					global.PlayerForces[a]["TechYRBoost"] = 1.4
+				elseif event.research.name == "waar-yield-regen-boost-3" then
+					global.PlayerForces[a]["TechYRBoost"] = 1.6
+				elseif event.research.name == "waar-yield-regen-boost-4" then
+					global.PlayerForces[a]["TechYRBoost"] = 1.8
+				elseif event.research.name == "waar-yield-regen-boost-5" then
+					global.PlayerForces[a]["TechYRBoost"] = 2.0
+				else
+					BoostLevel=event.research.level
+					global.PlayerForces[a]["TechYRBoost"] = 2.0 + (0.2 * (BoostLevel-6))
+				end
+			end
+			for b = 1, #global.WaterGlobalArea, 1 do
+				for c = 1, #global.OPLocate, 1 do
+					if global.WaterGlobalArea[b]["WGAID"] == global.OPLocate[c]["WA"] and global.OPLocate[c]["force"] == global.PlayerForces[a].name then
+						if global.WaterGlobalArea[b]["TechYRBoost"] < global.PlayerForces[a]["TechYRBoost"] then
+							global.WaterGlobalArea[b]["TechYRBoost"] = global.PlayerForces[a]["TechYRBoost"]
+						end
+					end
+				end
+				if BoostLevel == 1 then
+					global.WaterGlobalArea[b]["AmountWtr"] = global.WaterGlobalArea[b]["AmountWtr"] * global.WaterGlobalArea[b]["TechYRBoost"]
+					global.WaterGlobalArea[b]["RegenAmount"] = global.WaterGlobalArea[b]["RegenAmount"] * global.WaterGlobalArea[b]["TechYRBoost"]
+					if global.WaterGlobalArea[b]["WtrUsed"] > 0 then
+						global.WaterGlobalArea[b]["WtrUsed"] = global.WaterGlobalArea[b]["WtrUsed"] * global.WaterGlobalArea[b]["TechYRBoost"]
+					end
+				else
+					global.WaterGlobalArea[b]["AmountWtr"] = (global.WaterGlobalArea[b]["AmountWtr"] / (global.WaterGlobalArea[b]["TechYRBoost"] - 0.2)) * global.WaterGlobalArea[b]["TechYRBoost"]
+					global.WaterGlobalArea[b]["RegenAmount"] = (global.WaterGlobalArea[b]["RegenAmount"] / (global.WaterGlobalArea[b]["TechYRBoost"] - 0.2)) * global.WaterGlobalArea[b]["TechYRBoost"]
+					if global.WaterGlobalArea[b]["WtrUsed"] > 0 then
+						global.WaterGlobalArea[b]["WtrUsed"] = (global.WaterGlobalArea[b]["WtrUsed"] / (global.WaterGlobalArea[b]["TechYRBoost"] - 0.2)) * global.WaterGlobalArea[b]["TechYRBoost"]
+					end
+				end
+			end
+		end
+	end
+end
+
 function ScenFunc()
 	global.LandFill = {}
 	global.PlayerForces = {}
@@ -3043,6 +3134,7 @@ script.on_event({defines.events.script_raised_built}, ScriptConvert)
 script.on_event({defines.events.on_player_mined_entity,defines.events.script_raised_destroy,defines.events.on_robot_mined_entity,defines.events.on_entity_died}, DestroyedOffShore)
 script.on_event({defines.events.on_player_built_tile,defines.events.on_robot_built_tile}, LandFillCheck)
 script.on_event({defines.events.on_game_created_from_scenario},ScenFunc)
+script.on_event({defines.events.on_research_finished},TechTrack)
 script.on_configuration_changed(UpdateMod)
 remote.add_interface("WaaR", {	build = function(a,b)	event = a	global.remotetrigger = b	if event ~= nil then		ScriptConvert(event)	end end})
 commands.add_command("RestoreWater", "Restores Water Areas & Clears GlobalTable",RestoreWater)
@@ -3052,3 +3144,4 @@ commands.add_command("WaterAreas", "Displays All The WaterAreas Built", WaterAre
 commands.add_command("Pumpjacks", "Displays All The Pumpjacks Built", PumpJacks)
 commands.add_command("PlayerForces", "Displays All PlayerForces",PlayerForces)
 commands.add_command("StopScan", "Stops actively scanning any area that is",StopScanning)
+commands.add_command("WAARClearData", "Stops actively scanning any area that is",WAARClearData)
