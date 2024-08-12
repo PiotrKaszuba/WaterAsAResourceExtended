@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 1.1.0
+Date: 13. 08. 2024
+  Changes:
+    - Integrated 0.8.8 version changes from original mod creator. 
+---------------------------------------------------------------------------------------------------
 Version: 1.0.17
 Date: 31. 01. 2023
   Changes:
@@ -43,7 +48,7 @@ Version: 1.0.9
 Date: 08. 01. 2023
   Changes:
     - Futher optimizations
-	- Landfill now decreases regen of water area too
+    - Landfill now decreases regen of water area too
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.8
 Date: 08. 01. 2023
@@ -90,7 +95,7 @@ Date: 07. 01. 2023
   Bug Fix:
     - Additional tiles per second while scanning is properly used now
   Mod Feature(s):
-	- Added compatibility with 'waterfill' - rescanning edges to potentially increase area of fluid areas
+    - Added compatibility with 'waterfill' - rescanning edges to potentially increase area of fluid areas
 ---------------------------------------------------------------------------------------------------
 Version: 0.8.8
 Date: 04. 07. 2023
