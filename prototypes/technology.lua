@@ -1,4 +1,4 @@
-local waar_yield_regen_boost_icon = "__WaterAsAResource__/graphics/technology/waar-yield-regen-boost-1.png"
+local waar_yield_regen_boost_icon = "__WaterAsAResourceExtended__/graphics/technology/waar-yield-regen-boost-1.png"
 
 data:extend(
 {
