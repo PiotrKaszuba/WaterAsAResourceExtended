@@ -5,7 +5,7 @@ require("prototypes.tiles")
 require("prototypes.technology")
 require("util")
 
---data.raw.item["offshore-pump"].icon = "__WaterAsAResource__/graphics/icons/offshore-pump.png"
+--data.raw.item["offshore-pump"].icon = "__WaterAsAResourceExtended__/graphics/icons/offshore-pump.png"
 
 local offshorenofluid = table.deepcopy(data.raw["offshore-pump"]["offshore-pump"])
 

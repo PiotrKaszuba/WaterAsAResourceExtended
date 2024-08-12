@@ -83,8 +83,10 @@ function EdgePattern(SearchPosition)
 					-- Edge, Exclude from Queue
 					SearchPosition = {x = tile.position.x, y = tile.position.y}
 					Edge = true
+					WASearched[GridRef(SearchPosition)] = true
+					WaterEdgeGrid[GridRef(SearchPosition)] = true
 				end
-				WASearched[GridRef(SearchPosition)] = true
+				
 			end
 		end
 	end
@@ -283,13 +285,18 @@ function CompareAssign()
 end
 
 function CreateWaterArea()
-	global.WaterGlobalArea[#global.WaterGlobalArea+1] = {["WGAID"] = 0, ["WtrName"] = "None",["Surface"] = nil, ["ToSearch"] = nil, ["HasSearched"] = nil,["LoopCount"] = 0, ["AmountWtr"] = 0,["AmountBonusValue"] = 0,["RegenAmount"] = 0,["Depleted"] = 0,["ShallowWater"] = 0, ["DeepWater"] = 0,["ShallowWater-Shallow"] = 0,["ShallowWater-Mud"] = 0,["Percent"] = 0,["PercentPrev"] = 0,["Fired50"] = false, ["Fired75"] = false, ["Fired90"] = false, ["Fired95"] = false, ["Fired97"] = false,["Fired98"] = false,["Fired99"] = false,["RandPercent"] = 79, ["BTF"] = 0,["BTFE"] = 0,["Below80"] = 0, ["WaterRepArea"] = {},["WaterEdgeArea"] = {},["WaterEdgeAreaY"] = {},["WaterEdgeAreaX"] = {},["MinX"] = 0, ["MaxX"] = 0, ["MinY"] = 0, ["MaxY"] = 0, ["Hdif"] = 0, ["Vdif"] = 0, ["Hyp"] = 0, ["TilesSet"] = "N",["OPs"] = {},["OPsA"] = {},["ODs"] = {}, ["ODsA"] = {}, ["WtrUsed"] = 0,["WtrAdd"] = {}, ["WaterBodyType"] = 0, ["FluidType"] = nil, ["MapMarker"] = {}, ["MapMarkerPlaced"] = false, ["TechYRBoost"] = 1}
+	global.WaterGlobalArea[#global.WaterGlobalArea+1] = {["WGAID"] = 0, ["WtrName"] = "None",["Surface"] = nil, ["ToSearch"] = nil, ["HasSearched"] = nil,["LoopCount"] = 0, ["AmountWtr"] = 0,["AmountBonusValue"] = 0,["RegenAmount"] = 0,["Depleted"] = 0,["ShallowWater"] = 0, ["DeepWater"] = 0,["ShallowWater-Shallow"] = 0,["ShallowWater-Mud"] = 0,["Percent"] = 0,["PercentPrev"] = 0,["Fired50"] = false, ["Fired75"] = false, ["Fired90"] = false, ["Fired95"] = false, ["Fired97"] = false,["Fired98"] = false,["Fired99"] = false,["RandPercent"] = 79, ["BTF"] = 0,["BTFE"] = 0,["Below80"] = 0, ["WaterRepArea"] = {},["WaterEdgeArea"] = {},["WaterEdgeGrid"] = {},["WaterEdgeAreaY"] = {},["WaterEdgeAreaX"] = {},["MinX"] = 0, ["MaxX"] = 0, ["MinY"] = 0, ["MaxY"] = 0, ["Hdif"] = 0, ["Vdif"] = 0, ["Hyp"] = 0, ["TilesSet"] = "N",["OPs"] = {},["OPsA"] = {},["ODs"] = {}, ["ODsA"] = {}, ["WtrUsed"] = 0,["WtrAdd"] = {}, ["WaterBodyType"] = 0, ["FluidType"] = nil, ["MapMarker"] = {}, ["MapMarkerPlaced"] = false, ["TechYRBoost"] = 1}
 	a = #global.WaterGlobalArea
 	global.WGAID = global.WGAID + 1
 	global.WaterGlobalArea[a]["WGAID"] = global.WGAID
 	GetWaterArea(a)
 	CalculatedWaterTotal(a)
-	waterbodies.WtrName(a)
+	if global.WaterGlobalArea[a]["ToSearch"] == nil then
+		if global.WaterGlobalArea[a]["WtrName"] == "None" or global.WaterGlobalArea[a]["WtrName"] == "Puddle" or global.WaterGlobalArea[a]["WtrName"] == "Well" or global.WaterGlobalArea[a]["WtrName"] == "Pond"  then
+			waterbodies.WtrName(a)
+		end
+		game.print(string.format("%s created, with %sL of %s with regen %sL.", global.WaterGlobalArea[a]["WtrName"], comma_value(global.WaterGlobalArea[a]["AmountWtr"]), global.WaterGlobalArea[a]["FluidType"], global.WaterGlobalArea[a]["RegenAmount"]))
+	end
 	MapMarkerPlace(a)
 	a = 0
 end
@@ -430,6 +437,7 @@ return FoundExt
 end
 
 function GetWaterArea(a) 										-- Get Water Area Function
+	SearchAmount = settings.global["FluidArea-Start-Area"].value
 	if global.Type == 1 then
 		position = global.OPLocate[#global.OPLocate]["position"]
 		surface = global.OPLocate[#global.OPLocate]["surface"].name
@@ -446,11 +454,13 @@ function GetWaterArea(a) 										-- Get Water Area Function
 		WASearchQueue = global.WaterGlobalArea[a]["ToSearch"]
 		WASearched = global.WaterGlobalArea[a]["HasSearched"]
 		surface = global.WaterGlobalArea[a]["Surface"].name
+		SearchAmount = settings.global["FluidArea-Additional-Tiles-Per-Second"].value
 	end
-	WaterGArea = global.WaterGlobalArea[#global.WaterGlobalArea]
-	WaterRepArea = global.WaterGlobalArea[#global.WaterGlobalArea]["WaterRepArea"]
-	WaterEdgeArea = global.WaterGlobalArea[#global.WaterGlobalArea]["WaterEdgeArea"]
-	SearchAmount = settings.global["FluidArea-Start-Area"].value
+	WaterGArea = global.WaterGlobalArea[a]
+	WaterRepArea = global.WaterGlobalArea[a]["WaterRepArea"]
+	WaterEdgeArea = global.WaterGlobalArea[a]["WaterEdgeArea"]
+	WaterEdgeGrid = global.WaterGlobalArea[a]["WaterEdgeGrid"]
+
 	FA = global.WaterGlobalArea[a]
 	PlayerMaxArea = settings.global["FluidArea-MaxFluidAreaSize"].value
 	TotalArea = global.WaterGlobalArea[a]["ShallowWater"] + global.WaterGlobalArea[a]["DeepWater"]
@@ -477,11 +487,13 @@ function GetWaterArea(a) 										-- Get Water Area Function
 					end
 					if EdgePattern(SearchPosition) == true then
 						WaterEdgeArea[#WaterEdgeArea+1] = {["name"] = "lake-shallow" , ["position"] = {["x"] = SearchPosition.x, ["y"] = SearchPosition.y},["OriginalName"] = fluidname}
+						
 					end
 				elseif fluidname == "deepwater" or fluidname == "deepwater-green" then
 					FA["DeepWater"] = FA["DeepWater"] + 1
 					if EdgePattern(SearchPosition) == true then
 						WaterEdgeArea[#WaterEdgeArea+1] = {["name"] = "lake-deep" , ["position"] = {["x"] = SearchPosition.x, ["y"] = SearchPosition.y},["OriginalName"] = fluidname}
+						
 					end
 				end
 				if WaterGArea["MinX"] > SearchPosition.x then
@@ -513,7 +525,7 @@ function GetWaterArea(a) 										-- Get Water Area Function
 	end
 	if #WASearchQueue == 0 then
 		global.WaterGlobalArea[a]["ToSearch"] = nil
-		global.WaterGlobalArea[a]["HasSearched"] = nil
+		-- global.WaterGlobalArea[a]["HasSearched"] = nil
 		-- local wateredgeposition = {}
 		-- local wateredgepositionxtemp = {}
 		-- local wateredgepositionx = global.WaterGlobalArea[a]["WaterEdgeAreaX"]
@@ -571,8 +583,11 @@ function FluidAreaContinue(a)
 	end
 	if global.WaterGlobalArea[a]["ToSearch"] == nil then
 		global.WaterGlobalArea[a]["LoopCount"] = 0
-		waterbodies.WtrName(a)
-		game.print(string.format("%s created, with %sL of %s.", global.WaterGlobalArea[a]["WtrName"], comma_value(global.WaterGlobalArea[a]["AmountWtr"]), global.WaterGlobalArea[a]["FluidType"]))
+		if global.WaterGlobalArea[a]["WtrName"] == "None" or global.WaterGlobalArea[a]["WtrName"] == "Puddle" or global.WaterGlobalArea[a]["WtrName"] == "Well" or global.WaterGlobalArea[a]["WtrName"] == "Pond"  then
+				waterbodies.WtrName(a)
+		end
+		game.print(string.format("%s created, with %sL of %s with regen %sL.", global.WaterGlobalArea[a]["WtrName"], comma_value(global.WaterGlobalArea[a]["AmountWtr"]), global.WaterGlobalArea[a]["FluidType"], global.WaterGlobalArea[a]["RegenAmount"]))
+
 		MapMarker(a)
 	end
 end
@@ -596,6 +611,7 @@ function CalculatedWaterTotal(a)
     local OBonus = 3 
 	local WaterTotal = (Shallow * WATER) + (Deep * DEEPWATER) + (ShallowS * (WATER/2)) + (ShallowM * (WATER/4))
 	local WaterBodyType = 0
+	
 	if TotalArea < 4 then
 		--game.print("PUDDLE")
 		global.WaterGlobalArea[a]["AmountWtr"] = WaterTotal * PBonus * TechYRBoost
@@ -802,6 +818,7 @@ function RegenWater(a)
 		WGA[a]["PercentPrev"] = WGA[a]["Percent"]
 		WGA[a]["Percent"] = (WGA[a]["WtrUsed"] / WGA[a]["AmountWtr"]) * 100
 		PercentChange = WGA[a]["PercentPrev"] - WGA[a]["Percent"]
+		-- game.print(WGA[a]["Percent"])
 	end	
 end
 
@@ -1636,20 +1653,32 @@ function LandFill(a)
 				WAPosY = WAra[c]["position"]["y"]
 				if LFPosX == WAPosX then -- IF LandFill position x is equal to FluidArea position x
 					if LFPosY == WAPosY then -- IF LandFill position y is equal to FluidArea position y
-					Found = true
-					if Check > 0 then
-						global.WaterGlobalArea[a]["WaterRepArea"][c]["name"] = "landfill" 
-					end
-					local FluidName = global.LandFill[b]["name"]
-					if FluidName == "water" or FluidName == "crude-oil" or FluidName == "water-green" or FluidName == "water-shallow" or FluidName == "water-mud" then
-						local ShallowAmount = settings.global["TileFluidAmount-Shallow"].value
-						global.WaterGlobalArea[a]["AmountWtr"] = WGA[a]["AmountWtr"] - (ShallowAmount * WGA[a]["AmountBonusValue"])
-					elseif FluidName == "deepwater" or FluidName == "crude-oil-deep" or FluidName == "deepwater-green" then
-						local DeepAmount = settings.global["TileFluidAmount-Deep"].value
-						global.WaterGlobalArea[a]["AmountWtr"] = WGA[a]["AmountWtr"] - (DeepAmount * WGA[a]["AmountBonusValue"])
-					end
-					table.remove(global.LandFill,#global.LandFill)
-					goto EscapeLFSearch
+						Found = true
+						if Check > 0 then
+							global.WaterGlobalArea[a]["WaterRepArea"][c]["name"] = "landfill" 
+						end
+						local FluidName = global.LandFill[b]["name"]
+						if FluidName == "water" or FluidName == "crude-oil" or FluidName == "water-green" or FluidName == "water-shallow" or FluidName == "water-mud" then
+							local ShallowAmount = settings.global["TileFluidAmount-Shallow"].value
+							global.WaterGlobalArea[a]["AmountWtr"] = WGA[a]["AmountWtr"] - (ShallowAmount * WGA[a]["AmountBonusValue"])
+							if FluidName == "water" or FluidName == "water-green" then
+								WGA[a]["ShallowWater"] =  WGA[a]["ShallowWater"] - 1
+							elseif FluidName == "water-shallow" then
+								WGA[a]["ShallowWater-Shallow"] = WGA[a]["ShallowWater-Shallow"] - 1
+							elseif FluidName == "water-mud" then
+								WGA[a]["ShallowWater-Mud"] = WGA[a]["ShallowWater-Mud"] - 1
+							end
+							
+						
+						elseif FluidName == "deepwater" or FluidName == "crude-oil-deep" or FluidName == "deepwater-green" then
+							local DeepAmount = settings.global["TileFluidAmount-Deep"].value
+							global.WaterGlobalArea[a]["AmountWtr"] = WGA[a]["AmountWtr"] - (DeepAmount * WGA[a]["AmountBonusValue"])
+							if FluidName == "deepwater" or FluidName == "deepwater-green" then
+								WGA[a]["DeepWater"] = WGA[a]["DeepWater"] - 1
+							end
+						end
+						table.remove(global.LandFill,#global.LandFill)
+						goto EscapeLFSearch
 					end
 				end
 			end
@@ -1662,7 +1691,8 @@ function LandFill(a)
 	end
 	local LandfillEnabled = settings.get_player_settings(game.players[1])["Alarms-Landfill Message"].value
 	if #global.LandFill == 0 and Found == true and LandfillEnabled == true then
-		game.print(string.format("Landfill has reduced FluidArea %s, to %sL of %s.", WGA[a]["WtrName"], WGA[a]["AmountWtr"], WGA[a]["FluidType"]))
+		CalculatedWaterTotal(a)
+		game.print(string.format("Landfill has reduced FluidArea %s, to %sL of %s with regen %sL.", WGA[a]["WtrName"], WGA[a]["AmountWtr"], WGA[a]["FluidType"], WGA[a]["RegenAmount"]))
 	end
 	::EscapeLFSearchNF::
 end
@@ -1892,6 +1922,68 @@ function LandFillCheck(event)
 			local surface = event.surface_index
 			for a = 1, #tiles, 1 do
 				global.LandFill[#global.LandFill+1] = {["name"] = tiles[a].old_tile.name, ["position"] = {["x"] = tiles[a]["position"].x, ["y"] = tiles[a]["position"].y},["surface"] = surface}
+			end
+		end
+		if event.tile.name == "water" then
+			for a = 1, #global.WaterGlobalArea, 1 do
+				if global.WaterGlobalArea[a]["HasSearched"] == nil or global.WaterGlobalArea[a]["HasSearched"] == 0 then
+					global.WaterGlobalArea[a]["HasSearched"] = {}
+				end
+				
+				local tiles = event.tiles
+				local surface = global.WaterGlobalArea[a]["Surface"].name
+				local reset_edge = false
+				for t = 1, #tiles, 1 do
+					local position = {x=tiles[t]["position"].x, y=tiles[t]["position"].y}
+					
+					global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
+					if global.WaterGlobalArea[a]["WaterEdgeGrid"][GridRef(position)] == true then
+						
+
+						reset_edge = true
+						if global.WaterGlobalArea[a]["ToSearch"] == nil or global.WaterGlobalArea[a]["ToSearch"] == 0 then
+							global.WaterGlobalArea[a]["ToSearch"] = {}
+						end
+						global.WaterGlobalArea[a]["WaterEdgeGrid"][position] = nil
+						if reset_edge == false then
+							global.WaterGlobalArea[a]["ToSearch"][#global.WaterGlobalArea[a]["ToSearch"]+1] = position
+						end
+						global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
+						
+					end
+					
+				end
+				
+				
+				--local position_one = {x=global.WaterGlobalArea[a]["WaterEdgeArea"][1]["position"]["x"], y=global.WaterGlobalArea[a]["WaterEdgeArea"][1]["position"]["y"]}
+				--global.WaterGlobalArea[a]["ToSearch"][#global.WaterGlobalArea[a]["ToSearch"]+1] = position_one
+				if reset_edge == true then
+					for e = 1, #global.WaterGlobalArea[a]["WaterEdgeArea"], 1 do
+						local position = {x=global.WaterGlobalArea[a]["WaterEdgeArea"][e]["position"]["x"], y=global.WaterGlobalArea[a]["WaterEdgeArea"][e]["position"]["y"]}
+						global.WaterGlobalArea[a]["HasSearched"][GridRef(position)] = false
+						
+						local tile = game.surfaces[surface].get_tile(position.x, position.y)
+						local fluidname = tile.name
+						
+																						-- ELSE IsWater is TRUE then
+						if fluidname == "water" or fluidname == "water-green" or fluidname == "water-shallow" or fluidname == "water-mud" then					-- IF Water Type is "water"
+							if fluidname == "water" or fluidname == "water-green" then
+								global.WaterGlobalArea[a]["ShallowWater"] = global.WaterGlobalArea[a]["ShallowWater"] - 1
+							elseif fluidname == "water-shallow" then
+								global.WaterGlobalArea[a]["ShallowWater-Shallow"] = global.WaterGlobalArea[a]["ShallowWater-Shallow"] - 1
+							elseif fluidname == "water-mud" then
+								global.WaterGlobalArea[a]["ShallowWater-Mud"] = global.WaterGlobalArea[a]["ShallowWater-Mud"] - 1
+							end
+						elseif fluidname == "deepwater" or fluidname == "deepwater-green" then
+							global.WaterGlobalArea[a]["DeepWater"] = global.WaterGlobalArea[a]["DeepWater"] - 1
+						end
+						
+
+
+					end
+					global.WaterGlobalArea[a]["WaterEdgeArea"] = {}
+				end
+				
 			end
 		end
 	end
@@ -2915,8 +3007,12 @@ function StopScanning()
 	for a = 1, #global.WaterGlobalArea, 1 do
 		if global.WaterGlobalArea[a]["ToSearch"] ~= nil then
 			global.WaterGlobalArea[a]["ToSearch"] = nil
-			waterbodies.WtrName(a)
-			game.player.print(string.format("%s created, with %sL of %s.", global.WaterGlobalArea[a]["WtrName"], global.WaterGlobalArea[a]["AmountWtr"], global.WaterGlobalArea[a]["FluidType"]))
+		
+			if global.WaterGlobalArea[a]["WtrName"] == "None" or global.WaterGlobalArea[a]["WtrName"] == "Puddle" or global.WaterGlobalArea[a]["WtrName"] == "Well" or global.WaterGlobalArea[a]["WtrName"] == "Pond"  then
+				waterbodies.WtrName(a)
+			end
+			game.print(string.format("%s created, with %sL of %s with regen %sL.", global.WaterGlobalArea[a]["WtrName"], comma_value(global.WaterGlobalArea[a]["AmountWtr"]), global.WaterGlobalArea[a]["FluidType"], global.WaterGlobalArea[a]["RegenAmount"]))
+
 			MapMarker(a)
 		end
 	end

@@ -3,7 +3,7 @@ data:extend(
   {
   type = "pipe-to-ground",
     name = "offshore-drain",
-    icon = "__WaterAsAResource__/graphics/icons/offshore-drain.png",
+    icon = "__WaterAsAResourceExtended__/graphics/icons/offshore-drain.png",
     icon_size = 64, icon_mipmaps = 4,
     flags = {"placeable-neutral", "player-creation", "filter-directions"},
     collision_mask = { "object-layer" },
@@ -77,7 +77,7 @@ data:extend(
     {
       up = -- Input is South
       {
-        filename = "__WaterAsAResource__/graphics/entity/offshore-drain.png",
+        filename = "__WaterAsAResourceExtended__/graphics/entity/offshore-drain.png",
         priority = "high",
         x = 0,
 		shift = {1,0},
@@ -86,7 +86,7 @@ data:extend(
       },
       right = -- Input is West
       {
-        filename = "__WaterAsAResource__/graphics/entity/offshore-drain.png",
+        filename = "__WaterAsAResourceExtended__/graphics/entity/offshore-drain.png",
         priority = "high",
         x = 160,
 		shift = {0.93,0},
@@ -95,7 +95,7 @@ data:extend(
       },
       down = -- Input it North
       {
-        filename = "__WaterAsAResource__/graphics/entity/offshore-drain.png",
+        filename = "__WaterAsAResourceExtended__/graphics/entity/offshore-drain.png",
         priority = "high",
         x = 320,
         shift = {1,1},
@@ -104,7 +104,7 @@ data:extend(
       },
       left = -- Input is East
       {
-        filename = "__WaterAsAResource__/graphics/entity/offshore-drain.png",
+        filename = "__WaterAsAResourceExtended__/graphics/entity/offshore-drain.png",
         priority = "high",
         x = 480,
 		shift = {1,0},

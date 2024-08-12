@@ -13,7 +13,7 @@ data:extend(
      {
     type = "item",
     name = "offshore-drain",
-    icon = "__WaterAsAResource__/graphics/icons/offshore-drain.png",
+    icon = "__WaterAsAResourceExtended__/graphics/icons/offshore-drain.png",
     icon_size = 64, icon_mipmaps = 4,
     subgroup = "extraction-machine",
     order = "b[fluids]-a[offshore-pump]",
