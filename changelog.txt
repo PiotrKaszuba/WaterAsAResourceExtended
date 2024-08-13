@@ -2,7 +2,10 @@
 Version: 1.1.0
 Date: 13. 08. 2024
   Changes:
-    - Integrated 0.8.8 version changes from original mod creator. 
+    - Integrated 0.8.8 version changes from original mod creator.
+    - Changed default values of some settings including:
+      - Deep water value 100 -> 150
+      - Water regen rate 10 -> 20
 ---------------------------------------------------------------------------------------------------
 Version: 1.0.17
 Date: 31. 01. 2023

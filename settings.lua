@@ -21,7 +21,7 @@ data:extend({
         type = "bool-setting",
         name = "Disable-RestoreWater-Command",
         setting_type = "runtime-global",
-        default_value = false
+        default_value = true
     },
     {
         type = "int-setting",
@@ -51,7 +51,7 @@ data:extend({
         type = "int-setting",
         name = "TileFluidAmount-Deep",
         setting_type = "runtime-global",
-        default_value = 100,
+        default_value = 150,
         minimum_value = 20,
         maximum_value = 10000
     },
@@ -65,7 +65,7 @@ data:extend({
         type = "int-setting",
         name = "FluidArea-RegenRate",
         setting_type = "runtime-global",
-        default_value = 10, 
+        default_value = 20, 
         minimum_value = 1,
         maximum_value = 100
     },
@@ -102,7 +102,7 @@ data:extend({
         type = "bool-setting",
         name = "FluidArea-RemoveFromTable",
         setting_type = "runtime-global",
-        default_value = false
+        default_value = true
     },
 	{
         type = "bool-setting",
