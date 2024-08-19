@@ -1910,6 +1910,31 @@ function CheckWater()
 end
 
 -- SCRIPT EVENT FUNCTIONS --
+function RaisedSetTiles(event)
+	local tilenames = {}
+	local use_tile = nil
+	for _, tile in pairs(event.tiles) do
+		tilenames[tile.name] = 0
+		if use_tile == nil then
+			use_tile = tile
+			use_tile.valid = true
+		end
+	end
+	if use_tile == nil then
+		return
+	end
+	if #tilenames > 1 then
+		game.print("Warning: cannot properly call LandFillCheck due to script set_tiles having multiple tilenames (WAARE mod)")
+	end
+	if use_tile.name == "landfill" then
+		game.print("Warning: cannot properly call LandFillCheck due to script set_tiles using Landfill - it shouldn't be done (WAARE mod)")
+	end
+	local data = {["tile"]=use_tile, ["tiles"]=event.tiles}
+	LandFillCheck(data)
+
+end
+
+
 
 function LandFillCheck(event)
     if event.mod_name ~= "creative-mod" and event.tile.valid == true then
@@ -1920,7 +1945,7 @@ function LandFillCheck(event)
 				global.LandFill[#global.LandFill+1] = {["name"] = tiles[a].old_tile.name, ["position"] = {["x"] = tiles[a]["position"].x, ["y"] = tiles[a]["position"].y},["surface"] = surface}
 			end
 		end
-		if event.tile.name == "water" then
+		if event.tile.name == "water" or event.tile.name == "water-shallow" or event.tile.name == "water-green" or event.tile.name == "water-mud" then
 			for a = 1, #global.WaterGlobalArea, 1 do
 				if global.WaterGlobalArea[a]["HasSearched"] == nil or global.WaterGlobalArea[a]["HasSearched"] == 0 then
 					global.WaterGlobalArea[a]["HasSearched"] = {}
@@ -3216,6 +3241,24 @@ function WaaRSetup()
 		end
 	end
 end
+local function placerWater(placed)
+
+    local replacement = "water-shallow"
+
+    local dir     = placed.direction
+    local pos     = placed.position
+    local surface = placed.surface
+
+    placed.destroy()
+    local tileArray = {}
+    local i = 1
+	tileArray[i] = {
+		name = replacement,
+		position = {pos.x, pos.y}
+	}
+   
+    surface.set_tiles(tileArray, true, true, true, true)
+end
 
 -- SCRIPT EVENTS -- 
 
@@ -3230,8 +3273,17 @@ script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_e
 script.on_event({defines.events.script_raised_built}, ScriptConvert)
 script.on_event({defines.events.on_player_mined_entity,defines.events.script_raised_destroy,defines.events.on_robot_mined_entity,defines.events.on_entity_died}, DestroyedOffShore)
 script.on_event({defines.events.on_player_built_tile,defines.events.on_robot_built_tile}, LandFillCheck)
+script.on_event({defines.events.script_raised_set_tiles}, RaisedSetTiles)
 script.on_event({defines.events.on_game_created_from_scenario},ScenFunc)
 script.on_event({defines.events.on_research_finished},TechTrack)
+
+script.on_event(
+    {defines.events.on_built_entity, defines.events.on_robot_built_entity},
+    function(event)
+        if event.created_entity.name == "waterfill-placer" then placerWater(event.created_entity) end
+    end
+)
+
 script.on_configuration_changed(UpdateMod)
 remote.add_interface("WaaR", {	build = function(a,b)	event = a	global.remotetrigger = b	if event ~= nil then		ScriptConvert(event)	end end})
 commands.add_command("RestoreWater", "Restores Water Areas & Clears GlobalTable",RestoreWater)

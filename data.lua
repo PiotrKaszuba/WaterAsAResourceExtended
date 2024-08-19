@@ -3,6 +3,7 @@ require("prototypes.item")
 require("prototypes.recipe")
 require("prototypes.tiles")
 require("prototypes.technology")
+require("prototypes.waterfill")
 require("util")
 
 --data.raw.item["offshore-pump"].icon = "__WaterAsAResourceExtended__/graphics/icons/offshore-pump.png"
