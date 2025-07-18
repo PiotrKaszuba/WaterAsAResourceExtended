@@ -6,35 +6,35 @@ data:extend(
 	enabled = false,
     ingredients =
     {
-      {"electronic-circuit", 2},
-      {"pipe", 1},
-      {"iron-gear-wheel", 1}
+      {type="item", name="electronic-circuit", amount=2},
+      {type="item", name="pipe", amount=1},
+      {type="item", name="iron-gear-wheel", amount=1}
     },
-    result = "offshore-pump-nofluid"
+    results = {{type="item", name="offshore-pump-nofluid", amount=1}}
   },
-  	{
-    type = "recipe",
-    name = "offshore-drain",
-	enabled = false,
-    ingredients =
-    {
-      {"electronic-circuit", 2},
-      {"pipe", 1},
-      {"iron-gear-wheel", 1}
-    },
-    result = "offshore-drain"
-  },
-  {
-    type = "recipe",
-    name = "offshore-crude-oil-pump",
-	enabled = false,
-    ingredients =
-    {
-      {"electronic-circuit", 2},
-      {"pipe", 1},
-      {"iron-gear-wheel", 1}
-    },
-    result = "offshore-crude-oil-pump"
-  }
+  -- 	{
+  --   type = "recipe",
+  --   name = "offshore-drain",
+	-- enabled = false,
+  --   ingredients =
+  --   {
+  --     {type="item", name="electronic-circuit", amount=2},
+  --     {type="item", name="pipe", amount=1},
+  --     {type="item", name="iron-gear-wheel", amount=1}
+  --   },
+  --   results = {{type="item", name="offshore-drain", amount=1}}
+  -- },
+  -- {
+  --   type = "recipe",
+  --   name = "offshore-crude-oil-pump",
+	-- enabled = false,
+  --   ingredients =
+  --   {
+  --     {type="item", name="electronic-circuit", amount=2},
+  --     {type="item", name="pipe", amount=1},
+  --     {type="item", name="iron-gear-wheel", amount=1}
+  --   },
+  --   results = {{type="item", name="offshore-crude-oil-pump", amount=1}}
+  -- }
 }
 )

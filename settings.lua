@@ -1,19 +1,19 @@
 data:extend({
     {
         type = "bool-setting",
-        name = "Alarms-Low-Level (50/75/90%)",
+        name = "Alarms-Low-Level",
         setting_type = "runtime-global",
         default_value = true
     },
     {
         type = "bool-setting",
-        name = "Alarms-High-Level (95/97/98/99%)",
+        name = "Alarms-High-Level",
         setting_type = "runtime-global",
         default_value = true
     },
 	{
         type = "bool-setting",
-        name = "Alarms-Landfill Message",
+        name = "Alarms-Landfill-Message",
         setting_type = "runtime-per-user",
         default_value = true
     },

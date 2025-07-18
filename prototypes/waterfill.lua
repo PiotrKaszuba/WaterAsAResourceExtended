@@ -50,8 +50,7 @@ local waterfill_recipe = {
         },
         {type="fluid", name="water", amount=500},
     },
-    result = "waterfill",
-    result_count = 3
+    results = {{type="item", name="waterfill", amount=3}}
 }
 
 -- item
@@ -75,21 +74,25 @@ local waterfill_placer = {
     icon = "__WaterAsAResourceExtended__/graphics/icons/water.png",
     icon_size = 128,
     picture = emptyPic(),
-    collision_mask = {"object-layer", "floor-layer"},
-    collision_box = {{-0.2, -0.6}, {0.2, 0.3}},
-    center_collision_mask = {"water-tile", "object-layer", "player-layer"},
+    collision_mask = {layers={object=true, floor=true}},
+    collision_box = {{-0.1, -0.1}, {0.1, 0.1}},
+    -- center_collision_mask = {layers={object=true, player=true, water_tile=true}},
     flags = {"placeable-neutral", "player-creation", "filter-directions"},
-    fluid_box_tile_collision_test = {},
+    -- fluid_box_tile_collision_test = { "ground-tile" },
+    -- adjacent_tile_collision_test = { "water-tile" },
     fluid = "water",
     fluid_box = {
         filter = "water",
         pipe_connections = {
             {
-                position = {0, 1},
-                type = "output"
+                position = {0, 0.0},
+                flow_direction = "output",
+                direction=8,
             }
         },
-        production_type = "none"
+        production_type = "none",
+        volume=100,
+        
     },
     placeable_position_visualization = {
         priority = "extra-high-no-scale",
@@ -100,6 +103,10 @@ local waterfill_placer = {
         scale = 0.5
     },
     pumping_speed = 1,
+    energy_source={type='electric', usage_priority="secondary-input"},
+    energy_usage="0.01W",
+    fluid_source_offset={0, 0},
+    tile_buildability_rules={{area={{-0.3, -1.0}, {0.3, -0.6}}, required_tiles={layers={water_tile=true}}}},
 }
 
 data:extend({
@@ -110,15 +117,19 @@ data:extend({
 })
 
 data.raw.tile["water-shallow"].collision_mask = {
-    "water-tile",
-    "floor-layer",
-    "resource-layer",
-    "doodad-layer",
+    layers={
+        water_tile=true,
+        floor=true,
+        resource=true,
+        doodad=true,
+      }
 }
 
 data.raw.tile["water-mud"].collision_mask = {
-    "water-tile",
-    "floor-layer",
-    "resource-layer",
-    "doodad-layer",
+    layers={
+        water_tile=true,
+        floor=true,
+        resource=true,
+        doodad=true,
+      }
 }

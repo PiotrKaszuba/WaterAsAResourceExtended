@@ -5,7 +5,7 @@ function waterbodies.WtrName(a) --Random Name Function
 	local GRName = " Great Lake"
 	local SName = " Sea"
 	local OName = " Ocean"
-	local WaterBodyType = global.WaterGlobalArea[a]["WaterBodyType"]
+	local WaterBodyType = storage.WaterGlobalArea[a]["WaterBodyType"]
 	if WaterBodyType == 3 then
 		RandAmount = #Lakes
 		DB = Lakes
@@ -32,7 +32,7 @@ function waterbodies.WtrName(a) --Random Name Function
 			else
 				WtrName = DB[rand] .. OName
 			end
-		global.WaterGlobalArea[a]["WtrName"] = WtrName
+		storage.WaterGlobalArea[a]["WtrName"] = WtrName
 	end
 end
 
