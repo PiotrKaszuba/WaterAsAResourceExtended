@@ -6,7 +6,6 @@ require("prototypes.technology")
 require("prototypes.waterfill")
 require("util")
 
---data.raw.item["offshore-pump"].icon = "__WaterAsAResourceExtended__/graphics/icons/offshore-pump.png"
 
 local offshorenofluid = table.deepcopy(data.raw["offshore-pump"]["offshore-pump"])
 
@@ -16,13 +15,6 @@ offshorenofluid.collision_box = {{-0.6, -0.55}, {0.6, 0.3}}
 offshorenofluid.fluid_box = {volume=100,pipe_covers = pipecoverspictures(),production_type = "output",pipe_connections = { {position = {0, -0.54},flow_direction = "output", direction=0}, }, }
 offshorenofluid.placeable_by = {item = "offshore-pump", count = 1}
 
--- local offshorecrudeoil = table.deepcopy(data.raw["offshore-pump"]["offshore-pump"])
-
--- offshorecrudeoil.name = "offshore-crude-oil-pump"
--- offshorecrudeoil.fluid = "crude-oil"
--- offshorecrudeoil.pumping_speed = 20
--- offshorecrudeoil.fluid_box ={volume=100,pipe_covers = pipecoverspictures(),production_type = "output",filter = "crude-oil",pipe_connections ={ {position = {0, 1},type = "output" }, }, }
--- offshorecrudeoil.placeable_by = {item = "offshore-pump", count = 1}
 
 local lakeshallow = table.deepcopy(data.raw["tile"]["sand-3"])
 lakeshallow.name = "lake-shallow"
@@ -32,17 +24,14 @@ local lakedeep = table.deepcopy(data.raw["tile"]["dry-dirt"])
 lakedeep.name = "lake-deep"
 lakedeep.autoplace = nil
 
-data:extend({offshorenofluid,
---  offshorecrudeoil,
-  lakeshallow, lakedeep})
-
--- table.insert(water_tile_type_names, "crude-oil")
--- table.insert(water_tile_type_names, "crude-oil-deep")
+data:extend({
+	offshorenofluid,
+	lakeshallow,
+	lakedeep,
+})
 
 if mods["alien-biomes"] then
 	alien_biomes_priority_tiles = alien_biomes_priority_tiles or {}
 	table.insert(alien_biomes_priority_tiles,"lake-shallow")
 	table.insert(alien_biomes_priority_tiles,"lake-deep")
-	-- table.insert(alien_biomes_priority_tiles,"crude-oil")
-	-- table.insert(alien_biomes_priority_tiles,"crude-oil-deep")
 end
