@@ -124,4 +124,28 @@ data:extend({
         minimum_value = 600000,
         maximum_value = 9999999999
     },
+	{
+        type = "int-setting",
+        name = "FluidArea-Split-Scan-Amount",
+        setting_type = "runtime-global",
+        default_value = 100, 
+        minimum_value = 50,
+        maximum_value = 1000
+    },
+    {
+        type = "int-setting",
+        name = "Update-Budget-Per-Second",
+        setting_type = "runtime-global",
+        default_value = 1000, 
+        minimum_value = 100,
+        maximum_value = 10000
+    },
+    {
+        type = "int-setting",
+        name = "Force-Max-Waterbodies",
+        setting_type = "startup",
+        default_value = 10,
+        minimum_value = 5,
+        maximum_value = 100
+    },
 })
