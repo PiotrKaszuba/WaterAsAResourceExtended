@@ -30,9 +30,3 @@ data:extend({
 	lakeshallow,
 	lakedeep,
 })
-
-if mods["alien-biomes"] then
-	alien_biomes_priority_tiles = alien_biomes_priority_tiles or {}
-	table.insert(alien_biomes_priority_tiles,"lake-shallow")
-	table.insert(alien_biomes_priority_tiles,"lake-deep")
-end
