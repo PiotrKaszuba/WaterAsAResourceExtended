@@ -1,5 +1,6 @@
 require("entities")
 require("tiles")
+require("forces")
 
 event_handlers = {}
 
@@ -65,4 +66,10 @@ function event_handlers.handleScriptTileEvents(event)
         event.tiles,
         event.surface_index
     )
+end
+
+function event_handlers.TechTrack(event)
+    if forces.CheckSubstring(event.research.name, forces.TechYieldBoostName) then
+        forces.UpdateForceTechYieldBoost(event.research.force.name, event.research.name, event.research.level)
+    end
 end

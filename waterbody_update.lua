@@ -1,4 +1,5 @@
 require("waterbodies")
+require("waterbody_scan")
 
 waterbody_update = {}
 
@@ -64,29 +65,46 @@ end
 
 function waterbody_update.calculateWaterUsage(waterBody)
 	-- Way1: implement estimation of the water usa on the tick stats
-	-- Way2: get production stats from the pump prototypes appropriate for each force - impossible actually
-	
-	-- local forces = waterBody.entitiesData.forces
+    local waterUsageTickStats = waterBody.waterUsageTickStats
+    if not waterUsageTickStats then return 0 end
 
-	-- for forceName, _ in pairs(forces) do
-	-- 	local game_force = forces.getGameForce(forceName)
-	-- 	local force_waterbody_id = forces.AddWaterbodyIfNotExists(forceName, waterBody.surfaceId, waterBody.waterBodyId).waterbody_force_id
-	-- 	local prototype_name = entities.getActivePumpNameForForceWaterbodyId(force_waterbody_id)
-	-- 	local fluid_production_statistics = game_force.get_fluid_production_statistics(waterBody.surfaceId)
-	-- 	local water_production_stats = fluid_production_statistics.get_flow_count{name="water", category="input", precision_index=0, sample_index=300, count=true}
-	-- end
-	
-	return 0
+    local total_pumping_water = 0
+    for _, waterUsage in ipairs(waterUsageTickStats) do
+        total_pumping_water = total_pumping_water + waterUsage
+    end
+
+    total_pumping_water = total_pumping_water * storage.PeriodicEveryXTicks
+
+    return total_pumping_water
 end
 
 function waterbody_update.calculateEffectiveRegenAmount(waterBody)
 	-- Placeholder for regen calculation
-	return waterBody.waterAreaData.RegenAmount or 0
+	local regen_base = waterBody.waterAreaData.RegenAmount * 60 -- regen per second
+    local missing_water_percentage = waterbodies.calculatePercentageWaterUsed(waterBody)/100
+    -- best regen is at 75% missing water -> 150%
+    -- at 100% missing water, regen is at 50% and at 0% missing water, regen is at 75%
+    local multiplier = 0.75
+    if missing_water_percentage > 0.75 then
+        multiplier = 1.5 - (missing_water_percentage - 0.75) * 4
+    else
+        multiplier = 0.75 + (0.75 - missing_water_percentage) * 1
+    end
+    local regen_with_bonus = regen_base * multiplier
+    return regen_with_bonus
 end
 
 function waterbody_update.getWaterUsageStatsForPump(pump_data)
-	-- TODO: Implement
-	return 0
+	local pumped_last_tick = 0
+    if pump_data.entity.valid and pump_data.entity.active then
+        pumped_last_tick = pump_data.entity.pumped_last_tick
+        local force_data = forces.getPlayerForce(pump_data.forceName)
+        if force_data then
+            pumped_last_tick = pumped_last_tick * force_data.water_usage_multiplier
+        end
+    end
+    
+	return pumped_last_tick
 end
 
 function waterbody_update.collectWaterUsageStatsForWaterBody(waterBodyId)
@@ -102,10 +120,7 @@ function waterbody_update.collectWaterUsageStatsForWaterBody(waterBodyId)
 end
 
 function waterbody_update.updateWaterUsageTickStats(waterbody, loop_tick, waterbody_total_pumping_water)
-	if loop_tick == 0 then
-		waterbody.waterUsageTickStats = waterbodies.initWaterUsageTickStats()
-	end
-	if not waterbody.waterUsageTickStats then
+	if loop_tick == 0 or not waterbody.waterUsageTickStats then
 		waterbody.waterUsageTickStats = waterbodies.initWaterUsageTickStats()
 	end
 	waterbody.waterUsageTickStats[loop_tick + 1] = waterbody_total_pumping_water
@@ -124,10 +139,10 @@ end
 function waterbody_update.updateWaterBody(waterBodyId, updateBudget)
 	local waterBody = waterbodies.getWaterBody(waterBodyId)
 	if not waterBody or not waterBody.valid then return end
-	waterbodies.scanningLoop(waterBodyId, updateBudget)
-	local waterUsedChange = waterbodies.calculateWaterUsage(waterBody) 
-	local regen = waterbodies.calculateEffectiveRegenAmount(waterBody) --includes bonuses
-	waterbodies.updateWaterLevel(waterBody, waterUsedChange, regen)
+	waterbody_scan.scanningLoop(waterBodyId, updateBudget)
+	local waterUsedChange = waterbody_update.calculateWaterUsage(waterBody) 
+	local regen = waterbody_update.calculateEffectiveRegenAmount(waterBody) --includes bonuses
+	waterbody_update.updateWaterLevel(waterBody, waterUsedChange, regen)
 	waterbodies.updateDepletionAppearance(waterBody, updateBudget)
 	waterbodies.createMapMarker(waterBody)
 end

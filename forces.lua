@@ -14,7 +14,7 @@ end
 function forces.InitPlayerForce(name)
 	return {
 		name = name,
-		water_yield_regen_boost = 1.0,
+		water_usage_multiplier = 1.0,
 	}
 end
 
@@ -33,37 +33,38 @@ function forces.AddForceIfNotExists(name)
 	return storage.PlayerForces[name]
 end
 
-forces.TechYieldRegenBoostName = "waar-yield-regen-boost-"
-forces.TechYieldRegenBoostLevels = {
-	[1] = 1.2,
-	[2] = 1.4,
-	[3] = 1.6,
-	[4] = 1.8,
-	[5] = 2.0
+forces.TechYieldBoostName = "waar-yield-boost-"
+forces.TechYieldBoostLevels = {
+	[1] = 1.0 * 0.85 ^ 1,
+	[2] = 1.0 * 0.85 ^ 2,
+	[3] = 1.0 * 0.85 ^ 3,
+	[4] = 1.0 * 0.85 ^ 4,
+	[5] = 1.0 * 0.85 ^ 5,
+	
 }
 
-forces.TechYieldRegenBoostLevelInfiniteBoost = 0.2
+forces.TechYieldBoostLevelInfiniteBoost = 0.15
 
-function forces.GetTechYRBoost(research_name, research_level)
-	if forces.CheckSubstring(research_name, forces.TechYieldRegenBoostName) then
-		local maxLevel = forces.GetMaxKey(forces.TechYieldRegenBoostLevels)
-		local boostLevel = tonumber(forces.RemovePrefix(research_name, forces.TechYieldRegenBoostName))
+function forces.GetTechYieldBoost(research_name, research_level)
+	if forces.CheckSubstring(research_name, forces.TechYieldBoostName) then
+		local maxLevel = forces.GetMaxKey(forces.TechYieldBoostLevels)
+		local boostLevel = tonumber(forces.RemovePrefix(research_name, forces.TechYieldBoostName))
 		
 		local boost = 1.0
 		if boostLevel > maxLevel then
-			boost = forces.TechYieldRegenBoostLevels[maxLevel] + (forces.TechYieldRegenBoostLevelInfiniteBoost * (research_level - maxLevel))
+			boost = forces.TechYieldBoostLevels[maxLevel] * (forces.TechYieldBoostLevelInfiniteBoost ^ (research_level - maxLevel))
 		else
-			boost = forces.TechYieldRegenBoostLevels[boostLevel]
+			boost = forces.TechYieldBoostLevels[boostLevel]
 		end
 		return boost
 	end
 	return nil
 end
 
-function forces.UpdateForceTechYRBoost(force_name, research_name, research_level)
-	local boost = forces.GetTechYRBoost(research_name, research_level)
+function forces.UpdateForceTechYieldBoost(force_name, research_name, research_level)
+	local boost = forces.GetTechYieldBoost(research_name, research_level)
 	if boost ~= nil then
 		local force = forces.AddForceIfNotExists(force_name)
-		force.water_yield_regen_boost = boost
+		force.water_usage_multiplier = boost
 	end
 end

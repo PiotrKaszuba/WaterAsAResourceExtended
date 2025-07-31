@@ -1,29 +1,5 @@
 data:extend({
     {
-        type = "bool-setting",
-        name = "Alarms-Low-Level",
-        setting_type = "runtime-global",
-        default_value = true
-    },
-    {
-        type = "bool-setting",
-        name = "Alarms-High-Level",
-        setting_type = "runtime-global",
-        default_value = true
-    },
-	{
-        type = "bool-setting",
-        name = "Alarms-Landfill-Message",
-        setting_type = "runtime-per-user",
-        default_value = true
-    },
-    {
-        type = "bool-setting",
-        name = "Disable-RestoreWater-Command",
-        setting_type = "runtime-global",
-        default_value = true
-    },
-    {
         type = "int-setting",
         name = "FluidArea-Start-Area",
         setting_type = "runtime-global",
@@ -66,35 +42,6 @@ data:extend({
         name = "FluidArea-RegenRate",
         setting_type = "runtime-global",
         default_value = 20, 
-        minimum_value = 1,
-        maximum_value = 100
-    },
-	{
-        type = "bool-setting",
-        name = "Disable-FluidArea-RegenRate",
-        setting_type = "runtime-global",
-        default_value = false
-    },
-	{
-        type = "string-setting",
-        name = "FluidArea-Replace-Method",
-		setting_type = "runtime-global",
-        allowed_values = {"Random","From/To Pump"},
-        default_value = "From/To Pump"
-    },
-	{
-        type = "int-setting",
-        name = "FluidArea-RereplacePumps",
-        setting_type = "runtime-global",
-        default_value = 25, 
-        minimum_value = 0,
-        maximum_value = 100
-    },
-	{
-        type = "int-setting",
-        name = "FluidArea-ReactivateDrains",
-        setting_type = "runtime-global",
-        default_value = 75, 
         minimum_value = 0,
         maximum_value = 100
     },
@@ -103,12 +50,6 @@ data:extend({
         name = "FluidArea-RemoveFromTable",
         setting_type = "runtime-global",
         default_value = true
-    },
-	{
-        type = "bool-setting",
-        name = "FluidArea-DebugQueueLength",
-        setting_type = "runtime-global",
-        default_value = false
     },
 	{
         type = "bool-setting",
@@ -124,14 +65,6 @@ data:extend({
         minimum_value = 600000,
         maximum_value = 9999999999
     },
-	{
-        type = "int-setting",
-        name = "FluidArea-Split-Scan-Amount",
-        setting_type = "runtime-global",
-        default_value = 100, 
-        minimum_value = 50,
-        maximum_value = 1000
-    },
     {
         type = "int-setting",
         name = "Update-Budget-Per-Second",
@@ -140,12 +73,5 @@ data:extend({
         minimum_value = 100,
         maximum_value = 10000
     },
-    {
-        type = "int-setting",
-        name = "Force-Max-Waterbodies",
-        setting_type = "startup",
-        default_value = 10,
-        minimum_value = 5,
-        maximum_value = 100
-    },
+
 })

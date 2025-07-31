@@ -12,10 +12,6 @@ function waterbody_scan.getAdditionalScanAmount()
     return settings.global["FluidArea-Additional-Tiles-Per-Second"].value
 end
 
-function waterbody_scan.getSplitScanAmount()
-	return settings.global["FluidArea-Split-Scan-Amount"].value
-end
-
 function waterbody_scan.getAdjacentWaterAndLandTiles(position, surfaceId, water_body_id)
 	-- if water_body_id is given then only return adjacent water tiles that are part of the water body
 	local adjacent_waterbody_tiles = {}

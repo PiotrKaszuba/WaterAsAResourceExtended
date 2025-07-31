@@ -409,13 +409,8 @@ function waterbodies.GetWaterBodyType(totalArea)
 end
 
 function waterbodies.GetWaterBodyRegen(totalArea)
-	local regenOff = settings.global["Disable-FluidArea-RegenRate"].value
-	if regenOff == false then
-		local regenRate = settings.global["FluidArea-RegenRate"].value / 10000
-		return regenRate * totalArea
-	else
-		return 0
-	end
+	local regenRate = settings.global["FluidArea-RegenRate"].value / 10000
+	return regenRate * totalArea
 end
 
 function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)

@@ -166,11 +166,11 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		end
 
 		for _, new_water_body_id in pairs(new_water_body_ids) do
-			waterbody_scan.continueScanWaterArea(new_water_body_id.waterBodyId, math.ceil(waterbody_scan.getSplitScanAmount() / #new_water_body_ids))
+			waterbody_scan.continueScanWaterArea(new_water_body_id.waterBodyId, math.ceil(waterbody_scan.getInitialScanAmount() / #new_water_body_ids))
 		end
 		
 		if updateBudget then
-			updateBudget.budget = updateBudget.budget - waterbody_scan.getSplitScanAmount()
+			updateBudget.budget = updateBudget.budget - waterbody_scan.getInitialScanAmount()
 		end
 
 	end
