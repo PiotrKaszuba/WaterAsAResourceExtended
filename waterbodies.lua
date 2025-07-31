@@ -533,5 +533,5 @@ function waterbodies.calculatePercentageWaterUsed(waterbody)
 	local total_water_used = waterbodies.calculateTotalWaterUsed(waterbody)
 	local total_water_available = waterbody.waterAreaData.AmountWtr
 	if total_water_available == 0 then return 100 end
-	return (total_water_used / total_water_available) * 100
+	return math.max(math.min(total_water_used / total_water_available, 1), 0) * 100
 end

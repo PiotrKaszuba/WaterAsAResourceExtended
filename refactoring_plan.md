@@ -7,4 +7,5 @@ TODO:
 9. comprehensive tests - plan out test suite (especially for merging/splitting water bodies) etc, lifecycles etc.
 10. reevaluate mods additions (that were in original script) / mod updates, "ScenFunc" for scenario created games etc. - some additions that might handle logic in various cases and be useful
 11. some stats commands etc.
-12. consider re-adding drains?
+12. consider re-adding alarm settings low/high + landfill message? 
+13. consider re-adding drains?

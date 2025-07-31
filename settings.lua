@@ -41,9 +41,9 @@ data:extend({
         type = "int-setting",
         name = "FluidArea-RegenRate",
         setting_type = "runtime-global",
-        default_value = 20, 
+        default_value = 100, 
         minimum_value = 0,
-        maximum_value = 100
+        maximum_value = 1000
     },
 	{
         type = "bool-setting",

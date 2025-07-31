@@ -9,15 +9,23 @@ require("event_handlers")
 control = {}
 
 control.periodic_update_ticks = 1
+control.desired_big_update_ticks = 60
 
+function normalize_values_per_second(value, as_int_ceiling)
+	local normalized_value = value * storage.LoopNumTicks * storage.PeriodicEveryXTicks / 60
+	if as_int_ceiling then
+		return math.ceil(normalized_value)
+	end
+	return normalized_value
+end
 
 function initUpdateBudget()
-	return {budget = storage.UpdateBudget}
+	return {budget = normalize_values_per_second(storage.UpdateBudget, true)}
 end
 function EverySecond()
 	local updateBudget = initUpdateBudget()
 	-- events handling
-	tiles.processTileEventQueue(storage.MaxEventsPerSecond, updateBudget)
+	tiles.processTileEventQueue(normalize_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
 	waterbody_update.updateWaterBodies(updateBudget)
 	entities.updatePumpStates()
 end
@@ -25,7 +33,7 @@ end
 function SecondTickCounter(numTicks)
 	if storage.LoopTick == nil or storage.LoopTick >= numTicks then
 		storage.LoopTick = 0
-		storage.LoopNumTicks =  math.ceil(60 / control.periodic_update_ticks)
+		storage.LoopNumTicks =  math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
 		return true
 	else
 		storage.LoopTick = storage.LoopTick + 1
@@ -49,14 +57,14 @@ function Init()
 		storage.LoopTick = 0
 	end
 	if storage.LoopNumTicks == nil then
-		storage.LoopNumTicks =  math.ceil(60 / control.periodic_update_ticks)
+		storage.LoopNumTicks =  math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
 	end
 	if storage.UpdateBudget == nil then
-		storage.UpdateBudget = 1000 -- todo later add this as as a setting
+		storage.UpdateBudget = settings.global["Update-Budget-Per-Second"].value
 	end
 
 	if storage.MaxEventsPerSecond == nil then
-		storage.MaxEventsPerSecond = 20 -- todo later add this as as a setting
+		storage.MaxEventsPerSecond = 100
 	end
 
 	storage.PeriodicEveryXTicks = control.periodic_update_ticks

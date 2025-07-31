@@ -80,15 +80,15 @@ end
 
 function waterbody_update.calculateEffectiveRegenAmount(waterBody)
 	-- Placeholder for regen calculation
-	local regen_base = waterBody.waterAreaData.RegenAmount * 60 -- regen per second
+	local regen_base = waterBody.waterAreaData.RegenAmount * (storage.LoopNumTicks * storage.PeriodicEveryXTicks) / 60
     local missing_water_percentage = waterbodies.calculatePercentageWaterUsed(waterBody)/100
     -- best regen is at 75% missing water -> 150%
     -- at 100% missing water, regen is at 50% and at 0% missing water, regen is at 75%
     local multiplier = 0.75
     if missing_water_percentage > 0.75 then
-        multiplier = 1.5 - (missing_water_percentage - 0.75) * 4
+        multiplier = math.max(math.min(1.5 - (missing_water_percentage - 0.75) * 4, 1.5), 0.5)
     else
-        multiplier = 0.75 + (0.75 - missing_water_percentage) * 1
+        multiplier = math.max(math.min(0.75 + (0.75 - missing_water_percentage) * 1, 1.5), 0.5)
     end
     local regen_with_bonus = regen_base * multiplier
     return regen_with_bonus
