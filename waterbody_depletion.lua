@@ -1,0 +1,150 @@
+require("waterbodies")
+require("entities")
+require("utils")
+
+waterbody_depletion = {}
+
+function waterbody_depletion.calculateFocusPoint(waterBody)
+    local shapeData = waterBody.waterBodyShapeData
+    local centerX = (shapeData.MinX + shapeData.MaxX) / 2
+    local centerY = (shapeData.MinY + shapeData.MaxY) / 2
+
+    local pumpCount = 0
+	local totalX, totalY = 0, 0
+    for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
+        local pump_data = entities.getTrackedEntity(unit_number)
+        totalX = totalX + pump_data.input_position.x
+        totalY = totalY + pump_data.input_position.y
+        pumpCount = pumpCount + 1
+    end
+
+    if pumpCount == 0 then
+        return { x = centerX, y = centerY } -- Default to water body center if no pumps
+    end
+
+    local pumpCenterX = totalX / pumpCount
+    local pumpCenterY = totalY / pumpCount
+
+    local vectorX = centerX - pumpCenterX
+    local vectorY = centerY - pumpCenterY
+
+    -- The focus point is "opposite" the pump center relative to the water body center
+    return { x = centerX + vectorX, y = centerY + vectorY }
+end
+
+function waterbody_depletion.getCandidateTilesForVisualUpdate(waterBody, findDryTiles)
+    local candidateTiles = {}
+    local gridData = waterBody.gridsData.waterGridWithData
+
+    if findDryTiles then
+        for _, tileData in pairs(gridData) do
+            if utils.DryWaterTiles[tileData.name] then
+                candidateTiles[#candidateTiles + 1] = tileData
+            end
+        end
+    else
+        for _, tileData in pairs(gridData) do
+            if utils.IsWaterTile(tileData.name) then
+                candidateTiles[#candidateTiles + 1] = tileData
+            end
+        end
+    end
+    return candidateTiles
+end
+
+function waterbody_depletion.sortTilesByDistance(tiles, focusPoint, sortAscending)
+    table.sort(tiles, function(a, b)
+        local distA = (a.position.x - focusPoint.x)^2 + (a.position.y - focusPoint.y)^2
+        local distB = (b.position.x - focusPoint.x)^2 + (b.position.y - focusPoint.y)^2
+        if sortAscending then
+            return distA < distB
+        else
+            return distA > distB
+        end
+    end)
+end
+
+function waterbody_depletion.restoreAllVisuals(waterBody)
+    local state = waterBody.waterBodyStateData
+    if not state or state.BTF == 0 then return end
+
+    local dryTiles = waterbody_depletion.getCandidateTilesForVisualUpdate(waterBody, true)
+    if #dryTiles == 0 then
+        state.BTF = 0
+        return
+    end
+
+    local tilesToChange = {}
+    for _, tileData in pairs(dryTiles) do
+        tilesToChange[#tilesToChange + 1] = { name = tileData.originalName, position = tileData.position }
+        tileData.name = tileData.originalName
+    end
+
+    if #tilesToChange > 0 then
+        local surface = utils.GetSurface(waterBody.surfaceId)
+        surface.set_tiles(tilesToChange, false)
+    end
+
+    state.BTF = 0
+end
+
+
+function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percentUsed)
+    local state = waterBody.waterBodyStateData
+    local totalTiles = waterBody.waterAreaData.TotalArea
+    local targetChangedTiles = math.floor(totalTiles * ((percentUsed - 80) / 20))
+    local tilesToProcessCount = targetChangedTiles - state.BTF
+
+    if tilesToProcessCount == 0 then return end
+
+    local isDepleting = tilesToProcessCount > 0
+    local candidateTiles = waterbody_depletion.getCandidateTilesForVisualUpdate(waterBody, not isDepleting)
+
+    if #candidateTiles == 0 then return end
+
+    local focusPoint = waterbody_depletion.calculateFocusPoint(waterBody)
+    waterbody_depletion.sortTilesByDistance(candidateTiles, focusPoint, not isDepleting) -- Sort ascending for restoring, descending for depleting
+
+    local tilesToChange = {}
+    local numToProcess = math.min(math.abs(tilesToProcessCount), #candidateTiles)
+	local processedCount = 0
+
+    for i = 1, numToProcess do
+        local tileData = candidateTiles[i]
+        if isDepleting then
+            local dryTileName = utils.getDryTileForWetTile(tileData.originalName)
+            if dryTileName then
+                tilesToChange[#tilesToChange + 1] = { name = dryTileName, position = tileData.position }
+                tileData.name = dryTileName
+            end
+        else -- Restoring
+            tilesToChange[#tilesToChange + 1] = { name = tileData.originalName, position = tileData.position }
+            tileData.name = tileData.originalName
+        end
+		processedCount = processedCount + 1
+    end
+
+    if isDepleting then
+        state.BTF = state.BTF + processedCount
+    else
+        state.BTF = state.BTF - processedCount
+    end
+
+    if #tilesToChange > 0 then
+        local surface = utils.GetSurface(waterBody.surfaceId)
+        surface.set_tiles(tilesToChange, false) -- Pass false to prevent script_raised_set_tiles event
+    end
+end
+
+function waterbody_depletion.updateDepletionAppearance(waterBody)
+    local state = waterBody.waterBodyStateData
+    local percentUsed = waterbodies.calculatePercentageWaterUsed(waterBody)
+
+    if percentUsed < 80 then
+        if state.BTF > 0 then
+            waterbody_depletion.restoreAllVisuals(waterBody)
+        end
+    else
+        waterbody_depletion.updateGradualDepletionAppearance(waterBody, percentUsed)
+    end
+end
