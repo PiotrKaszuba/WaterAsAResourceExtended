@@ -472,7 +472,8 @@ function waterbodies.createWaterBodyFromTileIfNotExists(position, surfaceId)
 
     if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
         local waterBody = waterbodies.createNewWaterBody(surfaceId)
-		waterbodies.beginScanWaterArea(waterBody.waterBodyId, position)
+		require("modules.waterbody_scan")
+		waterbody_scan.beginScanWaterArea(waterBody.waterBodyId, position)
         return waterBody.waterBodyId
     end
 

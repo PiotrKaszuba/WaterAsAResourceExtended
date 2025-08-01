@@ -114,7 +114,7 @@ end
 
 function waterbody_scan.continueScanWaterArea(water_body_id, scan_amount)
 	local water_body = waterbodies.getWaterBody(water_body_id)
-	local finished, water_body = waterbodies.ScanWaterArea(water_body, scan_amount)
+	local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount)
 	return water_body.waterBodyId
 end
 
@@ -127,7 +127,7 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 	end
 	local search_queue = water_body.searchData.searchQueue
 	search_queue:enqueue(start_position)
-	local finished, water_body = waterbodies.ScanWaterArea(water_body, scan_amount, updateBudget)
+	local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount, updateBudget)
 	return water_body.waterBodyId
 end
 
