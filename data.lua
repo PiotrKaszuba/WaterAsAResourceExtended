@@ -1,7 +1,3 @@
-require("prototypes.entities")
-require("prototypes.item")
-require("prototypes.recipe")
-require("prototypes.tiles")
 require("prototypes.technology")
 require("prototypes.waterfill")
 require("util")

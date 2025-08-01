@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 Version: 2.0.0
-Date: 2025.7.29
+Date: 2025.8.01
   Changes:
     - Porting to Factorio 2.0
     - Complete codebase refactor for improved maintainability and performance, splitting the main script into multiple specialized files.
@@ -10,8 +10,7 @@ Date: 2025.7.29
     - Improved performance
     - Implemented an update budget system to prevent lag spikes and ensure smooth performance.
     - Added an asynchronous tile event queue for handling landfill and waterfill, improving responsiveness.
-    - Fixed: no longer depletes water globally or from all waterbodies on a surface
-    - Limits amount of waterbodies per surface
+    - Fixed: no longer depletes water globally or from all waterbodies on a surface - now, due to Lua API updates - its able to properly track per pump water usage
     - New features - waterbody merging and splitting
     - Includes waterfill mod that allows placing shallow water next existing water
     - Reworked the visual waterbody depletion algorithm - now based on pump locations.
