@@ -31,7 +31,7 @@ function initNewPump(entity)
         ["entity"] = entity,
         ["input_position"] = {["x"] = input_position.x, ["y"] = input_position.y},
         ["spritepos"] = {["x"] = entity.position.x, ["y"] = entity.position.y},
-        ["surfaceName"] = entity.surface.name,
+        ["surfaceId"] = entity.surface.index,
         ["direction"] = entity.direction,
         ["tileName"] = "water", -- Only water is supported now
         ["forceName"] = entity.force.name,

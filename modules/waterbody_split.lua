@@ -31,7 +31,7 @@ function waterbody_split.getWaterBodyLimitedBoundingBox(waterBody, center_positi
 	return bbox, rect_area_ratio
 end
 
-function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surface, center_position, updateBudget)
+function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surfaceId, center_position, updateBudget)
 	local current_check_size = 2
 	local rect_area_ratio = 0.0
 	local start_tile_gridKey = utils.PositionToString(start_tile_pos)
@@ -49,7 +49,7 @@ function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, o
 			updateBudget.budget = updateBudget.budget - (current_check_size * current_check_size) / 4
 		end
 		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody, center_position, current_check_size)
-		local all_connected_tiles = surface.get_connected_tiles(start_tile_pos, utils.GetWaterTileNamesArray(), true, bbox)
+		local all_connected_tiles = utils.GetSurface(surfaceId).get_connected_tiles(start_tile_pos, utils.GetWaterTileNamesArray(), true, bbox)
 		for _, tile_pos in pairs(all_connected_tiles) do
 			if missing_tiles[utils.PositionToString(tile_pos)] then
 				connected_tiles[utils.PositionToString(tile_pos)] = true
@@ -94,7 +94,6 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 
 	-- we need to check if there is a path between any of the adjacent water tiles
 	-- we can use get_connected_tiles with increasing area (BoundingBox)
-	local surface = utils.GetSurface(surfaceId)
 	local waterBody = waterbodies.getWaterBody(waterBodyId)
     if not waterBody or not waterBody.valid then
         return
@@ -111,7 +110,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 			updateBudget.budget = updateBudget.budget - 1
 		end
 		local start_tile_pos = table.remove(missing_tiles_positions)
-		local connected_tiles, missing_tiles = waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, missing_tiles_positions, surface, split_position, updateBudget)
+		local connected_tiles, missing_tiles = waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, missing_tiles_positions, surfaceId, split_position, updateBudget)
 		connected_tile_sets[#connected_tile_sets + 1] = connected_tiles
 
 		new_missing_tiles_positions = {}
@@ -157,7 +156,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		for pump_unit_number, pump_data in pairs(pumps) do
 			local pump_input_position = pump_data.input_position
 			-- check if this is still water tile
-			if utils.validate_tile_placement(pump_input_position, surface, utils.WaterTiles) then
+			if utils.validate_tile_placement(pump_input_position, surfaceId, utils.WaterTiles) then
 				local new_water_body_id = waterbodies.createNewWaterBody(surfaceId)
 				new_water_body_ids[#new_water_body_ids + 1] = {waterBodyId = new_water_body_id, position = pump_input_position}
 				entities.movePumpToWaterBody(pump_unit_number, new_water_body_id, waterBodyId)

@@ -72,8 +72,8 @@ function utils.calculate_direction_offset(position, direction)
 end
 
 
-function utils.validate_tile_placement(position, surface, required_tile_types)
-	local tile_name = surface.get_tile(position.x, position.y).name
+function utils.validate_tile_placement(position, surfaceId, required_tile_types)
+	local tile_name = utils.GetTile(position, surfaceId).name
 	if required_tile_types[tile_name] then
 		return true
 	end
@@ -112,7 +112,7 @@ function utils.GetSurface(surfaceId)
 end
 
 function utils.GetTile(position, surfaceId)
-	return utils.GetSurface(surfaceId).get_tile(position.x, position.y)
+	return game.surfaces[surfaceId].get_tile(position.x, position.y)
 end
 
 function utils.IsThereWater(position, surfaceId)

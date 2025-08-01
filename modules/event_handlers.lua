@@ -11,11 +11,13 @@ function event_handlers.BuiltPump(entity, do_not_reject)
     local input_position = utils.calculate_direction_offset(entity.position, entity.direction)
     local pump = initNewPump(entity)
 
+    local surfaceId = entity.surface.index
+
     -- Validate that the pump can be placed (must be on water)
-    if not utils.validate_tile_placement(input_position, entity.surface, utils.WaterTiles) then
+    if not utils.validate_tile_placement(input_position, surfaceId, utils.WaterTiles) then
         entities.rejectOrDeactivatePump(pump, "Must be placed on water edge", do_not_reject)
     else
-        local waterBodyId = waterbody_scan.createWaterBodyFromTileIfNotExists(input_position, entity.surface)
+        local waterBodyId = waterbody_scan.createWaterBodyFromTileIfNotExists(input_position, surfaceId)
         entities.registerPumpAndAddToWaterBody(waterBodyId, pump)
     end
 end

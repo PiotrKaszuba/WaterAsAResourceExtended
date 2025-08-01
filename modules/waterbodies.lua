@@ -560,8 +560,8 @@ end
 local MapMarker = {}
 MapMarker.__index = MapMarker
 
-function MapMarker:new(force, surface, args)
-    local tag = force.add_chart_tag(surface, args)
+function MapMarker:new(force, surfaceId, args)
+    local tag = force.add_chart_tag(utils.GetSurface(surfaceId), args)
     return setmetatable({tag = tag}, MapMarker)
 end
 

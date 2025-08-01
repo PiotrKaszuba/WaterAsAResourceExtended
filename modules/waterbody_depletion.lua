@@ -82,7 +82,7 @@ function waterbody_depletion.restoreAllVisuals(waterBody)
 
     if #tilesToChange > 0 then
         local surface = utils.GetSurface(waterBody.surfaceId)
-        surface.set_tiles(tilesToChange, false)
+        surface.set_tiles(tilesToChange, nil, nil, nil, false) -- Pass false to prevent script_raised_set_tiles event
     end
 
     state.DriedTiles = 0

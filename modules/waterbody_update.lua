@@ -31,7 +31,6 @@ function waterbody_update.createMapMarker(waterBody)
 
     for force_name, _ in pairs(waterBody.entitiesData.forces) do
         local marker = waterBody.waterBodyStateData.MapMarkers[force_name]
-        local surface = game.surfaces[waterBody.surfaceId]
         local force = game.forces[force_name]
         local position = nil
         if force_to_pump[force_name] then
@@ -48,7 +47,7 @@ function waterbody_update.createMapMarker(waterBody)
         local args = {position = position, text = text, icon = icon}
 
         if not marker or not marker:valid() then
-            marker = MapMarker:new(force, surface, args)
+            marker = MapMarker:new(force, waterBody.surfaceId, args)
             waterBody.waterBodyStateData.MapMarkers[force_name] = marker
         else
             marker:update(args)
