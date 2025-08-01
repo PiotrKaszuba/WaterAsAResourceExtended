@@ -128,7 +128,7 @@ end
 
 
 function entities.deactivatePump(pump_data)
-    pump_data.entity.active = 0
+    pump_data.entity.active = false
 end
 
 function entities.disablePump(pump_data)
@@ -143,7 +143,7 @@ function entities.activatePump(pump_data)
     if pump_data.disabled then
         return
     end
-    pump_data.entity.active = 1
+    pump_data.entity.active = true
 end
 
 function entities.enablePump(pump_data)
@@ -181,7 +181,7 @@ function entities.getActivePumpCount(waterBody)
     local count = 0
     for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
         local pump_data = entities.getTrackedEntity(unit_number)
-        if not pump_data.disabled and pump_data.entity.valid and pump_data.entity.active == 1 then
+        if not pump_data.disabled and pump_data.entity.valid and pump_data.entity.active then
             count = count + 1
         end
     end
