@@ -75,7 +75,7 @@ function waterbody_update.signalDepletionToPlayer(waterBody, force, player_idx)
     force.players[player_idx].print(string.format("%s has been depleted.", waterBody.waterBodyName or "Water body"))
 end
 
-function waterbody_update.signalAlarmToPlayer(waterBody, force, player_idx, alarm_type)
+function waterbody_update.signalAlarmToPlayer(waterBody, force, player_idx, percentUsed)
     force.players[player_idx].print(string.format("%s has used %.0f%% of available water.", waterBody.waterBodyName or "Water body", percentUsed))
 end
 
@@ -96,7 +96,7 @@ function waterbody_update.handleDepletionAlarms(waterBody, percentUsed)
             end
         end
         if do_alarm then
-            waterbodies.signalPerPlayer(waterBody, waterbody_update.signalAlarmToPlayer)
+            waterbodies.signalPerPlayer(waterBody, waterbody_update.signalAlarmToPlayer, percentUsed)
         end
     end
 end

@@ -208,7 +208,7 @@ end
 
 function waterbody_scan.signalFinishedScanningToPlayer(water_body, force, player_idx)
 	local msg_type = water_body.waterBodyStateData.FiredCreated and "updated" or "created"
-	force.players[player_idx].print(string.format("%s %s, with %sL of water with regen %sL.", water_body.waterBodyName, msg_type, comma_value(water_body.waterAreaData.AmountWtr), water_body.waterAreaData.RegenAmount))
+	force.players[player_idx].print(string.format("%s %s, with %sL of water with regen %sL.", water_body.waterBodyName, msg_type, utils.comma_value(water_body.waterAreaData.AmountWtr), water_body.waterAreaData.RegenAmount))
 end
 
 

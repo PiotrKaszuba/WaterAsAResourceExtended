@@ -121,7 +121,7 @@ function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_water
 end
 
 function waterbody_merge.signalWaterBodyMergedToPlayer(waterBody, force, player_idx, other_waterBody)
-	force.players[player_idx].print(string.format("%s merged %s. Merged water body has %sL of water with regen %sL.", waterBody.waterBodyName, other_waterBody.waterBodyName, comma_value(waterBody.waterAreaData.AmountWtr), waterBody.waterAreaData.RegenAmount))
+	force.players[player_idx].print(string.format("%s merged %s. Merged water body has %sL of water with regen %sL.", waterBody.waterBodyName, other_waterBody.waterBodyName, utils.comma_value(waterBody.waterAreaData.AmountWtr), waterBody.waterAreaData.RegenAmount))
 end
 
 function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
