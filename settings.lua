@@ -1,5 +1,23 @@
 data:extend({
     {
+        type = "bool-setting",
+        name = "Alarms-Low-Level",
+        setting_type = "runtime-global",
+        default_value = true
+    },
+    {
+        type = "bool-setting",
+        name = "Alarms-High-Level",
+        setting_type = "runtime-global",
+        default_value = true
+    },
+    {
+        type = "bool-setting",
+        name = "Alarms-Tile-Message",
+        setting_type = "runtime-global",
+        default_value = false
+    },
+    {
         type = "int-setting",
         name = "FluidArea-Start-Area",
         setting_type = "runtime-global",
@@ -45,9 +63,25 @@ data:extend({
         minimum_value = 0,
         maximum_value = 1000
     },
+    {
+        type = "int-setting",
+        name = "Visual-Depletion-Start-Percentage",
+        setting_type = "runtime-global",
+        default_value = 80,
+        minimum_value = 50,
+        maximum_value = 95,
+    },
+	{
+        type = "int-setting",
+        name = "Pumps-Reactivation-LevelPerThousand",
+        setting_type = "runtime-global",
+        default_value = 990,
+        minimum_value = 1,
+        maximum_value = 1000
+    },
 	{
         type = "bool-setting",
-        name = "FluidArea-RemoveFromTable",
+        name = "FluidArea-RemoveDepletedOrphaned",
         setting_type = "runtime-global",
         default_value = true
     },

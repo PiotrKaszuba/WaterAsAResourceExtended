@@ -1,7 +1,7 @@
-require("waterbodies")
-require("waterbody_scan")
-require("entities")
-require("utils")
+require("modules.waterbodies")
+require("modules.waterbody_scan")
+require("modules.entities")
+require("modules.utils")
 
 waterbody_split = {}
 
@@ -83,6 +83,10 @@ function waterbody_split.checkIfAllTilesAreUsedAndUnique(all_tiles_positions, co
 	return next(temp_all_tiles_set) == nil and "ok" or "not_all_used"
 end
 
+function waterbody_split.signalWaterBodySplitToPlayer(waterBody, force, player_idx, num_new_water_bodies)
+	force.players[player_idx].print(string.format("%s split into %s waterbodies.", waterBody.waterBodyName, num_new_water_bodies))
+end
+
 function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, surfaceId, updateBudget)
 	-- water body got split if there is no path between 2 neigboring water tiles (to the landfilled tile)
 	-- check all adjacent water tiles
@@ -122,7 +126,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 
 	local check_result = waterbody_split.checkIfAllTilesAreUsedAndUnique(adjacent_waterbody_tiles, connected_tile_sets)
 	if check_result ~= "ok" then
-		game.print("WARNING: Water body got split, validation of neighboring water tiles failed")
+		game.print(string.format("WARNING: Water body got split, validation of neighboring water tiles failed: %s", check_result))
 	end
 	
 	-- now we have separated water bodies represented by initial tile_sets in connected_tile_sets
@@ -137,6 +141,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 	
 
 	if got_split then
+		waterbodies.signalPerPlayer(waterBody, waterbody_split.signalWaterBodySplitToPlayer, #connected_tile_sets)
 		local new_water_body_ids = {}
 		-- TODO should notify interested parties
 		local pumps = waterBody.entitiesData.pumps

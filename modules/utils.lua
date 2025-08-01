@@ -150,6 +150,13 @@ function utils.comma_value(n) -- credit http://richard.warburton.it
 	return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
 end
 
+function utils.merge_arrays(array1, array2)
+	for _, value in ipairs(array2) do
+		array1[#array1 + 1] = value
+	end
+	return array1
+end
+
 utils.Queue = {}
 
 function utils.Queue:new()

@@ -1,5 +1,5 @@
-require("utils")
-require("waterbodies")
+require("modules.utils")
+require("modules.waterbodies")
 
 entities = {}
 

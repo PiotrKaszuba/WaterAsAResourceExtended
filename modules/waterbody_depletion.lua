@@ -1,6 +1,6 @@
-require("waterbodies")
-require("entities")
-require("utils")
+require("modules.waterbodies")
+require("modules.entities")
+require("modules.utils")
 
 waterbody_depletion = {}
 
@@ -66,11 +66,11 @@ end
 
 function waterbody_depletion.restoreAllVisuals(waterBody)
     local state = waterBody.waterBodyStateData
-    if not state or state.BTF == 0 then return end
+    if not state or state.DriedTiles == 0 then return end
 
     local dryTiles = waterbody_depletion.getCandidateTilesForVisualUpdate(waterBody, true)
     if #dryTiles == 0 then
-        state.BTF = 0
+        state.DriedTiles = 0
         return
     end
 
@@ -85,15 +85,19 @@ function waterbody_depletion.restoreAllVisuals(waterBody)
         surface.set_tiles(tilesToChange, false)
     end
 
-    state.BTF = 0
+    state.DriedTiles = 0
 end
 
+function waterbody_depletion.getVisualDepletionStartPercentage()
+    return settings.global["Visual-Depletion-Start-Percentage"].value
+end
 
 function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percentUsed)
     local state = waterBody.waterBodyStateData
     local totalTiles = waterBody.waterAreaData.TotalArea
-    local targetChangedTiles = math.floor(totalTiles * ((percentUsed - 80) / 20))
-    local tilesToProcessCount = targetChangedTiles - state.BTF
+    local startPercentage = waterbody_depletion.getVisualDepletionStartPercentage()
+    local targetChangedTiles = math.floor(totalTiles * ((percentUsed - startPercentage) / (100 - startPercentage)))
+    local tilesToProcessCount = targetChangedTiles - state.DriedTiles
 
     if tilesToProcessCount == 0 then return end
 
@@ -125,14 +129,14 @@ function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percent
     end
 
     if isDepleting then
-        state.BTF = state.BTF + processedCount
+        state.DriedTiles = state.DriedTiles + processedCount
     else
-        state.BTF = state.BTF - processedCount
+        state.DriedTiles = state.DriedTiles - processedCount
     end
 
     if #tilesToChange > 0 then
         local surface = utils.GetSurface(waterBody.surfaceId)
-        surface.set_tiles(tilesToChange, false) -- Pass false to prevent script_raised_set_tiles event
+        surface.set_tiles(tilesToChange, nil, nil, nil, false) -- Pass false to prevent script_raised_set_tiles event
     end
 end
 
@@ -140,8 +144,8 @@ function waterbody_depletion.updateDepletionAppearance(waterBody)
     local state = waterBody.waterBodyStateData
     local percentUsed = waterbodies.calculatePercentageWaterUsed(waterBody)
 
-    if percentUsed < 80 then
-        if state.BTF > 0 then
+    if percentUsed < waterbody_depletion.getVisualDepletionStartPercentage() then
+        if state.DriedTiles > 0 then
             waterbody_depletion.restoreAllVisuals(waterBody)
         end
     else

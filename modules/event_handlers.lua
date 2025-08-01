@@ -1,6 +1,6 @@
-require("entities")
-require("tiles")
-require("forces")
+require("modules.entities")
+require("modules.tiles")
+require("modules.forces")
 
 event_handlers = {}
 

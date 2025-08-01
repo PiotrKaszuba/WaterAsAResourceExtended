@@ -1,4 +1,4 @@
-require("utils")
+require("modules.utils")
 
 waterbodies = {}
 
@@ -194,13 +194,19 @@ end
 
 function waterbodies.initWaterBodyStateData()
     return {
-        ["WaterUsed"] = 0,
-        ["WaterUsedPrev"] = 0,
+        ["WaterUsed"] = 0,	-- the actual water used synchronized on 'big updates'
+        ["WaterUsedPrev"] = 0,	-- the actual water used on the previous 'big update'
 
-		["WaterUsedPenalty"] = 0,
+		["TempAvailableWater"] = 0,	-- the available water that can be used before the next 'big update' - if <= 0 - the water body is depleted and triggers instant update
 
-        ["Depleted"] = false,
+		["WaterUsedPenalty"] = 0,	-- the water used penalty that is applied to the water body - it occurs when waterbody is created on the water tiles that had been used in previous waterbody depleted to some extent
 
+		["WaterUsedPenaltyRestored"] = 0,	-- the restored water (above WaterUsed) that can negate the WaterUsedPenalty (up to that amount)
+
+
+        ["Depleted"] = false,	-- if true - the water body is depleted and all pumps are deactivated
+		
+		-- alarm flags
 		["Fired50"] = false,
 		["Fired75"] = false,
 		["Fired90"] = false,
@@ -209,13 +215,16 @@ function waterbodies.initWaterBodyStateData()
 		["Fired98"] = false,
 		["Fired99"] = false,
 
-		["BTF"] = 0,
+		["FiredCreated"] = false, -- if true - the water body was created and the message was already sent to the players
 
-		["LoopCount"] = 0,
+		["DriedTiles"] = 0, -- the current number of tiles that are dried - used for gradual depletion appearance
+
+		["ScanLoopCount"] = 0,  -- the number of big updates since started scanning
+		["OrphanedBigUpdateCount"] = 0, -- the number of big updates since the water body was orphaned
 
 		-- TODO: create class for map marker that will handle all the map marker logic
 		-- and have .destroy() ethod
-        ["MapMarker"] = {},
+        ["MapMarkers"] = {},
     }
 end
 
@@ -376,9 +385,11 @@ waterbodies.EdgeTileNameMap = {
 	["deepwater-green"] = "lake-deep",
 }
 
-function waterbodies.GetAmountWaterForTileType(tileType)
-	return settings.global[waterbodies.WaterBodyTileTypesToAmountWaterTypes[tileType]].value
+function waterbodies.GetAmountWaterForWaterBodyTileType(tileType, include_multiplier)
+	local multiplier = include_multiplier and waterbodies.WaterBodyTileTypesToAmountWaterMultiplier[tileType] or 1
+	return settings.global[waterbodies.WaterBodyTileTypesToAmountWaterTypes[tileType]].value * multiplier
 end
+
 
 function waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 	local totalArea = 0
@@ -388,12 +399,12 @@ function waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 		local amount = waterBody.waterBodyTileCountData[tileType]
 		if amount ~= nil then
 			totalArea = totalArea + amount
-			local amountWater = amount * waterbodies.GetAmountWaterForTileType(tileType) * multiplier
+			local amountWater = amount * waterbodies.GetAmountWaterForWaterBodyTileType(tileType) * multiplier
 			totalWater = totalWater + amountWater
 		end
 		local penalty_amount = waterBody.waterBodyTileCountPercentagePenalty[tileType]
 		if penalty_amount ~= nil then
-			local amountWaterPenalty = penalty_amount * waterbodies.GetAmountWaterForTileType(tileType) * multiplier
+			local amountWaterPenalty = penalty_amount * waterbodies.GetAmountWaterForWaterBodyTileType(tileType) * multiplier
 			penaltyWaterUsed = penaltyWaterUsed + amountWaterPenalty
 		end
 	end
@@ -482,12 +493,12 @@ function waterbodies.updateBoundingBox(shape_data, position)
 	waterbodies.calculateDimensions(shape_data)
 end
 
-function waterbodies.signalPerPlayer(water_body, signal_func)
+function waterbodies.signalPerPlayer(water_body, signal_func, additional_args)
 	local water_body_forces = water_body.entitiesData.forces
 	for force_name, v in pairs(water_body_forces) do
 		if v then
 			for player_idx, _ in pairs(game.forces[force_name].players) do
-				signal_func(water_body, game.forces[force_name], player_idx)
+				signal_func(water_body, game.forces[force_name], player_idx, additional_args)
 			end
 		end
 	end
@@ -499,12 +510,17 @@ function waterbodies.initCleanedWaterBody(water_body)
 		["valid"] = false,
 		["waterBodyId"] = water_body.waterBodyId,
 		["surfaceId"] = water_body.surfaceId,
+		["waterBodyName"] = water_body.waterBodyName,
 	}
 end
 
 function waterbodies.removeWaterBody(waterBody)
 	waterBody.valid = false
-
+	
+	for _, marker in pairs(waterBody.waterBodyStateData.MapMarkers) do
+    	marker:destroy()
+	end
+	
 	-- Clean up tile assignments to this water body
     -- waterbodies.cleanupWaterBodyTiles(waterBody)
 
@@ -525,8 +541,14 @@ function waterbodies.cleanupWaterBodyTiles(waterBody)
 end
 
 function waterbodies.calculateTotalWaterUsed(waterbody)
-	local total_water_used = waterbody.waterBodyStateData.WaterUsed + waterbody.waterBodyStateData.WaterUsedPenalty
+	local total_water_used = waterbody.waterBodyStateData.WaterUsed + waterbody.waterBodyStateData.WaterUsedPenalty - waterbody.waterBodyStateData.WaterUsedPenaltyRestored
 	return total_water_used
+end
+
+function waterbodies.calculateRemainingWater(waterbody)
+	local total_water_available = waterbody.waterAreaData.AmountWtr
+	local total_water_used = waterbodies.calculateTotalWaterUsed(waterbody)
+	return total_water_available - total_water_used
 end
 
 function waterbodies.calculatePercentageWaterUsed(waterbody)
@@ -534,4 +556,27 @@ function waterbodies.calculatePercentageWaterUsed(waterbody)
 	local total_water_available = waterbody.waterAreaData.AmountWtr
 	if total_water_available == 0 then return 100 end
 	return math.max(math.min(total_water_used / total_water_available, 1), 0) * 100
+end
+
+local MapMarker = {}
+MapMarker.__index = MapMarker
+
+function MapMarker:new(force, surface, args)
+    local tag = force.add_chart_tag(surface, args)
+    return setmetatable({tag = tag}, MapMarker)
+end
+
+function MapMarker:valid()
+    return self.tag and self.tag.valid
+end
+
+function MapMarker:destroy()
+    if self:valid() then self.tag.destroy() end
+end
+
+function MapMarker:update(args)
+    if not self:valid() then return end
+    if args.position then self.tag.position = args.position end
+    if args.text then self.tag.text = args.text end
+    if args.icon then self.tag.icon = args.icon end
 end

@@ -1,10 +1,10 @@
-require("utils")
-require("waterbodies")
-require("entities")
-require("forces")
-require("tiles")
-require("waterbody_update")
-require("event_handlers")
+require("modules.utils")
+require("modules.waterbodies")
+require("modules.entities")
+require("modules.forces")
+require("modules.tiles")
+require("modules.waterbody_update")
+require("modules.event_handlers")
 
 control = {}
 

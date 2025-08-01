@@ -1,6 +1,6 @@
-require("utils")
-require("waterbodies")
-require("waterbody_logic")
+require("modules.utils")
+require("modules.waterbodies")
+require("modules.waterbody_logic")
 
 waterbody_scan = {}
 
@@ -94,6 +94,7 @@ function waterbody_scan.processWaterTile(water_body, position, tile_name, surfac
 			if waterGridWithData[gridKey] == nil then
 				water_body.waterBodyTileCountData[waterBodyTileType] = water_body.waterBodyTileCountData[waterBodyTileType] + 1
 				
+				-- inherit depletion level from the original waterbody (if any)
 				local tile_percentage_water_used = waterbodies.getWaterTilePercentageWaterUsed(gridKey, surface_id)
 				water_body.waterBodyTileCountPercentagePenalty[waterBodyTileType] = water_body.waterBodyTileCountPercentagePenalty[waterBodyTileType] + tile_percentage_water_used
 				
@@ -175,15 +176,22 @@ function waterbody_scan.signalScanningAlarmToPlayer(water_body, force, player_id
 end
 
 function waterbody_scan.signalFinishedScanningToPlayer(water_body, force, player_idx)
-	force.players[player_idx].print(string.format("%s created, with %sL of water with regen %sL.", water_body.waterBodyName, comma_value(water_body.waterAreaData.AmountWtr), water_body.waterAreaData.RegenAmount))
+	local msg_type = water_body.waterBodyStateData.FiredCreated and "updated" or "created"
+	force.players[player_idx].print(string.format("%s %s, with %sL of water with regen %sL.", water_body.waterBodyName, msg_type, comma_value(water_body.waterAreaData.AmountWtr), water_body.waterAreaData.RegenAmount))
+end
+
+
+function waterbody_scan.getScanningLoopPeriod()
+	-- return settings.global["FluidArea-Scanning-Loop-Period"].value
+	return 20
 end
 
 function waterbody_scan.scanningLoopPeriodic(water_body)
-	water_body.searchData.LoopCount = water_body.searchData.LoopCount + 1
+	water_body.searchData.ScanLoopCount = water_body.searchData.ScanLoopCount + 1
 
-	if water_body.searchData.LoopCount == 20 then
+	if water_body.searchData.ScanLoopCount == waterbody_scan.getScanningLoopPeriod() then
 		waterbodies.signalPerPlayer(water_body, waterbody_scan.signalScanningAlarmToPlayer)
-		water_body.searchData.LoopCount = 0
+		water_body.searchData.ScanLoopCount = 0
 	end
 end
 
@@ -210,7 +218,7 @@ function waterbody_scan.scanningLoop(water_body_id, updateBudget)
 				waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
 			end
 		elseif water_body.waterAreaData.ToCalculate then
-			waterbody_scan.finishedScanning(water_body)
+			waterbody_scan.finishedScanning(water_body, true)
 		end
 	end
 	return water_body_id
@@ -219,6 +227,8 @@ end
 function waterbody_scan.finishedScanning(water_body)
 	waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
 	water_body.searchData.finished = true
-	waterbodies.signalPerPlayer(water_body, waterbody_scan.signalFinishedScanningToPlayer)
-
+	if (not water_body.waterBodyStateData.FiredCreated) or settings.global["Alarms-Tile-Message"].value then
+		waterbodies.signalPerPlayer(water_body, waterbody_scan.signalFinishedScanningToPlayer)
+		water_body.waterBodyStateData.FiredCreated = true
+	end
 end

@@ -1,16 +1,28 @@
-require("waterbodies")
-require("entities")
-require("utils")
+require("modules.waterbodies")
+require("modules.entities")
+require("modules.utils")
 
 waterbody_logic = {}
 
+function waterbody_logic.call_on_each_waterbody_pump(waterBody, func)
+	local waterBody = waterbodies.getWaterBody(waterBodyId)
+	if waterBody and waterBody.valid then
+		for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
+			func(entities.getTrackedEntity(unit_number))
+		end
+	end
+end
+
 function waterbody_logic.disableWaterBodyPumps(waterBodyId)
-    local waterBody = waterbodies.getWaterBody(waterBodyId)
-    if waterBody and waterBody.valid then
-        for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-            entities.disablePump(entities.getTrackedEntity(unit_number))
-        end
-    end
+    waterbody_logic.call_on_each_waterbody_pump(waterBodyId, entities.disablePump)
+end
+
+function waterbody_logic.deactivateWaterBodyPumps(waterBodyId)
+    waterbody_logic.call_on_each_waterbody_pump(waterBodyId, entities.deactivatePump)
+end
+
+function waterbody_logic.activateWaterBodyPumps(waterBodyId)
+    waterbody_logic.call_on_each_waterbody_pump(waterBodyId, entities.activatePump)
 end
 
 function waterbody_logic.disablePumpsAndRemoveWaterBody(waterBody)
@@ -73,7 +85,7 @@ function waterbody_logic.mergeGridsData(gridsData, other_gridsData, include_glob
 			-- this tile is not in the current water body - add it
 			gridsData.waterGridWithData[gridKey] = tileData
 		else
-			local waterBodyTileType = waterbodies.WaterTileToWaterBodyTileType[tileData.name]
+			local waterBodyTileType = waterbodies.WaterTileToWaterBodyTileType[tileData.originalName] -- uses originalName to avoid issue with partially dried waterbodies
 			overlapTileCountData[waterBodyTileType] = overlapTileCountData[waterBodyTileType] + 1
 
 		end
@@ -127,27 +139,41 @@ function waterbody_logic.mergeWaterBodyStateData(waterBodyStateData, other_water
 	waterBodyStateData.WaterUsed = waterBodyStateData.WaterUsed + other_waterBodyStateData.WaterUsed
 	waterBodyStateData.WaterUsedPrev = waterBodyStateData.WaterUsedPrev + other_waterBodyStateData.WaterUsedPrev
 
-	waterBodyStateData.Depleted = waterBodyStateData.Depleted or other_waterBodyStateData.Depleted
+	waterBodyStateData.TempAvailableWater = waterBodyStateData.TempAvailableWater + other_waterBodyStateData.TempAvailableWater
 
-	waterBodyStateData.Fired50 = waterBodyStateData.Fired50 or other_waterBodyStateData.Fired50
-	waterBodyStateData.Fired75 = waterBodyStateData.Fired75 or other_waterBodyStateData.Fired75
-	waterBodyStateData.Fired90 = waterBodyStateData.Fired90 or other_waterBodyStateData.Fired90
-	waterBodyStateData.Fired95 = waterBodyStateData.Fired95 or other_waterBodyStateData.Fired95
-	waterBodyStateData.Fired97 = waterBodyStateData.Fired97 or other_waterBodyStateData.Fired97
-	waterBodyStateData.Fired98 = waterBodyStateData.Fired98 or other_waterBodyStateData.Fired98
-	waterBodyStateData.Fired99 = waterBodyStateData.Fired99 or other_waterBodyStateData.Fired99
+	waterBodyStateData.WaterUsedPenalty = waterBodyStateData.WaterUsedPenalty + other_waterBodyStateData.WaterUsedPenalty
+	waterBodyStateData.WaterUsedPenaltyRestored = waterBodyStateData.WaterUsedPenaltyRestored + other_waterBodyStateData.WaterUsedPenaltyRestored
 
-	waterBodyStateData.BTF = waterBodyStateData.BTF + other_waterBodyStateData.BTF
+	waterBodyStateData.Depleted = waterBodyStateData.Depleted and other_waterBodyStateData.Depleted
 
+	-- only take flags of messages from the target water body
+	waterBodyStateData.Fired50 = waterBodyStateData.Fired50
+	waterBodyStateData.Fired75 = waterBodyStateData.Fired75
+	waterBodyStateData.Fired90 = waterBodyStateData.Fired90
+	waterBodyStateData.Fired95 = waterBodyStateData.Fired95
+	waterBodyStateData.Fired97 = waterBodyStateData.Fired97
+	waterBodyStateData.Fired98 = waterBodyStateData.Fired98
+	waterBodyStateData.Fired99 = waterBodyStateData.Fired99
 
-	if waterBodyStateData.MapMarker and waterBodyStateData.MapMarker.valid then
-		waterBodyStateData.MapMarker.destroy()
-	end
-	if other_waterBodyStateData.MapMarker and other_waterBodyStateData.MapMarker.valid then
-		other_waterBodyStateData.MapMarker.destroy()
-	end
+	waterBodyStateData.FiredCreated = waterBodyStateData.FiredCreated
 
+	waterBodyStateData.DriedTiles = waterBodyStateData.DriedTiles + other_waterBodyStateData.DriedTiles
+	
+	waterBodyStateData.ScanLoopCount = waterBodyStateData.ScanLoopCount
+	waterBodyStateData.OrphanedBigUpdateCount = waterBodyStateData.OrphanedBigUpdateCount + other_waterBodyStateData.OrphanedBigUpdateCount
 
+    for _, marker in pairs(waterBodyStateData.MapMarkers) do
+        marker:destroy()
+    end
+    for _, marker in pairs(other_waterBodyStateData.MapMarkers) do
+        marker:destroy()
+    end
+    waterBodyStateData.MapMarkers = {}
+
+end
+
+function waterbody_logic.signalWaterBodyMergedToPlayer(waterBody, force, player_idx, other_waterBody)
+	force.players[player_idx].print(string.format("%s merged %s. Merged water body has %sL of water with regen %sL.", waterBody.waterBodyName, other_waterBody.waterBodyName, comma_value(waterBody.waterAreaData.AmountWtr), waterBody.waterAreaData.RegenAmount))
 end
 
 function waterbody_logic.mergeWaterBody(waterBody1, waterBody2)
@@ -185,6 +211,8 @@ function waterbody_logic.mergeWaterBody(waterBody1, waterBody2)
 
     -- there is no merge for WaterAreaData - it will be re-calculated totally based on other merged data
 	waterBody1.waterAreaData.ToCalculate = true
+	waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody1)
+	waterbodies.signalPerPlayer(waterBody1, waterbody_logic.signalWaterBodyMergedToPlayer, waterBody2)
 
 	waterbodies.removeWaterBody(waterBody2)
 

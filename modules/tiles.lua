@@ -1,8 +1,8 @@
-require("utils")
-require("waterbodies")
-require("waterbody_scan")
-require("waterbody_split")
-require("waterbody_logic")
+require("modules.utils")
+require("modules.waterbodies")
+require("modules.waterbody_scan")
+require("modules.waterbody_split")
+require("modules.waterbody_logic")
 
 tiles = {}
 
@@ -165,23 +165,28 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     local tileType = waterbodies.WaterTileToWaterBodyTileType[originalTileName]
     if not tileType then return end
     
-    -- 1. Reduce tile count
+    -- 1. Reduce tile count that will be used for water amount calculation
     waterBody.waterBodyTileCountData[tileType] = 
         math.max(0, waterBody.waterBodyTileCountData[tileType] - 1)
     
-    -- 2. Remove from waterGrid
+    -- 2. Regenerate some water used based on current percentage use (overall it will decrease amount of reamining water due to AmountWtr decreasing more than water used)
+    local currentPercentageUsed = waterbodies.calculatePercentageWaterUsed(waterBody)
+    local toRegen = waterbodies.GetAmountWaterForWaterBodyTileType(tileType, true) * currentPercentageUsed
+    waterbody_update.updateWaterLevel(waterBody, 0, toRegen)
+
+    -- 3. Remove from waterGrid
     waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
     
-    -- 3. Mark tile as unassigned in global registry
+    -- 4. Mark tile as unassigned in global registry
     waterbodies.addNewWaterTile(gridKey, surfaceId, -1)
     
-    -- 4. Recalculate edges around this position
+    -- 5. Recalculate edges around this position
     waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surfaceId, updateBudget)
     
-    -- 5. Mark for water amount recalculation
+    -- 6. Mark for water amount recalculation
     waterBody.waterAreaData.ToCalculate = true
     
-    -- 6. Check if water body becomes empty
+    -- 7. Check if water body becomes empty
     if waterbodies.isWaterBodyEmpty(waterBody) then
         waterbody_logic.disablePumpsAndRemoveWaterBody(waterBody)
     end
