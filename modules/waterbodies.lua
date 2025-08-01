@@ -555,9 +555,9 @@ end
 waterbodies.MapMarker = {}
 waterbodies.MapMarker.__index = waterbodies.MapMarker
 
-function waterbodies.MapMarker:new(force, surfaceId, args)
-    local tag = force.add_chart_tag(utils.GetSurface(surfaceId), args)
-    local instance = {tag = tag}
+function waterbodies.MapMarker:new(force, surfaceId, position, text, icon)
+    local tag = force.add_chart_tag(utils.GetSurface(surfaceId), {position = position, text = text, icon = icon})
+    local instance = {tag = tag, force=force, surfaceId=surfaceId, position=position, text=text, icon=icon}
     setmetatable(instance, waterbodies.MapMarker)
     return instance
 end
@@ -572,7 +572,12 @@ end
 
 function waterbodies.MapMarker:update(args)
     if not self:valid() then return end
-    if args.position then self.tag.position = args.position end
-    if args.text then self.tag.text = args.text end
-    if args.icon then self.tag.icon = args.icon end
+    if args.position then self.position = args.position end
+    if args.text then self.text = args.text end
+    if args.icon then self.icon = args.icon end
+    if args.position or args.text or args.icon then
+        -- tag is read only so we need to destroy and create a new one
+        self:destroy()
+        self.tag = self.force.add_chart_tag(utils.GetSurface(self.surfaceId), {position = self.position, text = self.text, icon = self.icon})
+    end
 end
