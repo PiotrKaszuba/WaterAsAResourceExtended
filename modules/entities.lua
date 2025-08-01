@@ -200,23 +200,31 @@ function entities.getFirstPumpPerForce(waterBody)
 end
 
 function entities.updatePumpStates()
+    local to_remove = {}
     for unit_number, pump_data in pairs(storage.TrackedEntities) do
         if pump_data.type == "pump" then
-            local waterBody = waterbodies.getWaterBody(pump_data.waterBodyId)
-            local should_be_active = (
-                waterBody and 
-                waterBody.valid and 
-                not waterBody.waterBodyStateData.Depleted and
-                not pump_data.disabled and
-                pump_data.entity.valid and
-                pump_data.entity.neighbours[1] and pump_data.entity.neighbours[1][1] -- to double check if this is correct
-            )
-            
-            if should_be_active then
-                entities.activatePump(pump_data)
+            if not pump_data.entity.valid then
+                entities.disablePump(pump_data)
+                entities.removePumpFromWaterBody(unit_number, pump_data.waterBodyId)
+                to_remove[unit_number] = true
             else
-                entities.deactivatePump(pump_data)
+                local waterBody = waterbodies.getWaterBody(pump_data.waterBodyId)
+                local should_be_active = (
+                    waterBody and 
+                    waterBody.valid and 
+                    not waterBody.waterBodyStateData.Depleted and
+                    not pump_data.disabled
+                )
+                
+                if should_be_active then
+                    entities.activatePump(pump_data)
+                else
+                    entities.deactivatePump(pump_data)
+                end
             end
         end
+    end
+    for unit_number, _ in pairs(to_remove) do
+        entities.removeTrackedEntity(unit_number)
     end
 end
