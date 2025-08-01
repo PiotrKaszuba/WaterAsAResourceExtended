@@ -1,6 +1,7 @@
 require("modules.waterbodies")
 require("modules.waterbody_scan")
 require("modules.waterbody_depletion")
+require("modules.entities")
 
 waterbody_update = {}
 
@@ -204,7 +205,7 @@ end
 function waterbody_update.waterBodyDepleted(waterBody)
     local state = waterBody.waterBodyStateData
     state.Depleted = true
-    waterbody_logic.deactivateWaterBodyPumps(waterBody.waterBodyId)
+    entities.deactivateWaterBodyPumps(waterBody.waterBodyId)
     waterbodies.signalPerPlayer(waterBody, waterbody_update.signalDepletionToPlayer)
 end
 

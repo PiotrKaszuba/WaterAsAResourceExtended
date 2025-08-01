@@ -463,24 +463,6 @@ function waterbodies.createNewWaterBody(surfaceId)
 end
 
 
-
--- return waterBodyId of existing or new water body
-function waterbodies.createWaterBodyFromTileIfNotExists(position, surfaceId)
-
-    local gridKey = utils.PositionToString(position)
-    local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
-
-    if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
-        local waterBody = waterbodies.createNewWaterBody(surfaceId)
-		require("modules.waterbody_scan")
-		waterbody_scan.beginScanWaterArea(waterBody.waterBodyId, position)
-        return waterBody.waterBodyId
-    end
-
-    return waterBodyId
-end
-
-
 function waterbodies.calculateDimensions(shape_data)
 	shape_data["Hdif"] = shape_data["MaxX"] - shape_data["MinX"]
 	shape_data["Vdif"] = shape_data["MaxY"] - shape_data["MinY"]

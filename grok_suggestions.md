@@ -12,6 +12,6 @@ These suggestions build on your updates and aim to enhance flexibility without m
 
 ## Refactoring and Code Maintenance
 - **Shared Init Templates**: In `waterbodies.lua`, many init functions (e.g., `initWaterBodyTileCountData`, `initWaterAreaData`) repeat similar table structures. Refactor into a shared helper function (e.g., `createEmptyDataTable(keys)`) to reduce redundancy and make adding new fields easier.
-- **Error Handling with pcall**: Wrap performance-critical loops (e.g., scanning in `waterbody_scan.lua`'s `ScanWaterArea` or merging in `waterbody_logic.lua`) in `pcall` to catch and log errors gracefully, preventing mod crashes from unexpected API failures or mod conflicts. For example: `local success, err = pcall(function() ... end); if not success then game.print("Error in scanning: " .. err) end.`
+- **Error Handling with pcall**: Wrap performance-critical loops (e.g., scanning in `waterbody_scan.lua`'s `ScanWaterArea` or merging in `waterbody_merge.lua`) in `pcall` to catch and log errors gracefully, preventing mod crashes from unexpected API failures or mod conflicts. For example: `local success, err = pcall(function() ... end); if not success then game.print("Error in scanning: " .. err) end.`
 
 These additions complement the existing suggestions and address lingering areas from the initial review for better mod quality. 

@@ -2,7 +2,8 @@ require("modules.utils")
 require("modules.waterbodies")
 require("modules.waterbody_scan")
 require("modules.waterbody_split")
-require("modules.waterbody_logic")
+require("modules.entities")
+require("modules.waterbody_merge")
 
 tiles = {}
 
@@ -131,7 +132,7 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
 
     else
         -- Multiple water bodies - merge them
-        local new_water_body_id = waterbody_logic.mergeMultipleWaterBodies(adjacentWaterBodies, position, surfaceId)
+        local new_water_body_id = waterbody_merge.mergeMultipleWaterBodies(adjacentWaterBodies, position, surfaceId)
 		if new_water_body_id ~= waterBody.waterBodyId then
 			waterBody = waterbodies.getWaterBody(new_water_body_id)
 		end
@@ -188,7 +189,7 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     
     -- 7. Check if water body becomes empty
     if waterbodies.isWaterBodyEmpty(waterBody) then
-        waterbody_logic.disablePumpsAndRemoveWaterBody(waterBody)
+        entities.disablePumpsAndRemoveWaterBody(waterBody)
     end
 end
 

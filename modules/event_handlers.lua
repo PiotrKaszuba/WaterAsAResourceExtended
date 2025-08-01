@@ -1,11 +1,28 @@
 require("modules.entities")
 require("modules.tiles")
 require("modules.forces")
+require("modules.utils")
+require("modules.waterbody_scan")
 
 event_handlers = {}
 
+function event_handlers.BuiltPump(entity, do_not_reject)
+
+    local input_position = utils.calculate_direction_offset(entity.position, entity.direction)
+    local pump = initNewPump(entity)
+
+    -- Validate that the pump can be placed (must be on water)
+    if not utils.validate_tile_placement(input_position, entity.surface, utils.WaterTiles) then
+        entities.rejectOrDeactivatePump(pump, "Must be placed on water edge", do_not_reject)
+    else
+        local waterBodyId = waterbody_scan.createWaterBodyFromTileIfNotExists(input_position, entity.surface)
+        entities.registerPumpAndAddToWaterBody(waterBodyId, pump)
+    end
+end
+
+
 event_handlers.offshore_pump_handlers = {
-    ["built"] = entities.BuiltPump,
+    ["built"] = event_handlers.BuiltPump,
     ["destroyed"] = entities.DestroyedPump,
     ["teleported"] = entities.TeleportedPump,
 }

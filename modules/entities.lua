@@ -86,12 +86,6 @@ function entities.rejectEntityPlacement(entity, reason)
 end
 
 
-function entities.untrackedPump(entity)
-    game.print("Warning: a pump is not tracked") 
-    entities.BuiltPump(entity, true)
-end
-
-
 function entities.rejectOrDeactivatePump(pump, reason, do_not_reject)
     if not do_not_reject then
         entities.rejectEntityPlacement(pump.entity, reason)
@@ -101,20 +95,7 @@ function entities.rejectOrDeactivatePump(pump, reason, do_not_reject)
 end
 
 
-function entities.BuiltPump(entity, do_not_reject)
 
-    local input_position = utils.calculate_direction_offset(entity.position, entity.direction)
-    local pump = initNewPump(entity)
-
-    -- Validate that the pump can be placed (must be on water)
-    if not utils.validate_tile_placement(input_position, entity.surface, utils.WaterTiles) then
-        entities.rejectOrDeactivatePump(pump, "Must be placed on water edge", do_not_reject)
-    else
-        local waterBodyId = waterbodies.createWaterBodyFromTileIfNotExists(input_position, entity.surface)
-        entities.registerPumpAndAddToWaterBody(waterBodyId, pump)
-    end
-    
-end
 
 function entities.DestroyedPump(entity)
     local unit_number = entity.unit_number
@@ -168,6 +149,43 @@ end
 function entities.enablePump(pump_data)
     -- enable means that it can be active but not necessarily now
     pump_data.disabled = false
+end
+
+function entities.call_on_each_waterbody_pump(waterBody, func)
+	local waterBody = waterbodies.getWaterBody(waterBodyId)
+	if waterBody and waterBody.valid then
+		for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
+			func(entities.getTrackedEntity(unit_number))
+		end
+	end
+end
+
+function entities.disableWaterBodyPumps(waterBodyId)
+    entities.call_on_each_waterbody_pump(waterBodyId, entities.disablePump)
+end
+
+function entities.deactivateWaterBodyPumps(waterBodyId)
+    entities.call_on_each_waterbody_pump(waterBodyId, entities.deactivatePump)
+end
+
+function entities.activateWaterBodyPumps(waterBodyId)
+    entities.call_on_each_waterbody_pump(waterBodyId, entities.activatePump)
+end
+
+function entities.disablePumpsAndRemoveWaterBody(waterBody)
+	entities.disableWaterBodyPumps(waterBody.waterBodyId)
+    waterbodies.removeWaterBody(waterBody)
+end
+
+function entities.getActivePumpCount(waterBody)
+    local count = 0
+    for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
+        local pump_data = entities.getTrackedEntity(unit_number)
+        if not pump_data.disabled and pump_data.entity.valid and pump_data.entity.active == 1 then
+            count = count + 1
+        end
+    end
+    return count
 end
 
 function entities.updatePumpStates()

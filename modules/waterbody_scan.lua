@@ -1,8 +1,23 @@
 require("modules.utils")
 require("modules.waterbodies")
-require("modules.waterbody_logic")
+require("modules.waterbody_merge")
 
 waterbody_scan = {}
+
+-- return waterBodyId of existing or new water body
+function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surfaceId)
+
+    local gridKey = utils.PositionToString(position)
+    local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+
+    if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
+        local waterBody = waterbodies.createNewWaterBody(surfaceId)
+		waterbody_scan.beginScanWaterArea(waterBody.waterBodyId, position)
+        return waterBody.waterBodyId
+    end
+
+    return waterBodyId
+end
 
 function waterbody_scan.getInitialScanAmount()
     return settings.global["FluidArea-Start-Area"].value
@@ -74,6 +89,21 @@ function waterbody_scan.EdgePattern(searchPosition, surfaceId, searchData, force
     return edgeFound
 end
 
+-- assign a tile to a water body
+-- if the tile is already assigned to a different water body, we have to merge the two water bodies
+function waterbody_scan.assignTileToWaterBody(gridKey, surfaceId, waterBodyId)
+    local tile_waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+	local new_water_body_id = waterBodyId
+    if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
+        waterbodies.addNewWaterTile(gridKey, surfaceId, waterBodyId)
+    elseif tile_waterBodyId ~= waterBodyId then
+        -- tile is already assigned to a different water body
+        -- we have to merge the two water bodies
+		new_water_body_id = waterbody_merge.mergeWaterBody(waterbodies.getWaterBody(tile_waterBodyId), waterbodies.getWaterBody(waterBodyId))
+    end
+	return new_water_body_id
+end
+
 -- Process a single water tile during scanning (internal helper)
 function waterbody_scan.processWaterTile(water_body, position, tile_name, surface_id)
 	local gridKey = utils.PositionToString(position)
@@ -86,7 +116,7 @@ function waterbody_scan.processWaterTile(water_body, position, tile_name, surfac
 	
     local waterBodyTileType = waterbodies.WaterTileToWaterBodyTileType[tile_name]
 	if waterBodyTileType ~= nil then
-		local new_water_body_id = waterbody_logic.assignTileToWaterBody(gridKey, surface_id, water_body.waterBodyId)
+		local new_water_body_id = waterbody_scan.assignTileToWaterBody(gridKey, surface_id, water_body.waterBodyId)
 		if new_water_body_id ~= water_body.waterBodyId then
 			water_body = waterbodies.getWaterBody(new_water_body_id)
 		else

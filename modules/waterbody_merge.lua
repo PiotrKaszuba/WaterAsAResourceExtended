@@ -1,71 +1,21 @@
 require("modules.waterbodies")
-require("modules.entities")
 require("modules.utils")
+require("modules.entities")
 
-waterbody_logic = {}
+waterbody_merge = {}
 
-function waterbody_logic.call_on_each_waterbody_pump(waterBody, func)
-	local waterBody = waterbodies.getWaterBody(waterBodyId)
-	if waterBody and waterBody.valid then
-		for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-			func(entities.getTrackedEntity(unit_number))
-		end
-	end
-end
 
-function waterbody_logic.disableWaterBodyPumps(waterBodyId)
-    waterbody_logic.call_on_each_waterbody_pump(waterBodyId, entities.disablePump)
-end
-
-function waterbody_logic.deactivateWaterBodyPumps(waterBodyId)
-    waterbody_logic.call_on_each_waterbody_pump(waterBodyId, entities.deactivatePump)
-end
-
-function waterbody_logic.activateWaterBodyPumps(waterBodyId)
-    waterbody_logic.call_on_each_waterbody_pump(waterBodyId, entities.activatePump)
-end
-
-function waterbody_logic.disablePumpsAndRemoveWaterBody(waterBody)
-	waterbody_logic.disableWaterBodyPumps(waterBody.waterBodyId)
-    waterbodies.removeWaterBody(waterBody)
-end
-
-function waterbody_logic.getActivePumpCount(waterBody)
-    local count = 0
-    for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-        local pump_data = entities.getTrackedEntity(unit_number)
-        if not pump_data.disabled and pump_data.entity.valid and pump_data.entity.active == 1 then
-            count = count + 1
-        end
-    end
-    return count
-end
-
--- assign a tile to a water body
--- if the tile is already assigned to a different water body, we have to merge the two water bodies
-function waterbody_logic.assignTileToWaterBody(gridKey, surfaceId, waterBodyId)
-    local tile_waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
-	local new_water_body_id = waterBodyId
-    if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
-        waterbodies.addNewWaterTile(gridKey, surfaceId, waterBodyId)
-    elseif tile_waterBodyId ~= waterBodyId then
-        -- tile is already assigned to a different water body
-        -- we have to merge the two water bodies
-		new_water_body_id = waterbody_logic.mergeWaterBody(waterbodies.getWaterBody(tile_waterBodyId), waterbodies.getWaterBody(waterBodyId))
-    end
-	return new_water_body_id
-end
 
 -- MERGE Functionality Below
-function waterbody_logic.merge_indicator_tables(table_result, table_other)
+function waterbody_merge.merge_indicator_tables(table_result, table_other)
     for k in pairs(table_other) do
         table_result[k] = true
     end	
 end
 
-function waterbody_logic.mergeSearchData(searchData, other_searchData, overlapTileCountData)
+function waterbody_merge.mergeSearchData(searchData, other_searchData, overlapTileCountData)
 	searchData.searchQueue:merge(other_searchData.searchQueue)
-	waterbody_logic.merge_indicator_tables(searchData.searchedPositions, other_searchData.searchedPositions)
+	waterbody_merge.merge_indicator_tables(searchData.searchedPositions, other_searchData.searchedPositions)
 	
 	local sum_overlap = 0
 	for k, v in pairs(overlapTileCountData) do
@@ -75,7 +25,7 @@ function waterbody_logic.mergeSearchData(searchData, other_searchData, overlapTi
 	searchData.finished = searchData.searchQueue:is_empty()
 end
 
-function waterbody_logic.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surfaceId)
+function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surfaceId)
 	local overlapTileCountData = waterbodies.initWaterBodyTileCountData()
 
 	for gridKey, tileData in pairs(other_gridsData.waterGridWithData) do
@@ -96,12 +46,12 @@ function waterbody_logic.mergeGridsData(gridsData, other_gridsData, include_glob
 		end
 	end
 
-	waterbody_logic.merge_indicator_tables(gridsData.edgeGrid, other_gridsData.edgeGrid)
+	waterbody_merge.merge_indicator_tables(gridsData.edgeGrid, other_gridsData.edgeGrid)
 
 	return overlapTileCountData
 end
 
-function waterbody_logic.mergeEntitiesData(entitiesData, other_entitiesData, waterBodyId, other_waterBodyId)
+function waterbody_merge.mergeEntitiesData(entitiesData, other_entitiesData, waterBodyId, other_waterBodyId)
 	other_pumps_unit_numbers = {}
 
 	for unit_number, _ in pairs(other_entitiesData.pumps) do
@@ -112,10 +62,10 @@ function waterbody_logic.mergeEntitiesData(entitiesData, other_entitiesData, wat
 		entities.movePumpToWaterBody(unit_number, waterBodyId, other_waterBodyId)
 	end
 	
-	waterbody_logic.merge_indicator_tables(entitiesData.forces, other_entitiesData.forces)
+	waterbody_merge.merge_indicator_tables(entitiesData.forces, other_entitiesData.forces)
 end
 
-function waterbody_logic.mergeShapeData(shapeData, other_shapeData)
+function waterbody_merge.mergeShapeData(shapeData, other_shapeData)
 	shapeData.MinX = math.min(shapeData.MinX, other_shapeData.MinX)
 	shapeData.MaxX = math.max(shapeData.MaxX, other_shapeData.MaxX)
 	shapeData.MinY = math.min(shapeData.MinY, other_shapeData.MinY)
@@ -123,19 +73,19 @@ function waterbody_logic.mergeShapeData(shapeData, other_shapeData)
 	waterbodies.calculateDimensions(shapeData)
 end
 
-function waterbody_logic.mergeWaterBodyTileCountData(tileCountData, other_tileCountData, overlapTileCountData)
+function waterbody_merge.mergeWaterBodyTileCountData(tileCountData, other_tileCountData, overlapTileCountData)
 	for k, v in pairs(tileCountData) do
 		tileCountData[k] = v + (other_tileCountData[k] or 0) - (overlapTileCountData[k] or 0)
 	end
 end
 
-function waterbody_logic.mergeWaterUsageTickStats(waterUsageTickStats, other_waterUsageTickStats)
+function waterbody_merge.mergeWaterUsageTickStats(waterUsageTickStats, other_waterUsageTickStats)
 	for i = 1, #waterUsageTickStats do
 		waterUsageTickStats[i] = waterUsageTickStats[i] + (other_waterUsageTickStats[i] or 0)
 	end
 end
 
-function waterbody_logic.mergeWaterBodyStateData(waterBodyStateData, other_waterBodyStateData)
+function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_waterBodyStateData)
 	waterBodyStateData.WaterUsed = waterBodyStateData.WaterUsed + other_waterBodyStateData.WaterUsed
 	waterBodyStateData.WaterUsedPrev = waterBodyStateData.WaterUsedPrev + other_waterBodyStateData.WaterUsedPrev
 
@@ -169,11 +119,11 @@ function waterbody_logic.mergeWaterBodyStateData(waterBodyStateData, other_water
 
 end
 
-function waterbody_logic.signalWaterBodyMergedToPlayer(waterBody, force, player_idx, other_waterBody)
+function waterbody_merge.signalWaterBodyMergedToPlayer(waterBody, force, player_idx, other_waterBody)
 	force.players[player_idx].print(string.format("%s merged %s. Merged water body has %sL of water with regen %sL.", waterBody.waterBodyName, other_waterBody.waterBodyName, comma_value(waterBody.waterAreaData.AmountWtr), waterBody.waterAreaData.RegenAmount))
 end
 
-function waterbody_logic.mergeWaterBody(waterBody1, waterBody2)
+function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	-- returns the merged water body
 	-- the other one has to be deleted from the storage
 
@@ -193,30 +143,30 @@ function waterbody_logic.mergeWaterBody(waterBody1, waterBody2)
 		error("Water bodies are not valid")
 	end
 
-	local overlapTileCountData = waterbody_logic.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surfaceId)
-	waterbody_logic.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData, overlapTileCountData)
-	waterbody_logic.mergeSearchData(waterBody1.searchData, waterBody2.searchData, overlapTileCountData)
-	waterbody_logic.mergeWaterBodyStateData(waterBody1.waterBodyStateData, waterBody2.waterBodyStateData)
+	local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surfaceId)
+	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData, overlapTileCountData)
+	waterbody_merge.mergeSearchData(waterBody1.searchData, waterBody2.searchData, overlapTileCountData)
+	waterbody_merge.mergeWaterBodyStateData(waterBody1.waterBodyStateData, waterBody2.waterBodyStateData)
 
-	waterbody_logic.mergeShapeData(waterBody1.waterBodyShapeData, waterBody2.waterBodyShapeData)
+	waterbody_merge.mergeShapeData(waterBody1.waterBodyShapeData, waterBody2.waterBodyShapeData)
 	
 	
-	waterbody_logic.mergeEntitiesData(waterBody1.entitiesData, waterBody2.entitiesData, waterBody1.waterBodyId, waterBody2.waterBodyId)
+	waterbody_merge.mergeEntitiesData(waterBody1.entitiesData, waterBody2.entitiesData, waterBody1.waterBodyId, waterBody2.waterBodyId)
 
-	waterbody_logic.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty)
-	waterbody_logic.mergeWaterUsageTickStats(waterBody1.waterUsageTickStats, waterBody2.waterUsageTickStats)
+	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty)
+	waterbody_merge.mergeWaterUsageTickStats(waterBody1.waterUsageTickStats, waterBody2.waterUsageTickStats)
 
     -- there is no merge for WaterAreaData - it will be re-calculated totally based on other merged data
 	waterBody1.waterAreaData.ToCalculate = true
 	waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody1)
-	waterbodies.signalPerPlayer(waterBody1, waterbody_logic.signalWaterBodyMergedToPlayer, waterBody2)
+	waterbodies.signalPerPlayer(waterBody1, waterbody_merge.signalWaterBodyMergedToPlayer, waterBody2)
 
 	waterbodies.removeWaterBody(waterBody2)
 
 	return waterBody1.waterBodyId
 end
 
-function waterbody_logic.mergeMultipleWaterBodies(waterBodyIds, triggerPosition, surfaceId)
+function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition, surfaceId)
     if #waterBodyIds < 2 then return end
     
     local targetWaterBody = waterbodies.getWaterBody(waterBodyIds[1])
@@ -225,7 +175,7 @@ function waterbody_logic.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
     for i = 2, #waterBodyIds do
         local otherWaterBody = waterbodies.getWaterBody(waterBodyIds[i])
         if otherWaterBody and otherWaterBody.valid then
-            waterbody_logic.mergeWaterBody(targetWaterBody, otherWaterBody)
+            waterbody_merge.mergeWaterBody(targetWaterBody, otherWaterBody)
         end
     end
     
