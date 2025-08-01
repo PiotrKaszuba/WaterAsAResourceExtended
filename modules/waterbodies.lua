@@ -570,12 +570,12 @@ function waterbodies.MapMarker:destroy()
     if self:valid() then self.tag.destroy() end
 end
 
-function waterbodies.MapMarker:update(args)
+function waterbodies.MapMarker:update(position, text, icon)
     if not self:valid() then return end
-    if args.position then self.position = args.position end
-    if args.text then self.text = args.text end
-    if args.icon then self.icon = args.icon end
-    if args.position or args.text or args.icon then
+    if position then self.position = position end
+    if text then self.text = text end
+    if icon then self.icon = icon end
+    if position or text or icon then
         -- tag is read only so we need to destroy and create a new one
         self:destroy()
         self.tag = self.force.add_chart_tag(utils.GetSurface(self.surfaceId), {position = self.position, text = self.text, icon = self.icon})
