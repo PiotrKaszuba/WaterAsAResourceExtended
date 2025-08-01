@@ -47,7 +47,7 @@ function waterbody_update.createMapMarker(waterBody)
         local args = {position = position, text = text, icon = icon}
 
         if not marker or not marker:valid() then
-            marker = MapMarker:new(force, waterBody.surfaceId, args)
+            marker = waterbodies.MapMarker:new(force, waterBody.surfaceId, args)
             waterBody.waterBodyStateData.MapMarkers[force_name] = marker
         else
             marker:update(args)

@@ -551,23 +551,26 @@ function waterbodies.calculatePercentageWaterUsed(waterbody)
 	return math.max(math.min(total_water_used / total_water_available, 1), 0) * 100
 end
 
-local MapMarker = {}
-MapMarker.__index = MapMarker
 
-function MapMarker:new(force, surfaceId, args)
+waterbodies.MapMarker = {}
+waterbodies.MapMarker.__index = waterbodies.MapMarker
+
+function waterbodies.MapMarker:new(force, surfaceId, args)
     local tag = force.add_chart_tag(utils.GetSurface(surfaceId), args)
-    return setmetatable({tag = tag}, MapMarker)
+    local instance = {tag = tag}
+    setmetatable(instance, waterbodies.MapMarker)
+    return instance
 end
 
-function MapMarker:valid()
+function waterbodies.MapMarker:valid()
     return self.tag and self.tag.valid
 end
 
-function MapMarker:destroy()
+function waterbodies.MapMarker:destroy()
     if self:valid() then self.tag.destroy() end
 end
 
-function MapMarker:update(args)
+function waterbodies.MapMarker:update(args)
     if not self:valid() then return end
     if args.position then self.tag.position = args.position end
     if args.text then self.tag.text = args.text end

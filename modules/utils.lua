@@ -158,15 +158,15 @@ function utils.merge_arrays(array1, array2)
 end
 
 utils.Queue = {}
+utils.Queue.__index = utils.Queue 
 
 function utils.Queue:new()
     local obj = {
-        first = 0,
-        last = -1,
+        first = 1,
+        last = 0,
         data = {}
     }
-    setmetatable(obj, self)
-    self.__index = self
+    setmetatable(obj, utils.Queue)
     return obj
 end
 
