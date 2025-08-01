@@ -133,15 +133,9 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
     -- Find adjacent water bodies
     local adjacentWaterBodies = tiles.findAdjacentWaterBodies(position, surfaceId)
     
-    if #adjacentWaterBodies == 0 then
-        -- Create new water body and start scanning
-        local waterBody = waterbodies.createNewWaterBody(surfaceId)
-        local new_water_body_id = waterbody_scan.beginScanWaterArea(waterBody.waterBodyId, position, 1, updateBudget)
-		if new_water_body_id ~= waterBody.waterBodyId then
-			waterBody = waterbodies.getWaterBody(new_water_body_id)
-		end
-        
-    elseif #adjacentWaterBodies == 1 then
+    -- if there are no adjacent water bodies - dont do anything
+    
+    if #adjacentWaterBodies == 1 then
         -- Extend existing water body
         local waterBodyId = adjacentWaterBodies[1]
         local waterBody = waterbodies.getWaterBody(waterBodyId)
@@ -155,7 +149,7 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
 			waterBody.gridsData.edgeGrid[utils.PositionToString(position)] = nil
         end
 
-    else
+    elseif #adjacentWaterBodies > 1 then
         -- Multiple water bodies - merge them
         waterbody_merge.mergeMultipleWaterBodies(adjacentWaterBodies, position, surfaceId)
 		if updateBudget then
