@@ -71,6 +71,13 @@ function utils.calculate_direction_offset(position, direction)
 	return offset_position
 end
 
+function utils.rejectEntityPlacement(entity, reason)
+    if entity.last_user and entity.last_user.valid then
+        entity.last_user.print(reason)
+        entity.last_user.insert{name = entity.name, count = 1}
+    end
+    entity.destroy()
+end
 
 function utils.validate_tile_placement(position, surfaceId, required_tile_types)
 	local tile_name = utils.GetTile(position, surfaceId).name
@@ -97,7 +104,6 @@ function utils.GetWaterDepthType(fluidname)
 	return nil
 end
 
-
 function utils.PositionToString (position)
 	return string.format ("%.1f , %.1f", position.x , position.y)	-- Print SearchPosition X, Y CoOrds as String
 end
@@ -111,6 +117,8 @@ function utils.GetSurface(surfaceId)
 	return game.surfaces[surfaceId]
 end
 
+-- any position within tile is valid
+-- the returned tile will have position as left-top corner
 function utils.GetTile(position, surfaceId)
 	return game.surfaces[surfaceId].get_tile(position.x, position.y)
 end
@@ -143,7 +151,6 @@ function utils.GetMaxKey(table)
 		end
 	end
 end
-
 
 function utils.comma_value(n) -- credit http://richard.warburton.it
 	local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')

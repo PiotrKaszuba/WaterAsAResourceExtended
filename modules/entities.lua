@@ -77,18 +77,9 @@ function entities.movePumpToWaterBody(unit_number, newWaterBodyId, oldWaterBodyI
 end
 
 
-function entities.rejectEntityPlacement(entity, reason)
-    if entity.last_user and entity.last_user.valid then
-        entity.last_user.print(reason)
-        entity.last_user.insert{name = entity.name, count = 1}
-    end
-    entity.destroy()
-end
-
-
 function entities.rejectOrDeactivatePump(pump, reason, do_not_reject)
     if not do_not_reject then
-        entities.rejectEntityPlacement(pump.entity, reason)
+        utils.rejectEntityPlacement(pump.entity, reason)
     else
         entities.deactivatePump(pump)
     end

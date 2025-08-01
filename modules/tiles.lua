@@ -25,21 +25,36 @@ tiles.waterfill_placer_to_water_tile = {
 
 
 function tiles.placerWater(placed)
+    local pos_center     = placed.position
+    local surface = placed.surface
+    local surfaceId = surface.index
+
+    local old_tile = utils.GetTile(pos_center, surfaceId)
+    local old_tile_name = old_tile.name
+    local pos = old_tile.position
+
+    if utils.DryWaterTiles[old_tile_name] then
+        utils.rejectEntityPlacement(placed, "Cannot place waterfill on dry tile")
+        return
+    end
 
     local replacement = tiles.waterfill_placer_to_water_tile[placed.name]
-
-    local pos     = placed.position
-    local surface = placed.surface
-
+    
     placed.destroy()
     local tileArray = {}
     local i = 1
 	tileArray[i] = {
 		name = replacement,
-		position = {pos.x, pos.y}
+		position = {x=pos.x, y=pos.y},
+        old_tile = {name = old_tile_name}
 	}
    
-    surface.set_tiles(tileArray, true, true, true, true)
+    surface.set_tiles(tileArray, true, true, true, false)
+    tiles.handleTileEventsInternal(
+        tileArray,
+        surfaceId
+    )
+
 end
 
 
@@ -53,6 +68,7 @@ function tiles.initTileEvent(eventType, position, surfaceId, tileData)
 end
 
 function tiles.addTileEvent(eventType, position, surfaceId, tileData)
+    -- assume position is left-top corner already
     storage.TileEventQueue:enqueue(tiles.initTileEvent(eventType, position, surfaceId, tileData))
 end
 
@@ -75,20 +91,28 @@ function tiles.processTileEventQueue(maxEvents, updateBudget)
     return processedCount
 end
 
-function tiles.handleTileEventsInternal(tiles, surfaceIndex)
-    if not tiles or not surfaceIndex then return end
+function tiles.handleTileEventsInternal(tileArray, surfaceIndex)
+    if not tileArray or not surfaceIndex then return end
     
-    for _, tile_event in pairs(tiles) do
+    for _, tile_event in pairs(tileArray) do
         local position = tile_event.position
+        -- try to fix the position to left-top corner just in case
+        local current_tile = utils.GetTile(position, surfaceIndex)
+        position = current_tile.position
+
         local old_name = tile_event.old_tile and tile_event.old_tile.name
         local new_name = tile_event.name
         
-        if new_name == "landfill" and old_name and utils.IsWaterTile(old_name) then
+        if old_name == nil then
+            game.print("Warning: script_raised_set_tiles with no old tile name. Problems may arise if landfill was placed not on water or waterfill was placed on water or dry tile.")
+        end
+
+        if new_name == "landfill" and (old_name and utils.IsWaterTile(old_name)) or (not old_name) then
             tiles.addTileEvent("landfill", position, surfaceIndex, {
                 originalTileName = old_name,
 				tileName = new_name,
             })
-        elseif utils.IsWaterTile(new_name) and old_name and not utils.IsWaterTile(old_name) then
+        elseif utils.IsWaterTile(new_name) and (old_name and not utils.IsWaterTile(old_name)) or (not old_name) then
             tiles.addTileEvent("waterfill", position, surfaceIndex, {
 				originalTileName = old_name,
                 tileName = new_name,
@@ -195,6 +219,7 @@ end
 
 
 function tiles.processLandfillEvent(tileEvent, updateBudget)
+    -- assume position is left-top corner already
 	local position = tileEvent.position
 	local surfaceId = tileEvent.surfaceId
     local gridKey = utils.PositionToString(position)

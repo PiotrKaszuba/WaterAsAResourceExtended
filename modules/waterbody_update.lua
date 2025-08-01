@@ -24,9 +24,9 @@ function waterbody_update.createMapMarker(waterBody)
 
     if waterBody.searchData.finished and not depleted then
         local remaining = math.ceil(waterBody.waterAreaData.AmountWtr * (100 - percent) / 100)
-        text = string.format("%s - %s - %.2f %%", waterBody.waterBodyName, utils.comma_value(remaining), 100 - percent)
+        text = string.format("%s - %s - %.2f %%", waterbodies.getFullNameForWaterBody(waterBody), utils.comma_value(remaining), 100 - percent)
     elseif waterBody.searchData.finished and depleted then
-        text = string.format("%s - Depleted", waterBody.waterBodyName)
+        text = string.format("%s - Depleted", waterbodies.getFullNameForWaterBody(waterBody))
     end
 
     for force_name, _ in pairs(waterBody.entitiesData.forces) do
@@ -35,10 +35,13 @@ function waterbody_update.createMapMarker(waterBody)
         local position = nil
         if force_to_pump[force_name] then
             position = force_to_pump[force_name].input_position
+            -- fix position to left-top corner
+            local tile = utils.GetTile(position, waterBody.surfaceId)
+            position = tile.position
         else
             local _, tileData = next(waterBody.gridsData.waterGridWithData)
             if not tileData or not tileData.position then
-                game.print(string.format("Warning: no position found for waterbody %s and force %s", waterBody.waterBodyName, force_name))
+                game.print(string.format("Warning: no position found for waterbody %s and force %s", waterbodies.getFullNameForWaterBody(waterBody), force_name))
                 break
             end
             position = tileData.position
@@ -71,12 +74,12 @@ function waterbody_update.getHighLevelAlarms()
     return {}
 end
 
-function waterbody_update.signalDepletionToPlayer(waterBody, force, player_idx)
-    force.players[player_idx].print(string.format("%s has been depleted.", waterBody.waterBodyName or "Water body"))
+function waterbody_update.signalDepletionToPlayer(waterBody)
+    return string.format("%s has been depleted.", waterbodies.getFullNameForWaterBody(waterBody))
 end
 
-function waterbody_update.signalAlarmToPlayer(waterBody, force, player_idx, percentUsed)
-    force.players[player_idx].print(string.format("%s has used %.0f%% of available water.", waterBody.waterBodyName or "Water body", percentUsed))
+function waterbody_update.signalAlarmToPlayer(waterBody, force, percentUsed)
+    return string.format("%s has used %.0f%% of available water.", waterbodies.getFullNameForWaterBody(waterBody), percentUsed)
 end
 
 function waterbody_update.handleDepletionAlarms(waterBody, percentUsed)
@@ -96,7 +99,7 @@ function waterbody_update.handleDepletionAlarms(waterBody, percentUsed)
             end
         end
         if do_alarm then
-            waterbodies.signalPerPlayer(waterBody, waterbody_update.signalAlarmToPlayer, percentUsed)
+            waterbodies.signalPerForce(waterBody, waterbody_update.signalAlarmToPlayer, percentUsed)
         end
     end
 end
@@ -204,7 +207,7 @@ function waterbody_update.waterBodyDepleted(waterBody)
     local state = waterBody.waterBodyStateData
     state.Depleted = true
     entities.deactivateWaterBodyPumps(waterBody.waterBodyId)
-    waterbodies.signalPerPlayer(waterBody, waterbody_update.signalDepletionToPlayer)
+    waterbodies.signalPerForce(waterBody, waterbody_update.signalDepletionToPlayer)
 end
 
 function waterbody_update.waterBodyRestored(waterBody)
@@ -254,10 +257,10 @@ function waterbody_update.collectWaterUsageStats(loop_tick)
     end
 end
 
-function waterbody_update.signalOrphanedToPlayer(waterBody, force, player_idx)
+function waterbody_update.signalOrphanedToPlayer(waterBody)
     local is_depleted = waterBody.waterBodyStateData.Depleted
     local depleted_msg = is_depleted and " depleted and " or ""
-    force.players[player_idx].print(string.format("%s has been %s orphaned and is removed.", waterBody.waterBodyName or "Water body", depleted_msg))
+    return string.format("%s has been %s orphaned and is removed.", waterbodies.getFullNameForWaterBody(waterBody), depleted_msg)
 end
 
 function waterbody_update.getRemoveDepletedOrphaned()
@@ -275,7 +278,7 @@ function waterbody_update.waterBodyCleanup(waterBody)
         if ((waterbodies.WaterBodyTypeToNamesCollection[waterBody.waterAreaData.WaterBodyType] == nil) and state.OrphanedBigUpdateCount > waterBody.waterAreaData.TotalArea)
             or (waterbody_update.getRemoveDepletedOrphaned() and state.Depleted) then
             
-            waterbodies.signalPerPlayer(waterBody, waterbody_update.signalOrphanedToPlayer)
+            waterbodies.signalPerForce(waterBody, waterbody_update.signalOrphanedToPlayer)
             waterbodies.removeWaterBody(waterBody)
         end
     else

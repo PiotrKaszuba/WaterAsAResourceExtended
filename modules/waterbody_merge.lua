@@ -120,8 +120,8 @@ function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_water
 
 end
 
-function waterbody_merge.signalWaterBodyMergedToPlayer(waterBody, force, player_idx, other_waterBody)
-	force.players[player_idx].print(string.format("%s merged %s. Merged water body has %sL of water with regen %sL.", waterBody.waterBodyName, other_waterBody.waterBodyName, utils.comma_value(waterBody.waterAreaData.AmountWtr), waterBody.waterAreaData.RegenAmount))
+function waterbody_merge.signalWaterBodyMergedToPlayer(waterBody, force, other_waterBody)
+	return string.format("%s merged %s. Merged water body has %sL of water with regen %sL and total area of %s tiles.", waterbodies.getFullNameForWaterBody(waterBody), waterbodies.getFullNameForWaterBody(other_waterBody), utils.comma_value(waterBody.waterAreaData.AmountWtr), waterBody.waterAreaData.RegenAmount, waterBody.waterAreaData.TotalArea)
 end
 
 function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
@@ -160,7 +160,7 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
     -- there is no merge for WaterAreaData - it will be re-calculated totally based on other merged data
 	waterBody1.waterAreaData.ToCalculate = true
 	waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody1)
-	waterbodies.signalPerPlayer(waterBody1, waterbody_merge.signalWaterBodyMergedToPlayer, waterBody2)
+	waterbodies.signalPerForce(waterBody1, waterbody_merge.signalWaterBodyMergedToPlayer, waterBody2)
 
 	waterbodies.removeWaterBody(waterBody2)
 
@@ -168,6 +168,10 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 end
 
 function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition, surfaceId)
+	-- fix position to left-top corner in case it was not
+	local tile = utils.GetTile(triggerPosition, surfaceId)
+	triggerPosition = tile.position
+
     if #waterBodyIds < 2 then return end
     
     local targetWaterBody = waterbodies.getWaterBody(waterBodyIds[1])

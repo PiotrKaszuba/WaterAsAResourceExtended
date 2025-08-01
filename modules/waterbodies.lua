@@ -338,21 +338,51 @@ waterbodies.WaterBodyTypeToNamesCollection = {
 	[6] = waterbodies.Oceans
 }
 
---local WaterBodyType = storage.WaterGlobalArea[a]["WaterBodyType"]
-function waterbodies.GenerateWaterBodyName(WaterBodyType) --Random Name Function
+function waterbodies.getAvailableNamesForWaterBodyType(waterBodyType)
+	local namesCollection = waterbodies.WaterBodyTypeToNamesCollection[waterBodyType]
 
-	local nameSuffix = waterbodies.WaterBodyTypesToName[WaterBodyType]
-	--check whether we have name collection for this water body type
-	if waterbodies.WaterBodyTypeToNamesCollection[WaterBodyType] ~= nil then
-		local randAmount = #waterbodies.WaterBodyTypeToNamesCollection[WaterBodyType]
-		local rand = math.random(1,randAmount)
-		local name = waterbodies.WaterBodyTypeToNamesCollection[WaterBodyType][rand]
-			.. nameSuffix
-		return name
+	local validWaterBodies = waterbodies.getValidWaterBodies()
+
+	local usedNames = {}
+	for waterBodyId, _ in pairs(validWaterBodies) do
+		local waterBody = waterbodies.getWaterBody(waterBodyId)
+		if waterBody and waterBody.waterBodyName then
+			usedNames[waterBody.waterBodyName] = true
+		end
 	end
+	local availableNames = {}
+	for _, name in ipairs(namesCollection) do
+		if usedNames[name] == nil then
+			availableNames[#availableNames + 1] = name
+		end
+	end
+	
+	return availableNames
+end
 
-	return nameSuffix
+function waterbodies.getFullNameForWaterBody(waterBody)
+	local name = waterBody.waterBodyName
+	local suffix = waterbodies.getWaterBodyNameSuffix(waterBody)
+	if name then
+		return name .. " " .. suffix
+	end
+	return suffix
+end
 
+function waterbodies.getWaterBodyNameSuffix(waterBody)
+	return waterbodies.WaterBodyTypesToName[waterBody.waterAreaData.WaterBodyType]
+end
+
+function waterbodies.GenerateWaterBodyName(waterBody)
+	if waterBody.waterBodyName == nil and waterbodies.WaterBodyTypeToNamesCollection[waterBody.waterAreaData.WaterBodyType] ~= nil then
+		local availableNames = waterbodies.getAvailableNamesForWaterBodyType(waterBody.waterAreaData.WaterBodyType)
+		local randAmount = #availableNames
+		if randAmount > 0 then
+			local rand = math.random(1, randAmount)
+			local name = availableNames[rand]
+			waterBody.waterBodyName = name
+		end
+	end
 end
 
 
@@ -480,13 +510,11 @@ function waterbodies.updateBoundingBox(shape_data, position)
 	waterbodies.calculateDimensions(shape_data)
 end
 
-function waterbodies.signalPerPlayer(water_body, signal_func, additional_args)
+function waterbodies.signalPerForce(water_body, signal_func, additional_args)
 	local water_body_forces = water_body.entitiesData.forces
 	for force_name, v in pairs(water_body_forces) do
 		if v then
-			for player_idx, _ in pairs(game.forces[force_name].players) do
-				signal_func(water_body, game.forces[force_name], player_idx, additional_args)
-			end
+			forces.getGameForce(force_name).print(signal_func(water_body, force_name, additional_args))
 		end
 	end
 end

@@ -6,7 +6,9 @@ waterbody_scan = {}
 
 -- return waterBodyId of existing or new water body
 function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surfaceId)
-
+	-- fix position to left-top corner
+	local tile = utils.GetTile(position, surfaceId)
+	position = tile.position
     local gridKey = utils.PositionToString(position)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
 
@@ -28,6 +30,10 @@ function waterbody_scan.getAdditionalScanAmount()
 end
 
 function waterbody_scan.getAdjacentWaterAndLandTiles(position, surfaceId, water_body_id)
+	-- fix position to left-top corner in case it was not
+	local tile = utils.GetTile(position, surfaceId)
+	position = tile.position
+	
 	-- if water_body_id is given then only return adjacent water tiles that are part of the water body
 	local adjacent_waterbody_tiles = {}
 	local adjacent_land_tiles = {}
@@ -49,22 +55,26 @@ function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surf
 	local adjacent_waterbody_tiles, adjacent_land_tiles = waterbody_scan.getAdjacentWaterAndLandTiles(position, surfaceId, waterBody.waterBodyId)
     
 	-- remove from edge grid - all adjacent land tiles
-	for _, position in pairs(adjacent_land_tiles) do
-		waterBody.gridsData.edgeGrid[utils.PositionToString(position)] = nil
+	for _, pos in pairs(adjacent_land_tiles) do
+		waterBody.gridsData.edgeGrid[utils.PositionToString(pos)] = nil
 	end
 
 	-- rebuild edges using EdgePattern
-	for _, position in pairs(adjacent_waterbody_tiles) do
+	for _, pos in pairs(adjacent_waterbody_tiles) do
 		-- this has to be completed even if budget is 0
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - 1
 		end
-		waterbody_scan.EdgePattern(position, surfaceId, waterBody, true, true)
+		waterbody_scan.EdgePattern(pos, surfaceId, waterBody, true, true)
 	end
 end
 
 function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody, force_edge_pattern, skip_water_tiles)
-    local edgeFound = false
+	-- fix position to left-top corner in case it was not
+	local tile = utils.GetTile(searchPosition, surfaceId)
+	searchPosition = tile.position
+
+	local edgeFound = false
     local searchData = waterBody.searchData
 
     for _, offset in pairs(utils.AdjacentOffsets) do
@@ -74,7 +84,7 @@ function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody, force_
         if (not searchData.searchedPositions[gridKey]) or force_edge_pattern then
             local tile = utils.GetTile(position, surfaceId)
             if tile.valid then
-                local tile_position = {x = tile.position.x, y = tile.position.y}
+                local tile_position = tile.position
                 if utils.IsWaterTile(tile.name) and not skip_water_tiles then
                     searchData.searchQueue:enqueue(tile_position)
                 else
@@ -157,6 +167,9 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 		return nil
 	end
 	local search_queue = water_body.searchData.searchQueue
+	-- fix position to left-top corner in case it was not
+	local tile = utils.GetTile(start_position, water_body.surfaceId)
+	start_position = tile.position
 	search_queue:enqueue(start_position)
 	local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount, updateBudget)
 	return water_body.waterBodyId
@@ -165,7 +178,6 @@ end
 -- Scan water area starting from a position and build tile data
 -- Returns: true if scan is complete, false if it is continuing
 function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
-
 	local surface_id = water_body.surfaceId
 	local water_body_max_area = waterbodies.getMaxWaterBodySize()
 	if updateBudget then
@@ -177,11 +189,14 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	-- Process tiles from search queue
 	while not water_body.searchData.searchQueue:is_empty() and search_amount > 0 do
 		local search_position = water_body.searchData.searchQueue:dequeue()
+		-- fix position to left-top corner in case it was not
+		local tile = utils.GetTile(search_position, surface_id)
+		search_position = tile.position
 		local gridKey = utils.PositionToString(search_position)
 		if not water_body.searchData.searchedPositions[gridKey] then
 			water_body.searchData.searchedPositions[gridKey] = true
 			if water_body.searchData.totalArea <= water_body_max_area then
-				local tile_name = utils.GetTile(search_position, surface_id).name
+				local tile_name = tile.name
 				water_body = waterbody_scan.processWaterTile(water_body, search_position, tile_name, surface_id)
 			end
 		end
@@ -196,19 +211,13 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	return waterbody_scan.checkIfScanningIsFinished(water_body), water_body
 end
 
-function waterbody_scan.getScanningAlarmEnabled(player_idx)
-	return settings.get_player_settings(game.players[player_idx])["Alarms-Continuing-Search"].value
+function waterbody_scan.signalScanningAlarmToPlayer(water_body)
+	return string.format("Still Scanning FluidArea %s", water_body.waterBodyId)
 end
 
-function waterbody_scan.signalScanningAlarmToPlayer(water_body, force, player_idx)
-	if waterbody_scan.getScanningAlarmEnabled(player_idx) then
-		force.players[player_idx].print(string.format("Still Scanning FluidArea %s", water_body.waterBodyId))
-	end
-end
-
-function waterbody_scan.signalFinishedScanningToPlayer(water_body, force, player_idx)
+function waterbody_scan.signalFinishedScanningToPlayer(water_body)
 	local msg_type = water_body.waterBodyStateData.FiredCreated and "updated" or "created"
-	force.players[player_idx].print(string.format("%s %s, with %sL of water with regen %sL.", water_body.waterBodyName, msg_type, utils.comma_value(water_body.waterAreaData.AmountWtr), water_body.waterAreaData.RegenAmount))
+	return string.format("%s %s, with %sL of water with regen %sL and total area of %s tiles.", waterbodies.getFullNameForWaterBody(water_body), msg_type, utils.comma_value(water_body.waterAreaData.AmountWtr), water_body.waterAreaData.RegenAmount, water_body.waterAreaData.TotalArea)
 end
 
 
@@ -221,7 +230,7 @@ function waterbody_scan.scanningLoopPeriodic(water_body)
 	water_body.waterBodyStateData.ScanLoopCount = water_body.waterBodyStateData.ScanLoopCount + 1
 
 	if water_body.waterBodyStateData.ScanLoopCount == waterbody_scan.getScanningLoopPeriod() then
-		waterbodies.signalPerPlayer(water_body, waterbody_scan.signalScanningAlarmToPlayer)
+		waterbodies.signalPerForce(water_body, waterbody_scan.signalScanningAlarmToPlayer)
 		water_body.waterBodyStateData.ScanLoopCount = 0
 	end
 end
@@ -249,7 +258,7 @@ function waterbody_scan.scanningLoop(water_body_id, updateBudget)
 				waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
 			end
 		elseif water_body.waterAreaData.ToCalculate then
-			waterbody_scan.finishedScanning(water_body, true)
+			waterbody_scan.finishedScanning(water_body)
 		end
 	end
 	return water_body_id
@@ -258,8 +267,11 @@ end
 function waterbody_scan.finishedScanning(water_body)
 	waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
 	water_body.searchData.finished = true
+	if (not water_body.waterBodyStateData.FiredCreated) then
+		waterbodies.GenerateWaterBodyName(water_body)
+	end
 	if (not water_body.waterBodyStateData.FiredCreated) or settings.global["Alarms-Tile-Message"].value then
-		waterbodies.signalPerPlayer(water_body, waterbody_scan.signalFinishedScanningToPlayer)
+		waterbodies.signalPerForce(water_body, waterbody_scan.signalFinishedScanningToPlayer)
 		water_body.waterBodyStateData.FiredCreated = true
 	end
 end

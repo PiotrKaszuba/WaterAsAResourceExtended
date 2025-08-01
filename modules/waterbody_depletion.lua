@@ -29,7 +29,11 @@ function waterbody_depletion.calculateFocusPoint(waterBody)
     local vectorY = centerY - pumpCenterY
 
     -- The focus point is "opposite" the pump center relative to the water body center
-    return { x = centerX + vectorX, y = centerY + vectorY }
+    local focusPoint = { x = centerX + vectorX, y = centerY + vectorY }
+    -- fix position to left-top corner
+    local tile = utils.GetTile(focusPoint, waterBody.surfaceId)
+    focusPoint = tile.position
+    return focusPoint
 end
 
 function waterbody_depletion.getCandidateTilesForVisualUpdate(waterBody, findDryTiles)

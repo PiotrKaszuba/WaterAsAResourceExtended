@@ -49,13 +49,7 @@ data:extend({
         minimum_value = 20,
         maximum_value = 10000
     },
-	    {
-        type = "bool-setting",
-        name = "Alarms-Continuing-Search",
-        setting_type = "runtime-per-user",
-        default_value = true
-    },
-		{
+	{
         type = "int-setting",
         name = "FluidArea-RegenRate",
         setting_type = "runtime-global",
