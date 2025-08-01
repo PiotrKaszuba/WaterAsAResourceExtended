@@ -59,13 +59,14 @@ function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surf
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - 1
 		end
-		waterbody_scan.EdgePattern(position, surfaceId, waterBody.searchData, true, true)
+		waterbody_scan.EdgePattern(position, surfaceId, waterBody, true, true)
 	end
 end
 
-function waterbody_scan.EdgePattern(searchPosition, surfaceId, searchData, force_edge_pattern, skip_water_tiles)
+function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody, force_edge_pattern, skip_water_tiles)
     local edgeFound = false
-    
+    local searchData = waterBody.searchData
+
     for _, offset in pairs(utils.AdjacentOffsets) do
         local position = {x = searchPosition.x + offset.x, y = searchPosition.y + offset.y}
         local gridKey = utils.PositionToString(position)
@@ -79,7 +80,7 @@ function waterbody_scan.EdgePattern(searchPosition, surfaceId, searchData, force
                 else
                     local edgeKey = utils.PositionToString(tile_position)
                     waterbodies.addNewWaterTile(edgeKey, surfaceId, -1)
-                    searchData.edgeGrid[edgeKey] = true
+                    waterBody.gridsData.edgeGrid[edgeKey] = true
                     edgeFound = true
                 end
             end
@@ -133,7 +134,7 @@ function waterbody_scan.processWaterTile(water_body, position, tile_name, surfac
 			end
 		end
 		-- Check for edge pattern and add adjacent tiles to search queue
-		waterbody_scan.EdgePattern(position, surface_id, water_body.searchData)
+		waterbody_scan.EdgePattern(position, surface_id, water_body)
 
 		waterbodies.updateBoundingBox(water_body.waterBodyShapeData, position)
 
