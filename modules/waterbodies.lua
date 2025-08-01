@@ -104,6 +104,16 @@ function waterbodies.checkWaterBodyExists(waterBodyId)
     return storage.WaterBodies[waterBodyId] ~= nil
 end
 
+function waterbodies.getFirstPumpPerForce(waterBody)
+	local force_to_pump = {}
+	for _, pump_data in pairs(waterBody.entitiesData.pumps) do
+		if not force_to_pump[pump_data.force] then
+			force_to_pump[pump_data.force] = pump_data
+		end
+	end
+	return force_to_pump
+end
+
 function waterbodies.getWaterAreaArray(waterBody)
     local waterArea = {}
     for _, tileData in pairs(waterBody.gridsData.waterGridWithData) do
@@ -514,12 +524,18 @@ function waterbodies.initCleanedWaterBody(water_body)
 	}
 end
 
+function waterbodies.destroyMapMarkers(waterBodyStateData)
+	for _, marker in pairs(waterBodyStateData.MapMarkers) do
+		if marker then
+			marker:destroy()
+		end
+	end
+end
+
 function waterbodies.removeWaterBody(waterBody)
 	waterBody.valid = false
 	
-	for _, marker in pairs(waterBody.waterBodyStateData.MapMarkers) do
-    	marker:destroy()
-	end
+	waterbodies.destroyMapMarkers(waterBody.waterBodyStateData)
 	
 	-- Clean up tile assignments to this water body
     -- waterbodies.cleanupWaterBodyTiles(waterBody)

@@ -2,8 +2,7 @@ TODO:
 
 Needed:
 1. Initial scans for pumps / poles when mod hasn't been initialized yet? + update mod func?
-3. Map Marker
-9. comprehensive tests - plan out test suite (especially for merging/splitting water bodies) etc, lifecycles etc.
+9. comprehensive tests - plan out test suite (especially for merging/splitting water bodies) etc, lifecycles etc. - somewhat - now do them
 
 Maybe:
 2. Update budget on depletion appearance? - IDK

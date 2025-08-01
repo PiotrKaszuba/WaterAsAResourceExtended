@@ -162,12 +162,9 @@ function waterbody_logic.mergeWaterBodyStateData(waterBodyStateData, other_water
 	waterBodyStateData.ScanLoopCount = waterBodyStateData.ScanLoopCount
 	waterBodyStateData.OrphanedBigUpdateCount = waterBodyStateData.OrphanedBigUpdateCount + other_waterBodyStateData.OrphanedBigUpdateCount
 
-    for _, marker in pairs(waterBodyStateData.MapMarkers) do
-        marker:destroy()
-    end
-    for _, marker in pairs(other_waterBodyStateData.MapMarkers) do
-        marker:destroy()
-    end
+    waterbodies.destroyMapMarkers(waterBodyStateData)
+    waterbodies.destroyMapMarkers(other_waterBodyStateData)
+	
     waterBodyStateData.MapMarkers = {}
 
 end

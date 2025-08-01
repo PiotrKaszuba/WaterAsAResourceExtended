@@ -4,19 +4,17 @@ require("modules.waterbody_depletion")
 
 waterbody_update = {}
 
+function waterbody_update.getMapMarkerEnabled()
+    return settings.global["Map-EnableMarkers"].value
+end
+
 function waterbody_update.createMapMarker(waterBody)
-    if not settings.global["Map-EnableMarkers"].value then
-        for _, marker in pairs(waterBody.waterBodyStateData.MapMarkers) do
-            marker:destroy()
-        end
-        waterBody.waterBodyStateData.MapMarkers = {}
+    if not waterbody_update.getMapMarkerEnabled() then
+        waterbodies.destroyMapMarkers(waterBody.waterBodyStateData)
         return
     end
 
-    local waterArea = waterbodies.getWaterAreaArray(waterBody)
-    if #waterArea == 0 then return end
-
-    local position = waterArea[1].position
+    local force_to_pump = waterbodies.getFirstPumpPerForce(waterBody)
 
     local text = "Pending..."
     local icon = {type = "fluid", name = "water"}
@@ -30,12 +28,23 @@ function waterbody_update.createMapMarker(waterBody)
         text = string.format("%s - Depleted", waterBody.waterBodyName)
     end
 
-    local args = {position = position, text = text, icon = icon}
-
     for force_name, _ in pairs(waterBody.entitiesData.forces) do
         local marker = waterBody.waterBodyStateData.MapMarkers[force_name]
         local surface = game.surfaces[waterBody.surfaceId]
         local force = game.forces[force_name]
+        local position = nil
+        if force_to_pump[force_name] then
+            position = force_to_pump[force_name].input_position
+        else
+            local _, tileData = next(waterBody.gridsData.waterGridWithData)
+            if not tileData or not tileData.position then
+                game.print(string.format("Warning: no position found for waterbody %s and force %s", waterBody.waterBodyName, force_name))
+                break
+            end
+            position = tileData.position
+        end
+        
+        local args = {position = position, text = text, icon = icon}
 
         if not marker or not marker:valid() then
             marker = MapMarker:new(force, surface, args)
