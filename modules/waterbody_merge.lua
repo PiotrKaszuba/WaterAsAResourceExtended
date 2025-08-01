@@ -185,6 +185,7 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
     end
     
     targetWaterBody.searchData.searchQueue:enqueue(triggerPosition)
+	targetWaterBody.searchData.searchedPositions[utils.PositionToString(triggerPosition)] = nil
     targetWaterBody.searchData.finished = false
 	targetWaterBody.waterAreaData.ToCalculate = true
 	-- also remove the tile from edge grid

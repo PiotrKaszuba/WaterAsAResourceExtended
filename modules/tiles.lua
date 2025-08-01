@@ -91,7 +91,7 @@ function tiles.processTileEventQueue(maxEvents, updateBudget)
     return processedCount
 end
 
-function tiles.handleTileEventsInternal(tileArray, surfaceIndex)
+function tiles.handleTileEventsInternal(tileArray, surfaceIndex, placed_name)
     if not tileArray or not surfaceIndex then return end
     
     for _, tile_event in pairs(tileArray) do
@@ -101,7 +101,7 @@ function tiles.handleTileEventsInternal(tileArray, surfaceIndex)
         position = current_tile.position
 
         local old_name = tile_event.old_tile and tile_event.old_tile.name
-        local new_name = tile_event.name
+        local new_name = tile_event.name or placed_name
         
         if old_name == nil then
             game.print("Warning: script_raised_set_tiles with no old tile name. Problems may arise if landfill was placed not on water or waterfill was placed on water or dry tile.")
@@ -148,6 +148,7 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
         
         if waterBody then
             waterBody.searchData.searchQueue:enqueue(position)
+            waterBody.searchData.searchedPositions[utils.PositionToString(position)] = nil
             waterBody.searchData.finished = false
             waterBody.waterAreaData.ToCalculate = true
 			-- also remove the tile from edge grid
@@ -156,10 +157,7 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
 
     else
         -- Multiple water bodies - merge them
-        local new_water_body_id = waterbody_merge.mergeMultipleWaterBodies(adjacentWaterBodies, position, surfaceId)
-		if new_water_body_id ~= waterBody.waterBodyId then
-			waterBody = waterbodies.getWaterBody(new_water_body_id)
-		end
+        waterbody_merge.mergeMultipleWaterBodies(adjacentWaterBodies, position, surfaceId)
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - #adjacentWaterBodies
 		end

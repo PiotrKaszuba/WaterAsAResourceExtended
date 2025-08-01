@@ -41,7 +41,7 @@ function waterbody_scan.getAdjacentWaterAndLandTiles(position, surfaceId, water_
 		local adj_pos = {x = position.x + offset.x, y = position.y + offset.y}
 		local adj_gridKey = utils.PositionToString(adj_pos)
 		local adj_waterBodyId = waterbodies.getWaterTile(adj_gridKey, surfaceId)
-		local is_water_tile = utils.IsWaterTile(utils.GetTile(adj_pos, surfaceId).name)
+		local is_water_tile = utils.IsWaterOrDryTile(utils.GetTile(adj_pos, surfaceId).name)
 		if (water_body_id == nil or adj_waterBodyId == water_body_id) and is_water_tile then
 			adjacent_waterbody_tiles[#adjacent_waterbody_tiles + 1] = adj_pos
 		elseif not is_water_tile then
@@ -85,9 +85,10 @@ function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody, force_
             local tile = utils.GetTile(position, surfaceId)
             if tile.valid then
                 local tile_position = tile.position
-                if utils.IsWaterTile(tile.name) and not skip_water_tiles then
+				local is_water_tile = utils.IsWaterTile(tile.name)
+                if is_water_tile and not skip_water_tiles then
                     searchData.searchQueue:enqueue(tile_position)
-                else
+				elseif not is_water_tile then
                     local edgeKey = utils.PositionToString(tile_position)
                     waterbodies.addNewWaterTile(edgeKey, surfaceId, -1)
                     waterBody.gridsData.edgeGrid[edgeKey] = true

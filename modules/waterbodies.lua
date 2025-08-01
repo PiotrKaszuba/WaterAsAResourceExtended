@@ -6,11 +6,13 @@ function waterbodies.initWaterBodiesAndTiles()
     if storage.WaterBodies == nil then
         storage.WaterBodies = {}
 		storage.NextWaterBodyId = 1
+		storage.RecycledWaterBodyIds = {} -- waterBodyId -> true
 		storage.ValidWaterBodies = {} -- waterBodyId -> true
     end
     if storage.WaterTiles == nil then
         storage.WaterTiles = {} -- surfaceId -> gridKey -> waterBodyId
-    end
+		storage.WaterBodyToNumTiles = {} -- waterBodyId -> numTiles
+	end
 end
 
 function waterbodies.getValidWaterBodies()
@@ -36,8 +38,13 @@ end
 -- if not present use as waterbodies.addNewWaterTile(position, surfaceId, -1)
 function waterbodies.addNewWaterTile(gridKey, surfaceId, waterBodyId)
     waterbodies.initSurface(surfaceId)
-
-    storage.WaterTiles[surfaceId][gridKey] = waterBodyId or -1
+	local previous_owner = storage.WaterTiles[surfaceId][gridKey]
+	local write_id = waterBodyId or -1
+    storage.WaterTiles[surfaceId][gridKey] = write_id
+	if previous_owner ~= nil then
+		storage.WaterBodyToNumTiles[previous_owner] = (storage.WaterBodyToNumTiles[previous_owner] or 0) - 1
+	end
+	storage.WaterBodyToNumTiles[write_id] = (storage.WaterBodyToNumTiles[write_id] or 0) + 1
 end
 
 function waterbodies.getWaterTile(gridKey, surfaceId)
@@ -74,6 +81,12 @@ function waterbodies.getWaterTilePercentageWaterUsed(gridKey, surfaceId)
 end
 
 function waterbodies.getNextFreeWaterBodyId()
+	if next(storage.RecycledWaterBodyIds) ~= nil then
+		local recycledWaterBodyId = next(storage.RecycledWaterBodyIds)
+		storage.RecycledWaterBodyIds[recycledWaterBodyId] = nil
+		return recycledWaterBodyId
+	end
+
     local waterBodyId = storage.NextWaterBodyId
     while storage.WaterBodies[waterBodyId] ~= nil do
         waterBodyId = waterBodyId + 1

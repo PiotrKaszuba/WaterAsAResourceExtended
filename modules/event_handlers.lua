@@ -75,7 +75,8 @@ function event_handlers.handlePlayerTileEvents(event)
     
     tiles.handleTileEventsInternal(
         event.tiles,
-        event.surface_index
+        event.surface_index,
+        event.tile.name
     )
 end
 

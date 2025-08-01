@@ -88,6 +88,14 @@ function utils.validate_tile_placement(position, surfaceId, required_tile_types)
 	return false
 end
 
+function utils.IsWaterOrDryTile(tileName)
+	return utils.IsWaterTile(tileName) or utils.IsDryTile(tileName)
+end
+
+function utils.IsDryTile(tileName)
+	return utils.DryWaterTiles[tileName] == true
+end
+
 function utils.IsWaterTile(tileName)
 	return utils.WaterTiles[tileName] == true
 end
