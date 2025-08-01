@@ -188,6 +188,17 @@ function entities.getActivePumpCount(waterBody)
     return count
 end
 
+function entities.getFirstPumpPerForce(waterBody)
+	local force_to_pump = {}
+	for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
+		local pump_data = entities.getTrackedEntity(unit_number)
+		if not force_to_pump[pump_data.forceName] then
+			force_to_pump[pump_data.forceName] = pump_data
+		end
+	end
+	return force_to_pump
+end
+
 function entities.updatePumpStates()
     for unit_number, pump_data in pairs(storage.TrackedEntities) do
         if pump_data.type == "pump" then

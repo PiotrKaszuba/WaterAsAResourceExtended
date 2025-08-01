@@ -15,7 +15,7 @@ function waterbody_update.createMapMarker(waterBody)
         return
     end
 
-    local force_to_pump = waterbodies.getFirstPumpPerForce(waterBody)
+    local force_to_pump = entities.getFirstPumpPerForce(waterBody)
 
     local text = "Pending..."
     local icon = {type = "fluid", name = "water"}
@@ -108,6 +108,7 @@ function waterbody_update.bigUpdateWaterLevel(waterBody, waterUsedChange, regenA
 	state.WaterUsedPrev = state.WaterUsed
     waterbody_update.updateWaterLevel(waterBody, waterUsedChange, regenAmount)
     state.TempAvailableWater = waterbodies.calculateRemainingWater(waterBody)
+    state.TempUsedWater = 0
 end
 
 function waterbody_update.updateWaterLevel(waterBody, waterUsedChange, regenAmount)
@@ -235,8 +236,8 @@ end
 function waterbody_update.smallUpdateRemainingWaterDepletion(waterBody, waterbody_total_pumping_water)
 	local state = waterBody.waterBodyStateData
     if not state.Depleted then
-        state.TempAvailableWater = state.TempAvailableWater - waterbody_total_pumping_water
-        if state.TempAvailableWater <= 0 then
+        state.TempUsedWater = state.TempUsedWater + waterbody_total_pumping_water
+        if state.TempUsedWater >= state.TempAvailableWater then
             waterbody_update.waterBodyDepleted(waterBody)
         end
     elseif waterbody_total_pumping_water > 0 then

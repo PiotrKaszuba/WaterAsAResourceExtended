@@ -6,6 +6,10 @@ require("modules.waterbody_scan")
 
 event_handlers = {}
 
+function event_handlers.signalCreatedWaterBodyPendingScanningToPlayer(waterBody, force, player_idx)
+    force.players[player_idx].print("A new water body has been created and is pending scanning.")
+end
+
 function event_handlers.BuiltPump(entity, do_not_reject)
 
     local input_position = utils.calculate_direction_offset(entity.position, entity.direction)
@@ -19,6 +23,7 @@ function event_handlers.BuiltPump(entity, do_not_reject)
     else
         local waterBodyId = waterbody_scan.createWaterBodyFromTileIfNotExists(input_position, surfaceId)
         entities.registerPumpAndAddToWaterBody(waterBodyId, pump)
+        waterbodies.signalPerPlayer(waterbodies.getWaterBody(waterBodyId), event_handlers.signalCreatedWaterBodyPendingScanningToPlayer)
     end
 end
 

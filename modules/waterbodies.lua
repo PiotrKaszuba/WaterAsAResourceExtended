@@ -104,15 +104,6 @@ function waterbodies.checkWaterBodyExists(waterBodyId)
     return storage.WaterBodies[waterBodyId] ~= nil
 end
 
-function waterbodies.getFirstPumpPerForce(waterBody)
-	local force_to_pump = {}
-	for _, pump_data in pairs(waterBody.entitiesData.pumps) do
-		if not force_to_pump[pump_data.force] then
-			force_to_pump[pump_data.force] = pump_data
-		end
-	end
-	return force_to_pump
-end
 
 function waterbodies.getWaterAreaArray(waterBody)
     local waterArea = {}
@@ -207,8 +198,10 @@ function waterbodies.initWaterBodyStateData()
         ["WaterUsed"] = 0,	-- the actual water used synchronized on 'big updates'
         ["WaterUsedPrev"] = 0,	-- the actual water used on the previous 'big update'
 
-		["TempAvailableWater"] = 0,	-- the available water that can be used before the next 'big update' - if <= 0 - the water body is depleted and triggers instant update
+		["TempAvailableWater"] = 0,	-- the available water that can be used before the next 'big update' 
+		["TempUsedWater"] = 0,	-- the water used since the last 'big update' - used for small updates - if >= TempAvailableWater - the water body is depleted and triggers instant update
 
+		
 		["WaterUsedPenalty"] = 0,	-- the water used penalty that is applied to the water body - it occurs when waterbody is created on the water tiles that had been used in previous waterbody depleted to some extent
 
 		["WaterUsedPenaltyRestored"] = 0,	-- the restored water (above WaterUsed) that can negate the WaterUsedPenalty (up to that amount)
@@ -450,6 +443,7 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 	waterBody.waterAreaData.WaterBodyType = waterBodyType
 	
 	waterBody.waterBodyStateData.WaterUsedPenalty = penaltyWaterUsed
+	waterBody.waterBodyStateData.TempAvailableWater = waterbodies.calculateRemainingWater(waterBody)
 
 	waterBody.waterAreaData.ToCalculate = false
 

@@ -218,11 +218,11 @@ function waterbody_scan.getScanningLoopPeriod()
 end
 
 function waterbody_scan.scanningLoopPeriodic(water_body)
-	water_body.searchData.ScanLoopCount = water_body.searchData.ScanLoopCount + 1
+	water_body.waterBodyStateData.ScanLoopCount = water_body.waterBodyStateData.ScanLoopCount + 1
 
-	if water_body.searchData.ScanLoopCount == waterbody_scan.getScanningLoopPeriod() then
+	if water_body.waterBodyStateData.ScanLoopCount == waterbody_scan.getScanningLoopPeriod() then
 		waterbodies.signalPerPlayer(water_body, waterbody_scan.signalScanningAlarmToPlayer)
-		water_body.searchData.ScanLoopCount = 0
+		water_body.waterBodyStateData.ScanLoopCount = 0
 	end
 end
 

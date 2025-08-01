@@ -90,6 +90,7 @@ function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_water
 	waterBodyStateData.WaterUsedPrev = waterBodyStateData.WaterUsedPrev + other_waterBodyStateData.WaterUsedPrev
 
 	waterBodyStateData.TempAvailableWater = waterBodyStateData.TempAvailableWater + other_waterBodyStateData.TempAvailableWater
+	waterBodyStateData.TempUsedWater = waterBodyStateData.TempUsedWater + other_waterBodyStateData.TempUsedWater
 
 	waterBodyStateData.WaterUsedPenalty = waterBodyStateData.WaterUsedPenalty + other_waterBodyStateData.WaterUsedPenalty
 	waterBodyStateData.WaterUsedPenaltyRestored = waterBodyStateData.WaterUsedPenaltyRestored + other_waterBodyStateData.WaterUsedPenaltyRestored
@@ -153,7 +154,7 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	
 	waterbody_merge.mergeEntitiesData(waterBody1.entitiesData, waterBody2.entitiesData, waterBody1.waterBodyId, waterBody2.waterBodyId)
 
-	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty)
+	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty, {})
 	waterbody_merge.mergeWaterUsageTickStats(waterBody1.waterUsageTickStats, waterBody2.waterUsageTickStats)
 
     -- there is no merge for WaterAreaData - it will be re-calculated totally based on other merged data
