@@ -15,10 +15,10 @@ function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surfaceId)
     if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
         local waterBody = waterbodies.createNewWaterBody(surfaceId)
 		waterbody_scan.beginScanWaterArea(waterBody.waterBodyId, position)
-        return waterBody.waterBodyId
+        return waterBody.waterBodyId, true
     end
 
-    return waterBodyId
+    return waterBodyId, false
 end
 
 function waterbody_scan.getInitialScanAmount()

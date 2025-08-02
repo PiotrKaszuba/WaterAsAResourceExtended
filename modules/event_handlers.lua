@@ -10,6 +10,15 @@ function event_handlers.signalCreatedWaterBodyPendingScanningToPlayer(waterBody)
     return "A new water body has been created and is pending scanning."
 end
 
+function event_handlers.signalAttachedToWaterBody(waterBody)
+    local shared_msg = "A pump has been added to "
+    if waterBody.searchData.finished then
+        return string.format("%s%s, with %sL of water with regen %sL and total area of %s tiles.", shared_msg, waterbodies.getFullNameForWaterBody(waterBody), utils.comma_value(waterBody.waterAreaData.AmountWtr), waterBody.waterAreaData.RegenAmount, waterBody.waterAreaData.TotalArea)
+    else
+        return string.format("%s water body that is still being scanned.", shared_msg)
+    end
+end
+
 function event_handlers.BuiltPump(entity, do_not_reject)
 
     local input_position = utils.calculate_direction_offset(entity.position, entity.direction)
@@ -21,9 +30,9 @@ function event_handlers.BuiltPump(entity, do_not_reject)
     if not utils.validate_tile_placement(input_position, surfaceId, utils.WaterTiles) then
         entities.rejectOrDeactivatePump(pump, "Must be placed on water edge", do_not_reject)
     else
-        local waterBodyId = waterbody_scan.createWaterBodyFromTileIfNotExists(input_position, surfaceId)
+        local waterBodyId, created = waterbody_scan.createWaterBodyFromTileIfNotExists(input_position, surfaceId)
         entities.registerPumpAndAddToWaterBody(waterBodyId, pump)
-        waterbodies.signalPerForce(waterbodies.getWaterBody(waterBodyId), event_handlers.signalCreatedWaterBodyPendingScanningToPlayer)
+        waterbodies.signalPerForce(waterbodies.getWaterBody(waterBodyId), created and event_handlers.signalCreatedWaterBodyPendingScanningToPlayer or event_handlers.signalAttachedToWaterBody)
     end
 end
 
