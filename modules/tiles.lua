@@ -34,7 +34,7 @@ function tiles.placerWater(placed)
     local pos = old_tile.position
 
     if utils.DryWaterTiles[old_tile_name] then
-        utils.rejectEntityPlacement(placed, "Cannot place waterfill on dry tile", "waterfill")
+        utils.rejectEntityPlacement(placed, "Cannot place waterfill on dry (depleted) tile", "waterfill")
         return
     end
 
@@ -104,7 +104,7 @@ function tiles.handleTileEventsInternal(tileArray, surfaceIndex, placed_name)
         local new_name = tile_event.name or placed_name
         
         if old_name == nil then
-            game.print("Warning: script_raised_set_tiles with no old tile name. Problems may arise if landfill was placed not on water or waterfill was placed on water or dry tile.")
+            game.print("Warning: script_raised_set_tiles with no old tile name. Problems may arise if landfill was placed not on water or waterfill was placed on water or dry (depleted) tile.")
         end
 
         if new_name == "landfill" and (old_name and utils.IsWaterTile(old_name)) or (not old_name) then

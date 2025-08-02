@@ -24,7 +24,7 @@ function event_handlers.BuiltPump(entity)
     local pump = initNewPump(entity)
 
     if not entities.validatePumpPlacement(pump) then
-        utils.rejectEntityPlacement(pump.entity, "Must be placed on water edge")
+        utils.rejectEntityPlacement(pump.entity, "Must be placed on water edge and not on a dry (depleted) tile")
     else
         local waterBodyId, created = waterbody_scan.createWaterBodyFromTileIfNotExists(pump.input_position, pump.surfaceId)
         entities.registerPumpAndAddToWaterBody(waterBodyId, pump)

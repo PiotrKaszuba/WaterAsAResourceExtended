@@ -147,7 +147,7 @@ function waterbody_update.calculateEffectiveRegenAmount(waterBody)
     if missing_water_percentage > 0.75 then
         multiplier = math.max(math.min(1.5 - (missing_water_percentage - 0.75) * 4, 1.5), 0.5)
     else
-        multiplier = math.max(math.min(0.75 + (0.75 - missing_water_percentage) * 1, 1.5), 0.5)
+        multiplier = math.max(math.min(1.5 + (missing_water_percentage - 0.75) * 1, 1.5), 0.5)
     end
     local regen_with_bonus = regen_base * multiplier
     return regen_with_bonus

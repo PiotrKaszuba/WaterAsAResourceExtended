@@ -56,12 +56,20 @@ function entities.registerPumpAndAddToWaterBody(waterBodyId, pump_data)
     end
 end
 
+function entities.updateWaterBodyForces(waterBody)
+    waterBody.entitiesData.forces = {}
+    for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
+		pump_data = entities.getTrackedEntity(unit_number)
+        waterBody.entitiesData.forces[pump_data.forceName] = true
+    end
+end
+
 function entities.removePumpFromWaterBody(unit_number, waterBodyId)
     if waterBodyId ~= nil then
         local waterBody = waterbodies.getWaterBody(waterBodyId)
         if waterBody and waterBody.valid then
             waterBody.entitiesData.pumps[unit_number] = nil
-            waterbodies.updateWaterBodyForces(waterBody)
+            entities.updateWaterBodyForces(waterBody)
         end
     end
 end
