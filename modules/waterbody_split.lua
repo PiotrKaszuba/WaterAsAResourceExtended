@@ -36,7 +36,7 @@ function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, o
 	local rect_area_ratio = 0.0
 	local start_tile_gridKey = utils.PositionToString(start_tile_pos)
 	local connected_tiles = {}
-	connected_tiles[start_tile_gridKey] = true
+	connected_tiles[#connected_tiles+1] = start_tile_pos
 	local missing_tiles = {} -- indicator table, gridKey -> true
 	for _, tile_pos in pairs(otherTiles_positions) do
 		missing_tiles[utils.PositionToString(tile_pos)] = true
@@ -51,9 +51,10 @@ function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, o
 		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody.waterBodyShapeData, center_position, current_check_size)
 		local all_connected_tiles = utils.GetSurface(surfaceId).get_connected_tiles(start_tile_pos, utils.GetWaterTileNamesArray(), true, bbox)
 		for _, tile_pos in pairs(all_connected_tiles) do
-			if missing_tiles[utils.PositionToString(tile_pos)] then
-				connected_tiles[utils.PositionToString(tile_pos)] = true
-				missing_tiles[utils.PositionToString(tile_pos)] = nil
+			local tile_pos_gridKey = utils.PositionToString(tile_pos)
+			if missing_tiles[tile_pos_gridKey] then
+				connected_tiles[#connected_tiles+1] = tile_pos
+				missing_tiles[tile_pos_gridKey] = nil
 			end
 		end
 		if next(missing_tiles) == nil then
@@ -73,7 +74,8 @@ function waterbody_split.checkIfAllTilesAreUsedAndUnique(all_tiles_positions, co
 		temp_all_tiles_set[temp_gridKey] = true
 	end
 	for _, connected_tiles_set_gridKeys in pairs(connected_tiles_sets_gridKeys) do
-		for grid_key, _ in pairs(connected_tiles_set_gridKeys) do
+		for _, position in ipairs(connected_tiles_set_gridKeys) do
+			local grid_key = utils.PositionToString(position)
 			if not temp_all_tiles_set[grid_key] then
 				return "duplicate"
 			end
@@ -149,26 +151,29 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		waterBody.entitiesData.pumps = {}
 		waterbodies.removeWaterBody(waterBody)
 		local first_tile_pos = nil
-		for _, tile_set in pairs(connected_tile_sets) do
-			_, first_tile_pos = next(tile_set)
-			local new_water_body_id = waterbodies.createNewWaterBody(surfaceId)
-			new_water_body_ids[#new_water_body_ids + 1] = {waterBodyId = new_water_body_id, position = first_tile_pos}
+		for _, tile_set in ipairs(connected_tile_sets) do
+			first_tile_pos = tile_set[1]
+			local new_water_body = waterbodies.createNewWaterBody(surfaceId)
+			new_water_body_ids[#new_water_body_ids + 1] = {waterBodyId = new_water_body.waterBodyId, position = first_tile_pos}
 		end
 
-		for pump_unit_number, pump_data in pairs(pumps) do
-			local pump_input_position = pump_data.input_position
-			-- check if this is still water tile
-			if utils.validate_tile_placement(pump_input_position, surfaceId, utils.WaterTiles) then
-				local new_water_body_id = waterbodies.createNewWaterBody(surfaceId)
-				
-				-- fix position to left-top corner in case it was not
-				local tile = utils.GetTile(pump_input_position, surfaceId)
-				local pump_input_top_left_corner = tile.position
-				
-				new_water_body_ids[#new_water_body_ids + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner}
-				entities.movePumpToWaterBody(pump_unit_number, new_water_body_id, waterBodyId)
-			else
-				entities.disablePump(pump_data)
+		for pump_unit_number, _ in pairs(pumps) do
+			local pump_data = entities.getTrackedEntity(pump_unit_number)
+			if pump_data and pump_data.entity.valid and pump_data.type == "pump" and not pump_data.disabled then
+				local pump_input_position = pump_data.input_position
+				-- check if this is still water tile
+				if utils.validate_tile_placement(pump_input_position, surfaceId, utils.WaterTiles) then
+					local new_water_body = waterbodies.createNewWaterBody(surfaceId)
+					
+					-- fix position to left-top corner in case it was not
+					local tile = utils.GetTile(pump_input_position, surfaceId)
+					local pump_input_top_left_corner = tile.position
+					
+					new_water_body_ids[#new_water_body_ids + 1] = {waterBodyId = new_water_body.waterBodyId, position = pump_input_top_left_corner}
+					entities.movePumpToWaterBody(pump_unit_number, new_water_body.waterBodyId, waterBodyId)
+				else
+					entities.disablePump(pump_data)
+				end
 			end
 		end
 
