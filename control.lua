@@ -9,23 +9,17 @@ require("modules.event_handlers")
 control = {}
 
 control.periodic_update_ticks = 1
-control.desired_big_update_ticks = 60
+control.desired_big_update_ticks = 30
 
-function normalize_values_per_second(value, as_int_ceiling)
-	local normalized_value = value * storage.LoopNumTicks * storage.PeriodicEveryXTicks / 60
-	if as_int_ceiling then
-		return math.ceil(normalized_value)
-	end
-	return normalized_value
-end
+
 
 function initUpdateBudget()
-	return {budget = normalize_values_per_second(storage.UpdateBudget, true)}
+	return {budget = utils.normalize_values_per_second(storage.UpdateBudget, true)}
 end
 function EverySecond()
 	local updateBudget = initUpdateBudget()
 	-- events handling
-	tiles.processTileEventQueue(normalize_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
+	tiles.processTileEventQueue(utils.normalize_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
 	waterbody_update.updateWaterBodies(updateBudget)
 	entities.updatePumpStates()
 end

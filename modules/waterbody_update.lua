@@ -2,6 +2,7 @@ require("modules.waterbodies")
 require("modules.waterbody_scan")
 require("modules.waterbody_depletion")
 require("modules.entities")
+require("modules.utils")
 
 waterbody_update = {}
 
@@ -104,9 +105,11 @@ function waterbody_update.handleDepletionAlarms(waterBody, percentUsed)
     end
 end
 
-function waterbody_update.bigUpdateWaterLevel(waterBody, waterUsedChange, regenAmount)
+function waterbody_update.bigUpdateWaterLevel(waterBody)
 	local state = waterBody.waterBodyStateData
 	state.WaterUsedPrev = state.WaterUsed
+    local waterUsedChange = state.TempUsedWater
+    local regenAmount = waterbody_update.calculateEffectiveRegenAmount(waterBody)
     waterbody_update.updateWaterLevel(waterBody, waterUsedChange, regenAmount)
     state.TempAvailableWater = waterbodies.calculateRemainingWater(waterBody)
     state.TempUsedWater = 0
@@ -134,25 +137,9 @@ function waterbody_update.updateWaterLevel(waterBody, waterUsedChange, regenAmou
     state.TempAvailableWater = state.TempAvailableWater - waterUsedChange + (regen1 + regen2)
 end
 
-
-
-function waterbody_update.calculateWaterUsage(waterBody)
-    -- it just sums up the tick stats - the estimation between ticks 
-    -- is done getWaterUsageStatsForPump by multiplying by storage.PeriodicEveryXTicks
-    local waterUsageTickStats = waterBody.waterUsageTickStats
-    if not waterUsageTickStats then return 0 end
-
-    local total_pumping_water = 0
-    for _, waterUsage in ipairs(waterUsageTickStats) do
-        total_pumping_water = total_pumping_water + waterUsage
-    end
-
-    return total_pumping_water
-end
-
 function waterbody_update.calculateEffectiveRegenAmount(waterBody)
 	-- Placeholder for regen calculation
-	local regen_base = waterBody.waterAreaData.RegenAmount * (storage.LoopNumTicks * storage.PeriodicEveryXTicks) / 60
+	local regen_base = utils.normalize_values_per_second(waterBody.waterAreaData.RegenAmount)
     local missing_water_percentage = waterbodies.calculatePercentageWaterUsed(waterBody)/100
     -- best regen is at 75% missing water -> 150%
     -- at 100% missing water, regen is at 50% and at 0% missing water, regen is at 75%
@@ -194,13 +181,6 @@ function waterbody_update.collectWaterUsageStatsForWaterBody(waterBodyId)
 		total_pumping_water = total_pumping_water + pumpUsage
 	end
 	return total_pumping_water
-end
-
-function waterbody_update.updateWaterUsageTickStats(waterbody, loop_tick, waterbody_total_pumping_water)
-	if loop_tick == 0 or not waterbody.waterUsageTickStats then
-		waterbody.waterUsageTickStats = waterbodies.initWaterUsageTickStats()
-	end
-	waterbody.waterUsageTickStats[loop_tick + 1] = waterbody_total_pumping_water
 end
 
 function waterbody_update.waterBodyDepleted(waterBody)
@@ -252,7 +232,6 @@ function waterbody_update.collectWaterUsageStats(loop_tick)
     for id, _ in pairs(validWaterBodies) do
         local waterbody_total_pumping_water = waterbody_update.collectWaterUsageStatsForWaterBody(id)
 		local waterbody = waterbodies.getWaterBody(id)
-		waterbody_update.updateWaterUsageTickStats(waterbody, loop_tick, waterbody_total_pumping_water)
         waterbody_update.smallUpdateRemainingWaterDepletion(waterbody, waterbody_total_pumping_water)
     end
 end
@@ -273,16 +252,16 @@ function waterbody_update.waterBodyCleanup(waterBody)
     local state = waterBody.waterBodyStateData
 
     if isOrphaned then
-        state.OrphanedBigUpdateCount = state.OrphanedBigUpdateCount + 1
+        state.OrphanedSecondsCount = state.OrphanedSecondsCount + utils.normalize_values_per_second(1)
         -- remove only unnamed waterbody types and after bigUpdates higher than their area
-        if ((waterbodies.WaterBodyTypeToNamesCollection[waterBody.waterAreaData.WaterBodyType] == nil) and state.OrphanedBigUpdateCount > waterBody.waterAreaData.TotalArea)
+        if ((waterbodies.WaterBodyTypeToNamesCollection[waterBody.waterAreaData.WaterBodyType] == nil) and state.OrphanedSecondsCount > waterBody.waterAreaData.TotalArea)
             or (waterbody_update.getRemoveDepletedOrphaned() and state.Depleted) then
             
             waterbodies.signalPerForce(waterBody, waterbody_update.signalOrphanedToPlayer)
             waterbodies.removeWaterBody(waterBody)
         end
     else
-        state.OrphanedBigUpdateCount = 0
+        state.OrphanedSecondsCount = 0
     end
 end
 
@@ -292,9 +271,7 @@ function waterbody_update.updateWaterBody(waterBodyId, updateBudget)
 	if not waterBody or not waterBody.valid then return end
 
 	waterbody_scan.scanningLoop(waterBodyId, updateBudget)
-	local waterUsedChange = waterbody_update.calculateWaterUsage(waterBody) 
-	local regen = waterbody_update.calculateEffectiveRegenAmount(waterBody) --includes bonuses
-	waterbody_update.bigUpdateWaterLevel(waterBody, waterUsedChange, regen)
+	waterbody_update.bigUpdateWaterLevel(waterBody)
 	waterbody_update.handleDepletion(waterBody)
 	waterbody_update.createMapMarker(waterBody)
     waterbody_update.waterBodyCleanup(waterBody)

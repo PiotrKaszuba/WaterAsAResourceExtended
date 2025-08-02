@@ -209,4 +209,11 @@ function utils.Queue:merge(other_queue)
     end
 end
 
+function utils.normalize_values_per_second(value, as_int_ceiling)
+	local normalized_value = value * storage.LoopNumTicks * storage.PeriodicEveryXTicks / 60
+	if as_int_ceiling then
+		return math.ceil(normalized_value)
+	end
+	return normalized_value
+end
 

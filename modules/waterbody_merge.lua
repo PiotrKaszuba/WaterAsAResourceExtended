@@ -79,12 +79,6 @@ function waterbody_merge.mergeWaterBodyTileCountData(tileCountData, other_tileCo
 	end
 end
 
-function waterbody_merge.mergeWaterUsageTickStats(waterUsageTickStats, other_waterUsageTickStats)
-	for i = 1, #waterUsageTickStats do
-		waterUsageTickStats[i] = waterUsageTickStats[i] + (other_waterUsageTickStats[i] or 0)
-	end
-end
-
 function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_waterBodyStateData)
 	waterBodyStateData.WaterUsed = waterBodyStateData.WaterUsed + other_waterBodyStateData.WaterUsed
 	waterBodyStateData.WaterUsedPrev = waterBodyStateData.WaterUsedPrev + other_waterBodyStateData.WaterUsedPrev
@@ -111,7 +105,7 @@ function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_water
 	waterBodyStateData.DriedTiles = waterBodyStateData.DriedTiles + other_waterBodyStateData.DriedTiles
 	
 	waterBodyStateData.ScanLoopCount = waterBodyStateData.ScanLoopCount
-	waterBodyStateData.OrphanedBigUpdateCount = waterBodyStateData.OrphanedBigUpdateCount + other_waterBodyStateData.OrphanedBigUpdateCount
+	waterBodyStateData.OrphanedSecondsCount = waterBodyStateData.OrphanedSecondsCount + other_waterBodyStateData.OrphanedSecondsCount
 
     waterbodies.destroyMapMarkers(waterBodyStateData)
     waterbodies.destroyMapMarkers(other_waterBodyStateData)
@@ -155,7 +149,6 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	waterbody_merge.mergeEntitiesData(waterBody1.entitiesData, waterBody2.entitiesData, waterBody1.waterBodyId, waterBody2.waterBodyId)
 
 	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty, {})
-	waterbody_merge.mergeWaterUsageTickStats(waterBody1.waterUsageTickStats, waterBody2.waterUsageTickStats)
 
     -- there is no merge for WaterAreaData - it will be re-calculated totally based on other merged data
 	waterBody1.waterAreaData.ToCalculate = true

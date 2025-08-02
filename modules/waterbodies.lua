@@ -194,18 +194,6 @@ function waterbodies.initWaterAreaData()
     }
 end
 
-function waterbodies.initWaterUsageTickStats()
-	local waterUsageTickStats = {}
-	local numTicks = storage.LoopNumTicks
-
-	for i = 1, numTicks do
-		waterUsageTickStats[i] = 0
-	end
-
-	return waterUsageTickStats
-end
-
-
 function waterbodies.initWaterBodyStateData()
     return {
         ["WaterUsed"] = 0,	-- the actual water used synchronized on 'big updates'
@@ -236,7 +224,7 @@ function waterbodies.initWaterBodyStateData()
 		["DriedTiles"] = 0, -- the current number of tiles that are dried - used for gradual depletion appearance
 
 		["ScanLoopCount"] = 0,  -- the number of big updates since started scanning
-		["OrphanedBigUpdateCount"] = 0, -- the number of big updates since the water body was orphaned
+		["OrphanedSecondsCount"] = 0, -- the number of seconds since the water body was orphaned
 
 		-- TODO: create class for map marker that will handle all the map marker logic
 		-- and have .destroy() ethod
@@ -277,9 +265,6 @@ function waterbodies.InitWaterBody(
 		waterBodyStateData = waterBodyStateData or waterbodies.initWaterBodyStateData(),
 
 		waterBodyTileCountPercentagePenalty = waterbodies.initWaterBodyTileCountData(),
-		waterUsageTickStats = waterbodies.initWaterUsageTickStats(),
-
-
 	}
 end
 
