@@ -19,18 +19,14 @@ function event_handlers.signalAttachedToWaterBody(waterBody)
     end
 end
 
-function event_handlers.BuiltPump(entity, do_not_reject)
+function event_handlers.BuiltPump(entity)
 
-    local input_position = utils.calculate_direction_offset(entity.position, entity.direction)
     local pump = initNewPump(entity)
 
-    local surfaceId = entity.surface.index
-
-    -- Validate that the pump can be placed (must be on water)
-    if not utils.validate_tile_placement(input_position, surfaceId, utils.WaterTiles) then
-        entities.rejectOrDeactivatePump(pump, "Must be placed on water edge", do_not_reject)
+    if not entities.validatePumpPlacement(pump) then
+        utils.rejectEntityPlacement(pump.entity, "Must be placed on water edge")
     else
-        local waterBodyId, created = waterbody_scan.createWaterBodyFromTileIfNotExists(input_position, surfaceId)
+        local waterBodyId, created = waterbody_scan.createWaterBodyFromTileIfNotExists(pump.input_position, pump.surfaceId)
         entities.registerPumpAndAddToWaterBody(waterBodyId, pump)
         waterbodies.signalPerForce(waterbodies.getWaterBody(waterBodyId), created and event_handlers.signalCreatedWaterBodyPendingScanningToPlayer or event_handlers.signalAttachedToWaterBody)
     end

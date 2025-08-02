@@ -71,21 +71,24 @@ function utils.calculate_direction_offset(position, direction)
 	return offset_position
 end
 
-function utils.rejectEntityPlacement(entity, reason)
+function utils.rejectEntityPlacement(entity, reason, item)
     if entity.last_user and entity.last_user.valid then
         entity.last_user.print(reason)
-        entity.last_user.insert{name = entity.name, count = 1}
+        entity.last_user.insert{name = item or entity.name, count = 1}
     end
     entity.destroy()
 end
 
-function utils.validate_tile_placement(position, surfaceId, required_tile_types)
+function utils.validate_tile_placement(position, surfaceId, required_tile_types, forbidden_tile_types)
 	local tile_name = utils.GetTile(position, surfaceId).name
-	if required_tile_types[tile_name] then
-		return true
+	local correct_placement = true
+	if forbidden_tile_types and forbidden_tile_types[tile_name] then
+		correct_placement = false
 	end
-	
-	return false
+	if required_tile_types and not required_tile_types[tile_name] then
+		correct_placement = false
+	end
+	return correct_placement
 end
 
 function utils.IsWaterOrDryTile(tileName)

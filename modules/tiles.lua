@@ -34,7 +34,7 @@ function tiles.placerWater(placed)
     local pos = old_tile.position
 
     if utils.DryWaterTiles[old_tile_name] then
-        utils.rejectEntityPlacement(placed, "Cannot place waterfill on dry tile")
+        utils.rejectEntityPlacement(placed, "Cannot place waterfill on dry tile", "waterfill")
         return
     end
 

@@ -29,8 +29,8 @@ function initNewPump(entity)
     -- "pump_data"
     return {
         ["entity"] = entity,
-        ["input_position"] = {["x"] = input_position.x, ["y"] = input_position.y},
-        ["spritepos"] = {["x"] = entity.position.x, ["y"] = entity.position.y},
+        ["input_position"] = input_position,
+        ["spritepos"] = entity.position,
         ["surfaceId"] = entity.surface.index,
         ["direction"] = entity.direction,
         ["tileName"] = "water", -- Only water is supported now
@@ -76,17 +76,18 @@ function entities.movePumpToWaterBody(unit_number, newWaterBodyId, oldWaterBodyI
     entities.removePumpFromWaterBody(unit_number, oldWaterBodyId)
 end
 
-
-function entities.rejectOrDeactivatePump(pump, reason, do_not_reject)
-    if not do_not_reject then
-        utils.rejectEntityPlacement(pump.entity, reason)
-    else
-        entities.deactivatePump(pump)
+function entities.validatePumpPlacement(pump_data)
+    -- Validate that the pump can be placed (must be on water) and its base not on dry tile
+    local input_position = pump_data.input_position
+    local surfaceId = pump_data.surfaceId
+    local input_position_on_water = utils.validate_tile_placement(input_position, surfaceId, utils.WaterTiles)
+    if not input_position_on_water then
+        return false
     end
+    local base_position = pump_data.spritepos
+    local base_position_on_water = utils.validate_tile_placement(base_position, surfaceId, nil, utils.DryWaterTiles)
+    return base_position_on_water
 end
-
-
-
 
 function entities.DestroyedPump(entity)
     local unit_number = entity.unit_number
