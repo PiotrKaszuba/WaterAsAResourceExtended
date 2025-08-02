@@ -166,16 +166,27 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
 
     if #waterBodyIds < 2 then return end
     
-    local targetWaterBody = waterbodies.getWaterBody(waterBodyIds[1])
-    if not targetWaterBody then return end
-    
-    for i = 2, #waterBodyIds do
-        local otherWaterBody = waterbodies.getWaterBody(waterBodyIds[i])
-        if otherWaterBody and otherWaterBody.valid then
-            waterbody_merge.mergeWaterBody(targetWaterBody, otherWaterBody)
-        end
+	-- assume all water bodies are present and valid
+    local targetWaterBody = nil
+    local targetWaterBodyId = nil
+    for i = 1, #waterBodyIds do
+		-- if all is OK first iteration should set targetWaterBodyId
+		-- and the rest will do merge
+		if targetWaterBodyId == nil then
+			targetWaterBody = waterbodies.getWaterBody(waterBodyIds[i])
+			if targetWaterBody and targetWaterBody.valid then
+				targetWaterBodyId = targetWaterBody.waterBodyId
+			end
+		else
+			local otherWaterBody = waterbodies.getWaterBody(waterBodyIds[i])
+			if otherWaterBody and otherWaterBody.valid then
+				-- Merge currentBody into target, or vice versa; result is the surviving water body ID
+				targetWaterBodyId = waterbody_merge.mergeWaterBody(targetWaterBody, otherWaterBody)
+				targetWaterBody = waterbodies.getWaterBody(targetWaterBodyId)
+			end
+		end
     end
-    
+
     targetWaterBody.searchData.searchQueue:enqueue(triggerPosition)
     targetWaterBody.searchData.finished = false
 	targetWaterBody.waterAreaData.ToCalculate = true
