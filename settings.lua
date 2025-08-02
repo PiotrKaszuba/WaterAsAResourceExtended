@@ -15,7 +15,7 @@ data:extend({
         type = "bool-setting",
         name = "Alarms-Tile-Message",
         setting_type = "runtime-global",
-        default_value = false
+        default_value = true
     },
     {
         type = "int-setting",
@@ -29,7 +29,7 @@ data:extend({
         type = "int-setting",
         name = "FluidArea-Additional-Tiles-Per-Second",
         setting_type = "runtime-global",
-        default_value = 1000,
+        default_value = 500,
         minimum_value = 10,
         maximum_value = 50000
     },
@@ -97,7 +97,7 @@ data:extend({
         type = "int-setting",
         name = "Update-Budget-Per-Second",
         setting_type = "runtime-global",
-        default_value = 1000, 
+        default_value = 500, 
         minimum_value = 100,
         maximum_value = 10000
     },
