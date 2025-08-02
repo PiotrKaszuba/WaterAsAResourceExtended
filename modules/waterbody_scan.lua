@@ -6,16 +6,23 @@ waterbody_scan = {}
 
 -- return waterBodyId of existing or new water body
 function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surfaceId)
+	-- for profiling only - if code hits inner line then it requires left-top corner fix
+	if not utils.checkIfPositionIsLeftTopCorner(position) then
+		local profile_meter = 0
+	end
+	
 	-- fix position to left-top corner
 	local tile = utils.GetTile(position, surfaceId)
 	position = tile.position
+
     local gridKey = utils.PositionToString(position)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
 
-    if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
-        local waterBody = waterbodies.createNewWaterBody(surfaceId)
-		waterbody_scan.beginScanWaterArea(waterBody.waterBodyId, position)
-        return waterBody.waterBodyId, true
+    if not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId) then
+        local _, waterBodyId = waterbodies.createNewWaterBody(surfaceId)
+		-- scan can change waterBodyId if merge happened
+		waterBodyId = waterbody_scan.beginScanWaterArea(waterBodyId, position)
+        return waterBodyId, true
     end
 
     return waterBodyId, false

@@ -145,16 +145,17 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 
 	if got_split then
 		waterbodies.signalPerForce(waterBody, waterbody_split.signalWaterBodySplitToPlayer, #connected_tile_sets)
-		local new_water_body_ids = {}
+		local new_water_body_ids_and_positions = {}
 		-- TODO should notify interested parties
 		local pumps = waterBody.entitiesData.pumps
 		waterBody.entitiesData.pumps = {}
 		waterbodies.removeWaterBody(waterBody)
 		local first_tile_pos = nil
+		local new_water_body_id = nil
 		for _, tile_set in ipairs(connected_tile_sets) do
 			first_tile_pos = tile_set[1]
-			local new_water_body = waterbodies.createNewWaterBody(surfaceId)
-			new_water_body_ids[#new_water_body_ids + 1] = {waterBodyId = new_water_body.waterBodyId, position = first_tile_pos}
+			_, new_water_body_id = waterbodies.createNewWaterBody(surfaceId)
+			new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = first_tile_pos}
 		end
 
 		for pump_unit_number, _ in pairs(pumps) do
@@ -163,26 +164,26 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 				local pump_input_position = pump_data.input_position
 				-- check if this is still water tile
 				if utils.validate_tile_placement(pump_input_position, surfaceId, utils.WaterTiles) then
-					local new_water_body = waterbodies.createNewWaterBody(surfaceId)
+					_, new_water_body_id = waterbodies.createNewWaterBody(surfaceId)
 					
 					-- fix position to left-top corner in case it was not
 					local tile = utils.GetTile(pump_input_position, surfaceId)
 					local pump_input_top_left_corner = tile.position
 					
-					new_water_body_ids[#new_water_body_ids + 1] = {waterBodyId = new_water_body.waterBodyId, position = pump_input_top_left_corner}
-					entities.movePumpToWaterBody(pump_unit_number, new_water_body.waterBodyId, waterBodyId)
+					new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner}
+					entities.movePumpToWaterBody(pump_unit_number, new_water_body_id, waterBodyId)
 				else
 					entities.disablePump(pump_data)
 				end
 			end
 		end
 
-		for _, new_water_body_id in pairs(new_water_body_ids) do
-			waterbody_scan.beginScanWaterArea(new_water_body_id.waterBodyId, new_water_body_id.position, 1, updateBudget)
+		for _, new_water_body_id_and_position in pairs(new_water_body_ids_and_positions) do
+			waterbody_scan.beginScanWaterArea(new_water_body_id_and_position.waterBodyId, new_water_body_id_and_position.position, 1, updateBudget)
 		end
 
-		for _, new_water_body_id in pairs(new_water_body_ids) do
-			waterbody_scan.continueScanWaterArea(new_water_body_id.waterBodyId, math.ceil(waterbody_scan.getInitialScanAmount() / #new_water_body_ids))
+		for _, new_water_body_id_and_position in pairs(new_water_body_ids_and_positions) do
+			waterbody_scan.continueScanWaterArea(new_water_body_id_and_position.waterBodyId, math.ceil(waterbody_scan.getInitialScanAmount() / #new_water_body_ids_and_positions))
 		end
 		
 		if updateBudget then

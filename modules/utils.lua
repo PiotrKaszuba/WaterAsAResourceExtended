@@ -115,6 +115,10 @@ function utils.GetWaterDepthType(fluidname)
 	return nil
 end
 
+function utils.checkIfPositionIsLeftTopCorner(position)
+	return position.x % 1 == 0 and position.y % 1 == 0
+end
+
 function utils.PositionToString (position)
 	return string.format ("%.1f , %.1f", position.x , position.y)	-- Print SearchPosition X, Y CoOrds as String
 end
@@ -131,7 +135,8 @@ end
 -- any position within tile is valid
 -- the returned tile will have position as left-top corner
 function utils.GetTile(position, surfaceId)
-	return game.surfaces[surfaceId].get_tile(position.x, position.y)
+	local surface = game.surfaces[surfaceId]
+	return surface.get_tile(position)
 end
 
 function utils.IsThereWater(position, surfaceId)

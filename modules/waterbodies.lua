@@ -56,16 +56,20 @@ function waterbodies.checkIfWaterTileExists(gridKey, surfaceId)
     return waterbodies.getWaterTile(gridKey, surfaceId) ~= nil
 end
 
-function waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId)
-    local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
-    if waterBodyId == nil or waterBodyId == -1 then
-		return true
+function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
+	if waterBodyId == nil or waterBodyId == -1 then
+		return false
 	end
 	local waterBody = waterbodies.getWaterBody(waterBodyId)
 	if waterBody and waterBody.valid then
-		return false
+		return true
 	end
-	return true
+	return false
+end
+
+function waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId)
+    local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+    return not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
 end
 
 function waterbodies.getWaterTilePercentageWaterUsed(gridKey, surfaceId)
@@ -484,8 +488,8 @@ end
 
 function waterbodies.createNewWaterBody(surfaceId)
     local waterBody = waterbodies.simpleInitWaterBody(surfaceId)
-    waterbodies.addNewWaterBodyAndSetId(waterBody)
-    return waterBody
+    local waterBodyId = waterbodies.addNewWaterBodyAndSetId(waterBody)
+    return waterBody, waterBodyId
 end
 
 
