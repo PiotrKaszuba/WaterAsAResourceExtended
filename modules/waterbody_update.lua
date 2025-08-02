@@ -185,9 +185,12 @@ end
 
 function waterbody_update.waterBodyDepleted(waterBody)
     local state = waterBody.waterBodyStateData
+    -- only call once per depletion
+    if not state.Depleted then
+        waterbodies.signalPerForce(waterBody, waterbody_update.signalDepletionToPlayer)
+    end
     state.Depleted = true
     entities.deactivateWaterBodyPumps(waterBody.waterBodyId)
-    waterbodies.signalPerForce(waterBody, waterbody_update.signalDepletionToPlayer)
 end
 
 function waterbody_update.waterBodyRestored(waterBody)
@@ -216,14 +219,18 @@ end
 
 function waterbody_update.smallUpdateRemainingWaterDepletion(waterBody, waterbody_total_pumping_water)
 	local state = waterBody.waterBodyStateData
-    if not state.Depleted then
-        state.TempUsedWater = state.TempUsedWater + waterbody_total_pumping_water
-        if state.TempUsedWater >= state.TempAvailableWater then
+    state.TempUsedWater = state.TempUsedWater + waterbody_total_pumping_water
+    if state.Depleted and waterbody_total_pumping_water > 0 then
+        game.print(string.format("Warning: waterbody %s is depleted but total pumping water is %s - how?", waterbodies.getFullNameForWaterBody(waterBody), waterbody_total_pumping_water))
+    end
+    if state.TempUsedWater >= state.TempAvailableWater then
+        -- we call depleted if state is not depleted or if there is still some water being pumped
+        -- the remaining pumps will be deactivated by the depletion handler
+        if not state.Depleted or waterbody_total_pumping_water > 0 then
             waterbody_update.waterBodyDepleted(waterBody)
         end
-    elseif waterbody_total_pumping_water > 0 then
-        game.print("Warning: waterbody_total_pumping_water > 0 but waterbody is depleted")
     end
+
 end
 
 function waterbody_update.collectWaterUsageStats(loop_tick)

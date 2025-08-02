@@ -53,6 +53,9 @@ function entities.registerPumpAndAddToWaterBody(waterBodyId, pump_data)
         waterBody.entitiesData.pumps[pump_data.entity.unit_number] = true
         waterBody.entitiesData.forces[pump_data.forceName] = true
         pump_data.waterBodyId = waterBodyId
+        if waterBody.waterBodyStateData.Depleted then
+            entities.deactivatePump(pump_data)
+        end
     end
 end
 
@@ -151,7 +154,7 @@ function entities.enablePump(pump_data)
     pump_data.disabled = false
 end
 
-function entities.call_on_each_waterbody_pump(waterBody, func)
+function entities.call_on_each_waterbody_pump(waterBodyId, func)
 	local waterBody = waterbodies.getWaterBody(waterBodyId)
 	if waterBody and waterBody.valid then
 		for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
