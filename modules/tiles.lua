@@ -1,4 +1,5 @@
 require("modules.utils")
+require("modules.hot_utils")
 require("modules.waterbodies")
 require("modules.waterbody_scan")
 require("modules.waterbody_split")
@@ -143,7 +144,7 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
             waterBody.searchData.finished = false
             waterBody.waterAreaData.ToCalculate = true
 			-- also remove the tile from edge grid
-			waterBody.gridsData.edgeGrid[utils.PositionToString(position)] = nil
+			waterBody.gridsData.edgeGrid[hot_utils.GridKey(position)] = nil
         end
 
     elseif #adjacentWaterBodies > 1 then
@@ -161,7 +162,7 @@ function tiles.findAdjacentWaterBodies(position, surface)
     
     for _, offset in pairs(utils.AdjacentOffsets) do
         local adj_pos = {x = position.x + offset.x, y = position.y + offset.y}
-        local adj_gridKey = utils.PositionToString(adj_pos)
+        local adj_gridKey = hot_utils.GridKey(adj_pos)
         local waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
         
         if not waterbodies.checkIfTileIsNotAssignedToWaterBody(adj_gridKey, surface) and not seen[waterBodyId] then
@@ -175,7 +176,7 @@ end
 
 
 function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, surface, updateBudget)
-	local gridKey = utils.PositionToString(position)
+	local gridKey = hot_utils.GridKey(position)
     local tileType = waterbodies.WaterTileToWaterBodyTileType[originalTileName]
     if not tileType then return end
     
@@ -211,7 +212,7 @@ function tiles.processLandfillEvent(tileEvent, updateBudget)
     -- assume position is left-top corner already
 	local position = tileEvent.position
 	local surface = tileEvent.surface
-    local gridKey = utils.PositionToString(position)
+    local gridKey = hot_utils.GridKey(position)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
     
     if not waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface) then

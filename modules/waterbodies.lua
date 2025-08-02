@@ -131,7 +131,7 @@ function waterbodies.getWaterAreaArray(waterBody)
 end
 
 function waterbodies.addTileToWaterGrid(waterBody, position, tileName)
-    local gridKey = utils.PositionToString(position)
+    local gridKey = hot_utils.GridKey(position)
     waterBody.gridsData.waterGridWithData[gridKey] = {
         name = tileName,
         position = position,

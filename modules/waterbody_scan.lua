@@ -1,4 +1,5 @@
 require("modules.utils")
+require("modules.hot_utils")
 require("modules.waterbodies")
 require("modules.waterbody_merge")
 
@@ -16,7 +17,7 @@ function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surface)
 	local tile = utils.GetTile(position, surface)
 	position = tile.position
 
-    local gridKey = utils.PositionToString(position)
+    local gridKey = hot_utils.GridKey(position)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
 
     if not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId) then
@@ -47,7 +48,7 @@ function waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, water_bo
 	local adjacent_land_tiles = {}
 	for _, offset in pairs(utils.AdjacentOffsets) do
 		local adj_pos = {x = position.x + offset.x, y = position.y + offset.y}
-		local adj_gridKey = utils.PositionToString(adj_pos)
+		local adj_gridKey = hot_utils.GridKey(adj_pos)
 		local adj_waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
 		local is_water_tile = utils.IsWaterOrDryTile(utils.GetTile(adj_pos, surface).name)
 		if (water_body_id == nil or adj_waterBodyId == water_body_id) and is_water_tile then
@@ -64,7 +65,7 @@ function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surf
     
 	-- remove from edge grid - all adjacent land tiles
 	for _, pos in pairs(adjacent_land_tiles) do
-		waterBody.gridsData.edgeGrid[utils.PositionToString(pos)] = nil
+		waterBody.gridsData.edgeGrid[hot_utils.GridKey(pos)] = nil
 	end
 
 	-- rebuild edges using EdgePattern
@@ -93,7 +94,7 @@ function waterbody_scan.EdgePattern(searchPosition, surface, waterBody)
 		-- is part of this waterbody or its edge
 		local tile = utils.GetTile(position, surface)
 		position = tile.position
-		local gridKey = utils.PositionToString(position)
+		local gridKey = hot_utils.GridKey(position)
 		local tileWaterBodyId = waterbodies.getWaterTile(gridKey, surface)
 
         local already_searched = tileWaterBodyId == waterBodyId or edgeGrid[gridKey] ~= nil
@@ -136,7 +137,7 @@ end
 
 -- Process a single water tile during scanning (internal helper)
 function waterbody_scan.processWaterTile(water_body, position, tile_name, surface)
-	local gridKey = utils.PositionToString(position)
+	local gridKey = hot_utils.GridKey(position)
 
 	if not utils.IsWaterTile(tile_name) and not waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface) then
 		-- Non-water tile - mark as searched without adding to water body and skip
@@ -211,7 +212,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		-- fix position to left-top corner in case it was not
 		local tile = utils.GetTile(search_position, surface)
 		search_position = tile.position
-		local gridKey = utils.PositionToString(search_position)
+		local gridKey = hot_utils.GridKey(search_position)
 
 		local tile_waterBodyId = waterbodies.getWaterTile(gridKey, surface)
 		-- already searched means that the tile is part of this waterbody or its edge

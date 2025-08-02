@@ -1,5 +1,6 @@
 require("modules.waterbodies")
 require("modules.utils")
+require("modules.hot_utils")
 require("modules.entities")
 
 waterbody_merge = {}
@@ -191,7 +192,7 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
     targetWaterBody.searchData.finished = false
 	targetWaterBody.waterAreaData.ToCalculate = true
 	-- also remove the tile from edge grid
-	targetWaterBody.gridsData.edgeGrid[utils.PositionToString(triggerPosition)] = nil
+	targetWaterBody.gridsData.edgeGrid[hot_utils.GridKey(triggerPosition)] = nil
 
 	return targetWaterBody.waterBodyId
 end

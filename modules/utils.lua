@@ -103,16 +103,6 @@ function utils.IsWaterTile(tileName)
 	return utils.WaterTiles[tileName] == true
 end
 
-
-function utils.PositionToString (position)
-	return string.format ("%.1f , %.1f", position.x , position.y)	-- Print SearchPosition X, Y CoOrds as String
-end
-
-function utils.StringToPosition(gridKey)
-    local x, y = gridKey:match("([^,]+) , ([^,]+)")
-    return {x = tonumber(x), y = tonumber(y)}
-end
-
 function utils.GetSurfaceById(surfaceId)
 	return game.surfaces[surfaceId]
 end

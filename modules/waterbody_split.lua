@@ -2,6 +2,7 @@ require("modules.waterbodies")
 require("modules.waterbody_scan")
 require("modules.entities")
 require("modules.utils")
+require("modules.hot_utils")
 
 waterbody_split = {}
 
@@ -34,12 +35,12 @@ end
 function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surface, center_position, updateBudget)
 	local current_check_size = 2
 	local rect_area_ratio = 0.0
-	local start_tile_gridKey = utils.PositionToString(start_tile_pos)
+	local start_tile_gridKey = hot_utils.GridKey(start_tile_pos)
 	local connected_tiles = {}
 	connected_tiles[#connected_tiles+1] = start_tile_pos
 	local missing_tiles = {} -- indicator table, gridKey -> true
 	for _, tile_pos in pairs(otherTiles_positions) do
-		missing_tiles[utils.PositionToString(tile_pos)] = true
+		missing_tiles[hot_utils.GridKey(tile_pos)] = true
 	end
 	missing_tiles[start_tile_gridKey] = nil
 
@@ -51,7 +52,7 @@ function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, o
 		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody.waterBodyShapeData, center_position, current_check_size)
 		local all_connected_tiles = surface.get_connected_tiles(start_tile_pos, utils.GetWaterTileNamesArray(), true, bbox)
 		for _, tile_pos in pairs(all_connected_tiles) do
-			local tile_pos_gridKey = utils.PositionToString(tile_pos)
+			local tile_pos_gridKey = hot_utils.GridKey(tile_pos)
 			if missing_tiles[tile_pos_gridKey] then
 				connected_tiles[#connected_tiles+1] = tile_pos
 				missing_tiles[tile_pos_gridKey] = nil
@@ -70,12 +71,12 @@ function waterbody_split.checkIfAllTilesAreUsedAndUnique(all_tiles_positions, co
 	local temp_all_tiles_set = {}
 	local temp_gridKey = nil
 	for _, tile_pos in pairs(all_tiles_positions) do
-		temp_gridKey = utils.PositionToString(tile_pos)
+		temp_gridKey = hot_utils.GridKey(tile_pos)
 		temp_all_tiles_set[temp_gridKey] = true
 	end
 	for _, connected_tiles_set_gridKeys in pairs(connected_tiles_sets_gridKeys) do
 		for _, position in ipairs(connected_tiles_set_gridKeys) do
-			local grid_key = utils.PositionToString(position)
+			local grid_key = hot_utils.GridKey(position)
 			if not temp_all_tiles_set[grid_key] then
 				return "duplicate"
 			end
@@ -119,7 +120,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 
 		new_missing_tiles_positions = {}
 		for _, tile_pos in pairs(missing_tiles_positions) do
-			local gridKey = utils.PositionToString(tile_pos)
+			local gridKey = hot_utils.GridKey(tile_pos)
 			if missing_tiles[gridKey] then
 				new_missing_tiles_positions[#new_missing_tiles_positions + 1] = tile_pos
 			end
