@@ -6,11 +6,11 @@ require("modules.utils")
 waterbody_split = {}
 
 
-function waterbody_split.getWaterBodyLimitedBoundingBox(waterBody, center_position, side_length)
-	local minX = waterBody.shapeData.MinX
-	local minY = waterBody.shapeData.MinY
-	local maxX = waterBody.shapeData.MaxX
-	local maxY = waterBody.shapeData.MaxY
+function waterbody_split.getWaterBodyLimitedBoundingBox(shape_data, center_position, side_length)
+	local minX = shape_data.MinX
+	local minY = shape_data.MinY
+	local maxX = shape_data.MaxX
+	local maxY = shape_data.MaxY
 
 	-- local desired_rect_area = side_length * side_length
 	local max_rect_area = (maxX - minX) * (maxY - minY)
@@ -48,7 +48,7 @@ function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, o
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - (current_check_size * current_check_size) / 4
 		end
-		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody, center_position, current_check_size)
+		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody.waterBodyShapeData, center_position, current_check_size)
 		local all_connected_tiles = utils.GetSurface(surfaceId).get_connected_tiles(start_tile_pos, utils.GetWaterTileNamesArray(), true, bbox)
 		for _, tile_pos in pairs(all_connected_tiles) do
 			if missing_tiles[utils.PositionToString(tile_pos)] then
@@ -73,7 +73,7 @@ function waterbody_split.checkIfAllTilesAreUsedAndUnique(all_tiles_positions, co
 		temp_all_tiles_set[temp_gridKey] = true
 	end
 	for _, connected_tiles_set_gridKeys in pairs(connected_tiles_sets_gridKeys) do
-		for _, grid_key in pairs(connected_tiles_set_gridKeys) do
+		for grid_key, _ in pairs(connected_tiles_set_gridKeys) do
 			if not temp_all_tiles_set[grid_key] then
 				return "duplicate"
 			end

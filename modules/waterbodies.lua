@@ -142,7 +142,6 @@ end
 function waterbodies.InitSearchData()
 	return {
 		searchQueue = utils.Queue:new(),
-		searchedPositions = {}, -- indicator table, position key
 		totalArea = 0,
 		finished = false,
 	}

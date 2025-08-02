@@ -134,7 +134,7 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
     local adjacentWaterBodies = tiles.findAdjacentWaterBodies(position, surfaceId)
     
     -- if there are no adjacent water bodies - dont do anything
-    
+
     if #adjacentWaterBodies == 1 then
         -- Extend existing water body
         local waterBodyId = adjacentWaterBodies[1]
@@ -142,7 +142,6 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
         
         if waterBody then
             waterBody.searchData.searchQueue:enqueue(position)
-            waterBody.searchData.searchedPositions[utils.PositionToString(position)] = nil
             waterBody.searchData.finished = false
             waterBody.waterAreaData.ToCalculate = true
 			-- also remove the tile from edge grid

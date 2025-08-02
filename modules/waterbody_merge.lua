@@ -15,7 +15,6 @@ end
 
 function waterbody_merge.mergeSearchData(searchData, other_searchData, overlapTileCountData)
 	searchData.searchQueue:merge(other_searchData.searchQueue)
-	waterbody_merge.merge_indicator_tables(searchData.searchedPositions, other_searchData.searchedPositions)
 	
 	local sum_overlap = 0
 	for k, v in pairs(overlapTileCountData) do
@@ -178,7 +177,6 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
     end
     
     targetWaterBody.searchData.searchQueue:enqueue(triggerPosition)
-	targetWaterBody.searchData.searchedPositions[utils.PositionToString(triggerPosition)] = nil
     targetWaterBody.searchData.finished = false
 	targetWaterBody.waterAreaData.ToCalculate = true
 	-- also remove the tile from edge grid

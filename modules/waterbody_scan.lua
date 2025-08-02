@@ -65,36 +65,46 @@ function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surf
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - 1
 		end
-		waterbody_scan.EdgePattern(pos, surfaceId, waterBody, true, true)
+		waterbody_scan.EdgePattern(pos, surfaceId, waterBody)
 	end
 end
 
-function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody, force_edge_pattern, skip_water_tiles)
+function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody)
 	-- fix position to left-top corner in case it was not
 	local tile = utils.GetTile(searchPosition, surfaceId)
 	searchPosition = tile.position
 
 	local edgeFound = false
     local searchData = waterBody.searchData
+	local waterBodyId = waterBody.waterBodyId
+	local edgeGrid = waterBody.gridsData.edgeGrid
 
     for _, offset in pairs(utils.AdjacentOffsets) do
         local position = {x = searchPosition.x + offset.x, y = searchPosition.y + offset.y}
-        local gridKey = utils.PositionToString(position)
         
-        if (not searchData.searchedPositions[gridKey]) or force_edge_pattern then
-            local tile = utils.GetTile(position, surfaceId)
-            if tile.valid then
-                local tile_position = tile.position
-				local is_water_tile = utils.IsWaterTile(tile.name)
-                if is_water_tile and not skip_water_tiles then
-                    searchData.searchQueue:enqueue(tile_position)
-				elseif not is_water_tile then
-                    local edgeKey = utils.PositionToString(tile_position)
-                    waterbodies.addNewWaterTile(edgeKey, surfaceId, -1)
-                    waterBody.gridsData.edgeGrid[edgeKey] = true
-                    edgeFound = true
-                end
-            end
+		-- is part of this waterbody or its edge
+		local tile = utils.GetTile(position, surfaceId)
+		position = tile.position
+		local gridKey = utils.PositionToString(position)
+		local tileWaterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+
+        local already_searched = tileWaterBodyId == waterBodyId or edgeGrid[gridKey] ~= nil
+        if (not already_searched) then
+			local is_water_tile = utils.IsWaterTile(tile.name)
+			if is_water_tile then
+				searchData.searchQueue:enqueue(position)
+			else
+				if tileWaterBodyId == nil then
+					waterbodies.addNewWaterTile(gridKey, surfaceId, -1)
+				elseif tileWaterBodyId == waterBodyId then
+					game.print("Testing: EdgePattern got non water tile of the same waterbody!")
+				elseif tileWaterBodyId ~= -1 then
+					game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT shouldn't happen - investigate or fix the conditions around here.")
+
+				end
+				edgeGrid[gridKey] = true
+				edgeFound = true
+			end
         end
     end
     
@@ -194,8 +204,11 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		local tile = utils.GetTile(search_position, surface_id)
 		search_position = tile.position
 		local gridKey = utils.PositionToString(search_position)
-		if not water_body.searchData.searchedPositions[gridKey] then
-			water_body.searchData.searchedPositions[gridKey] = true
+
+		local tile_waterBodyId = waterbodies.getWaterTile(gridKey, surface_id)
+		-- already searched means that the tile is part of this waterbody or its edge
+		local already_searched = tile_waterBodyId == water_body.waterBodyId or water_body.gridsData.edgeGrid[gridKey] ~= nil
+		if not already_searched then
 			if water_body.searchData.totalArea <= water_body_max_area then
 				local tile_name = tile.name
 				water_body = waterbody_scan.processWaterTile(water_body, search_position, tile_name, surface_id)
@@ -228,9 +241,9 @@ function waterbody_scan.getScanningLoopPeriod()
 end
 
 function waterbody_scan.scanningLoopPeriodic(water_body)
-	water_body.waterBodyStateData.ScanLoopCount = water_body.waterBodyStateData.ScanLoopCount + 1
+	water_body.waterBodyStateData.ScanLoopCount = water_body.waterBodyStateData.ScanLoopCount + utils.normalize_values_per_second(1)
 
-	if water_body.waterBodyStateData.ScanLoopCount == waterbody_scan.getScanningLoopPeriod() then
+	if water_body.waterBodyStateData.ScanLoopCount >= waterbody_scan.getScanningLoopPeriod() then
 		waterbodies.signalPerForce(water_body, waterbody_scan.signalScanningAlarmToPlayer)
 		water_body.waterBodyStateData.ScanLoopCount = 0
 	end
