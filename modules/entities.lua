@@ -31,7 +31,7 @@ function initNewPump(entity)
         ["entity"] = entity,
         ["input_position"] = input_position,
         ["spritepos"] = entity.position,
-        ["surfaceId"] = entity.surface.index,
+        ["surface"] = entity.surface,
         ["direction"] = entity.direction,
         ["tileName"] = "water", -- Only water is supported now
         ["forceName"] = entity.force.name,
@@ -89,14 +89,12 @@ end
 
 function entities.validatePumpPlacement(pump_data)
     -- Validate that the pump can be placed (must be on water) and its base not on dry tile
-    local input_position = pump_data.input_position
-    local surfaceId = pump_data.surfaceId
-    local input_position_on_water = utils.validate_tile_placement(input_position, surfaceId, utils.WaterTiles)
+    local surface = pump_data.surface
+    local input_position_on_water = utils.validate_tile_placement(pump_data.input_position, surface, utils.WaterTiles)
     if not input_position_on_water then
         return false
     end
-    local base_position = pump_data.spritepos
-    local base_position_on_water = utils.validate_tile_placement(base_position, surfaceId, nil, utils.DryWaterTiles)
+    local base_position_on_water = utils.validate_tile_placement(pump_data.spritepos, surface, nil, utils.DryWaterTiles)
     return base_position_on_water
 end
 

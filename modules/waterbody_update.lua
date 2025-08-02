@@ -23,6 +23,8 @@ function waterbody_update.createMapMarker(waterBody)
     local percent = waterbodies.calculatePercentageWaterUsed(waterBody)
     local depleted = waterBody.waterBodyStateData.Depleted
 
+    local surface = waterBody.surface
+
     if waterBody.searchData.finished and not depleted then
         local remaining = math.ceil(waterBody.waterAreaData.AmountWtr * (100 - percent) / 100)
         text = string.format("%s - %s - %.2f %%", waterbodies.getFullNameForWaterBody(waterBody), utils.comma_value(remaining), 100 - percent)
@@ -37,7 +39,7 @@ function waterbody_update.createMapMarker(waterBody)
         if force_to_pump[force_name] then
             position = force_to_pump[force_name].input_position
             -- fix position to left-top corner
-            local tile = utils.GetTile(position, waterBody.surfaceId)
+            local tile = utils.GetTile(position, surface)
             position = tile.position
         else
             local _, tileData = next(waterBody.gridsData.waterGridWithData)
@@ -49,7 +51,7 @@ function waterbody_update.createMapMarker(waterBody)
         end
         
         if not marker or not marker:valid() then
-            marker = waterbodies.MapMarker:new(force, waterBody.surfaceId, position, text, icon)
+            marker = waterbodies.MapMarker:new(force, surface, position, text, icon)
             waterBody.waterBodyStateData.MapMarkers[force_name] = marker
         else
             marker:update(position, text, icon)
@@ -235,7 +237,6 @@ end
 
 function waterbody_update.collectWaterUsageStats(loop_tick)
 	local validWaterBodies = waterbodies.getValidWaterBodies()
-	if not validWaterBodies then return end
     for id, _ in pairs(validWaterBodies) do
         local waterbody_total_pumping_water = waterbody_update.collectWaterUsageStatsForWaterBody(id)
 		local waterbody = waterbodies.getWaterBody(id)
@@ -286,8 +287,7 @@ end
 
 function waterbody_update.updateWaterBodies(updateBudget)
 	local validWaterBodies = waterbodies.getValidWaterBodies()
-	if not validWaterBodies then return end
-    for id, _ in pairs(validWaterBodies) do
-        waterbody_update.updateWaterBody(id, updateBudget)
+    for waterBodyId, _ in pairs(validWaterBodies) do
+        waterbody_update.updateWaterBody(waterBodyId, updateBudget)
     end
 end

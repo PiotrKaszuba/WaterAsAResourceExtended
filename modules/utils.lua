@@ -79,8 +79,8 @@ function utils.rejectEntityPlacement(entity, reason, item)
     entity.destroy()
 end
 
-function utils.validate_tile_placement(position, surfaceId, required_tile_types, forbidden_tile_types)
-	local tile_name = utils.GetTile(position, surfaceId).name
+function utils.validate_tile_placement(position, surface, required_tile_types, forbidden_tile_types)
+	local tile_name = utils.GetTile(position, surface).name
 	local correct_placement = true
 	if forbidden_tile_types and forbidden_tile_types[tile_name] then
 		correct_placement = false
@@ -103,21 +103,6 @@ function utils.IsWaterTile(tileName)
 	return utils.WaterTiles[tileName] == true
 end
 
-function utils.GetWaterDepthType(fluidname)
-	-- return "shallow" or "deep" or nil if not water tile
-	if utils.IsWaterTile(fluidname) then
-		if utils.DeepWaterTiles[fluidname] then
-			return "deep"
-		else
-			return "shallow"
-		end
-	end
-	return nil
-end
-
-function utils.checkIfPositionIsLeftTopCorner(position)
-	return position.x % 1 == 0 and position.y % 1 == 0
-end
 
 function utils.PositionToString (position)
 	return string.format ("%.1f , %.1f", position.x , position.y)	-- Print SearchPosition X, Y CoOrds as String
@@ -128,28 +113,15 @@ function utils.StringToPosition(gridKey)
     return {x = tonumber(x), y = tonumber(y)}
 end
 
-function utils.GetSurface(surfaceId)
+function utils.GetSurfaceById(surfaceId)
 	return game.surfaces[surfaceId]
 end
 
 -- any position within tile is valid
 -- the returned tile will have position as left-top corner
-function utils.GetTile(position, surfaceId)
-	local surface = game.surfaces[surfaceId]
+function utils.GetTile(position, surface)
 	return surface.get_tile(position)
 end
-
-function utils.IsThereWater(position, surfaceId)
-	local tile = utils.GetTile(position, surfaceId)
-	if tile.valid == true then
-		return utils.WaterTiles[tile.name] == true
-	else
-		-- shouldn't happen so show warning
-		game.print("Invalid Tile")
-		return false
-	end
-end
-
 
 function utils.CheckSubstring(string, substring)
 	return string.find(string, substring, 1, true) ~= nil
@@ -225,3 +197,18 @@ function utils.normalize_values_per_second(value, as_int_ceiling)
 	return normalized_value
 end
 
+-- used for profiling only - a case: check if position is left-top corner and needs to be fixed
+function utils.checkIfPositionIsLeftTopCorner(position)
+	return position.x % 1 == 0 and position.y % 1 == 0
+end
+
+-- used for profiling only - measure how many times a case was hit by a caller
+function utils.profile_hits(case_name, caller_name)
+	if not storage.profiling_hits then
+		storage.profiling_hits = {}
+	end
+	if not storage.profiling_hits[caller_name] then
+		storage.profiling_hits[caller_name] = {}
+	end
+	storage.profiling_hits[caller_name][case_name] = (storage.profiling_hits[caller_name][case_name] or 0) + 1
+end

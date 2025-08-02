@@ -27,9 +27,8 @@ tiles.waterfill_placer_to_water_tile = {
 function tiles.placerWater(placed)
     local pos_center     = placed.position
     local surface = placed.surface
-    local surfaceId = surface.index
 
-    local old_tile = utils.GetTile(pos_center, surfaceId)
+    local old_tile = utils.GetTile(pos_center, surface)
     local old_tile_name = old_tile.name
     local pos = old_tile.position
 
@@ -52,24 +51,24 @@ function tiles.placerWater(placed)
     surface.set_tiles(tileArray, true, true, true, false)
     tiles.handleTileEventsInternal(
         tileArray,
-        surfaceId
+        surface
     )
 
 end
 
 
-function tiles.initTileEvent(eventType, position, surfaceId, tileData)
+function tiles.initTileEvent(eventType, position, surface, tileData)
 	return {
 		type = eventType, -- "landfill" or "waterfill"
 		position = position,
-		surfaceId = surfaceId,
+		surface = surface,
 		tileData = tileData
 	}
 end
 
-function tiles.addTileEvent(eventType, position, surfaceId, tileData)
+function tiles.addTileEvent(eventType, position, surface, tileData)
     -- assume position is left-top corner already
-    storage.TileEventQueue:enqueue(tiles.initTileEvent(eventType, position, surfaceId, tileData))
+    storage.TileEventQueue:enqueue(tiles.initTileEvent(eventType, position, surface, tileData))
 end
 
 function tiles.processTileEventQueue(maxEvents, updateBudget)
@@ -91,13 +90,13 @@ function tiles.processTileEventQueue(maxEvents, updateBudget)
     return processedCount
 end
 
-function tiles.handleTileEventsInternal(tileArray, surfaceIndex, placed_name)
-    if not tileArray or not surfaceIndex then return end
-    
+function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
+    if not tileArray or not surface then return end
+
     for _, tile_event in pairs(tileArray) do
         local position = tile_event.position
         -- try to fix the position to left-top corner just in case
-        local current_tile = utils.GetTile(position, surfaceIndex)
+        local current_tile = utils.GetTile(position, surface)
         position = current_tile.position
 
         local old_name = tile_event.old_tile and tile_event.old_tile.name
@@ -108,12 +107,12 @@ function tiles.handleTileEventsInternal(tileArray, surfaceIndex, placed_name)
         end
 
         if new_name == "landfill" and (old_name and utils.IsWaterTile(old_name)) or (not old_name) then
-            tiles.addTileEvent("landfill", position, surfaceIndex, {
+            tiles.addTileEvent("landfill", position, surface, {
                 originalTileName = old_name,
 				tileName = new_name,
             })
         elseif utils.IsWaterTile(new_name) and (old_name and not utils.IsWaterTile(old_name)) or (not old_name) then
-            tiles.addTileEvent("waterfill", position, surfaceIndex, {
+            tiles.addTileEvent("waterfill", position, surface, {
 				originalTileName = old_name,
                 tileName = new_name,
             })
@@ -123,15 +122,14 @@ end
 
 function tiles.processWaterfillEvent(tileEvent, updateBudget)
     local position = tileEvent.position
-    local surfaceId = tileEvent.surfaceId
-    local tileName = tileEvent.tileData.tileName
+    local surface = tileEvent.surface
     
 	if updateBudget then
 		updateBudget.budget = updateBudget.budget - 1
 	end
 
     -- Find adjacent water bodies
-    local adjacentWaterBodies = tiles.findAdjacentWaterBodies(position, surfaceId)
+    local adjacentWaterBodies = tiles.findAdjacentWaterBodies(position, surface)
     
     -- if there are no adjacent water bodies - dont do anything
 
@@ -150,23 +148,23 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
 
     elseif #adjacentWaterBodies > 1 then
         -- Multiple water bodies - merge them
-        waterbody_merge.mergeMultipleWaterBodies(adjacentWaterBodies, position, surfaceId)
+        waterbody_merge.mergeMultipleWaterBodies(adjacentWaterBodies, position, surface)
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - #adjacentWaterBodies
 		end
     end
 end
 
-function tiles.findAdjacentWaterBodies(position, surfaceId)
+function tiles.findAdjacentWaterBodies(position, surface)
     local waterBodyIds = {}
     local seen = {}
     
     for _, offset in pairs(utils.AdjacentOffsets) do
         local adj_pos = {x = position.x + offset.x, y = position.y + offset.y}
         local adj_gridKey = utils.PositionToString(adj_pos)
-        local waterBodyId = waterbodies.getWaterTile(adj_gridKey, surfaceId)
+        local waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
         
-        if not waterbodies.checkIfTileIsNotAssignedToWaterBody(adj_gridKey, surfaceId) and not seen[waterBodyId] then
+        if not waterbodies.checkIfTileIsNotAssignedToWaterBody(adj_gridKey, surface) and not seen[waterBodyId] then
             waterBodyIds[#waterBodyIds + 1] = waterBodyId
             seen[waterBodyId] = true
         end
@@ -176,7 +174,7 @@ function tiles.findAdjacentWaterBodies(position, surfaceId)
 end
 
 
-function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, surfaceId, updateBudget)
+function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, surface, updateBudget)
 	local gridKey = utils.PositionToString(position)
     local tileType = waterbodies.WaterTileToWaterBodyTileType[originalTileName]
     if not tileType then return end
@@ -194,10 +192,10 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
     
     -- 4. Mark tile as unassigned in global registry
-    waterbodies.addNewWaterTile(gridKey, surfaceId, -1)
+    waterbodies.addNewWaterTile(gridKey, surface, -1)
     
     -- 5. Recalculate edges around this position
-    waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surfaceId, updateBudget)
+    waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surface, updateBudget)
     
     -- 6. Mark for water amount recalculation
     waterBody.waterAreaData.ToCalculate = true
@@ -212,20 +210,20 @@ end
 function tiles.processLandfillEvent(tileEvent, updateBudget)
     -- assume position is left-top corner already
 	local position = tileEvent.position
-	local surfaceId = tileEvent.surfaceId
+	local surface = tileEvent.surface
     local gridKey = utils.PositionToString(position)
-    local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+    local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
     
-    if not waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
+    if not waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface) then
         local waterBody = waterbodies.getWaterBody(waterBodyId)
 		if waterBody and waterBody.valid then
 			if updateBudget then
 				updateBudget.budget = updateBudget.budget - 2
 			end
-            tiles.reduceTileFromWaterBody(waterBody, tileEvent.tileData.originalTileName, position, surfaceId, updateBudget)
+            tiles.reduceTileFromWaterBody(waterBody, tileEvent.tileData.originalTileName, position, surface, updateBudget)
         end
 		if waterBody.valid then
-			waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, position, surfaceId, updateBudget)
+			waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, position, surface, updateBudget)
 		end
     end
 end

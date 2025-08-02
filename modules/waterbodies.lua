@@ -1,4 +1,5 @@
 require("modules.utils")
+require("modules.hot_utils")
 
 waterbodies = {}
 
@@ -6,11 +7,10 @@ function waterbodies.initWaterBodiesAndTiles()
     if storage.WaterBodies == nil then
         storage.WaterBodies = {}
 		storage.NextWaterBodyId = 1
-		storage.RecycledWaterBodyIds = {} -- waterBodyId -> true
+		storage.RecycledWaterBodyIds = {} -- array of waterBodyIds
 		storage.ValidWaterBodies = {} -- waterBodyId -> true
-    end
-    if storage.WaterTiles == nil then
-        storage.WaterTiles = {} -- surfaceId -> gridKey -> waterBodyId
+
+        storage.WaterTiles = {} -- surfaceName -> gridKey -> waterBodyId
 		storage.WaterBodyToNumTiles = {} -- waterBodyId -> numTiles
 	end
 end
@@ -19,11 +19,19 @@ function waterbodies.getValidWaterBodies()
     return storage.ValidWaterBodies
 end
 
-function waterbodies.initSurface(surfaceId)
-    if storage.WaterTiles[surfaceId] == nil then
-        storage.WaterTiles[surfaceId] = {} -- gridKey -> waterBodyId
+-- these functions use surfaceName instead of surface
+function waterbodies.initSurface(surfaceName)
+    if storage.WaterTiles[surfaceName] == nil then
+        storage.WaterTiles[surfaceName] = {} -- gridKey -> waterBodyId
     end
 end
+
+function waterbodies.getWaterTile(gridKey, surface)
+	local surfaceName = surface.name
+    waterbodies.initSurface(surfaceName)
+    return storage.WaterTiles[surfaceName][gridKey]
+end
+
 
 function waterbodies.getSurfaceMaxWaterbodies()
 	return settings.startup["Surface-Max-Waterbodies"].value
@@ -35,25 +43,18 @@ end
 
 
 -- optional waterBodyId argument to link to a water body
--- if not present use as waterbodies.addNewWaterTile(position, surfaceId, -1)
-function waterbodies.addNewWaterTile(gridKey, surfaceId, waterBodyId)
-    waterbodies.initSurface(surfaceId)
-	local previous_owner = storage.WaterTiles[surfaceId][gridKey]
-	local write_id = waterBodyId or -1
-    storage.WaterTiles[surfaceId][gridKey] = write_id
+-- if not present use as waterbodies.addNewWaterTile(position, surface, -1)
+function waterbodies.addNewWaterTile(gridKey, surface, waterBodyId)
+	local write_id, previous_owner = hot_utils.writeWaterTileAndGetPrevious(gridKey, surface, waterBodyId)
 	if previous_owner ~= nil then
 		storage.WaterBodyToNumTiles[previous_owner] = (storage.WaterBodyToNumTiles[previous_owner] or 0) - 1
+		if storage.WaterBodyToNumTiles[previous_owner] <= 0 then
+			-- remove from this table and add recycled water body id
+			storage.WaterBodyToNumTiles[previous_owner] = nil
+			table.insert(storage.RecycledWaterBodyIds, previous_owner)
+		end
 	end
 	storage.WaterBodyToNumTiles[write_id] = (storage.WaterBodyToNumTiles[write_id] or 0) + 1
-end
-
-function waterbodies.getWaterTile(gridKey, surfaceId)
-    waterbodies.initSurface(surfaceId)
-    return storage.WaterTiles[surfaceId][gridKey]
-end
-
-function waterbodies.checkIfWaterTileExists(gridKey, surfaceId)
-    return waterbodies.getWaterTile(gridKey, surfaceId) ~= nil
 end
 
 function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
@@ -67,13 +68,13 @@ function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
 	return false
 end
 
-function waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId)
-    local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+function waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface)
+    local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
     return not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
 end
 
-function waterbodies.getWaterTilePercentageWaterUsed(gridKey, surfaceId)
-	local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+function waterbodies.getWaterTilePercentageWaterUsed(gridKey, surface)
+	local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
 	if waterBodyId == nil or waterBodyId == -1 then
 		return 0
 	end
@@ -85,9 +86,8 @@ function waterbodies.getWaterTilePercentageWaterUsed(gridKey, surfaceId)
 end
 
 function waterbodies.getNextFreeWaterBodyId()
-	if next(storage.RecycledWaterBodyIds) ~= nil then
-		local recycledWaterBodyId = next(storage.RecycledWaterBodyIds)
-		storage.RecycledWaterBodyIds[recycledWaterBodyId] = nil
+	if #storage.RecycledWaterBodyIds > 0 then
+		local recycledWaterBodyId = table.remove(storage.RecycledWaterBodyIds)
 		return recycledWaterBodyId
 	end
 
@@ -249,7 +249,7 @@ end
 -- TODO: port more params from above
 -- IDEA: make them separate 'structures' such as SearchData, TileData, MapMarker, WaterBodyState (for changing values such as depleted), AlarmData, PositionData (minX, maxX, minY, maxY) etc.
 function waterbodies.InitWaterBody(
-    surfaceId,
+    surface,
 	waterAreaData,
 	gridsData,
 	entitiesData,
@@ -266,7 +266,7 @@ function waterbodies.InitWaterBody(
 	return {
 		valid = true, -- if false, the water body is not valid and should be deleted
 
-        surfaceId = surfaceId or nil,
+        surface = surface or nil,
         waterBodyId = waterBodyId or nil,
         waterBodyName = waterBodyName or nil,
 
@@ -282,8 +282,8 @@ function waterbodies.InitWaterBody(
 	}
 end
 
-function waterbodies.simpleInitWaterBody(surfaceId)
-	return waterbodies.InitWaterBody(surfaceId, nil, nil, nil, nil, nil, nil, nil, nil)
+function waterbodies.simpleInitWaterBody(surface)
+	return waterbodies.InitWaterBody(surface, nil, nil, nil, nil, nil, nil, nil, nil)
 end
 
 
@@ -486,8 +486,8 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 end
 
 
-function waterbodies.createNewWaterBody(surfaceId)
-    local waterBody = waterbodies.simpleInitWaterBody(surfaceId)
+function waterbodies.createNewWaterBody(surface)
+    local waterBody = waterbodies.simpleInitWaterBody(surface)
     local waterBodyId = waterbodies.addNewWaterBodyAndSetId(waterBody)
     return waterBody, waterBodyId
 end
@@ -530,7 +530,7 @@ function waterbodies.initCleanedWaterBody(water_body)
 		["PercentageWaterUsed"] = waterbodies.calculatePercentageWaterUsed(water_body),
 		["valid"] = false,
 		["waterBodyId"] = water_body.waterBodyId,
-		["surfaceId"] = water_body.surfaceId,
+		["surface"] = water_body.surface,
 		["waterBodyName"] = water_body.waterBodyName,
 	}
 end
@@ -557,12 +557,12 @@ function waterbodies.removeWaterBody(waterBody)
 end
 
 function waterbodies.cleanupWaterBodyTiles(waterBody)
-    local surfaceId = waterBody.surfaceId
+    local surface = waterBody.surface
     
     -- Remove tile assignments for this water body
     for gridKey, _ in pairs(waterBody.gridsData.waterGridWithData) do
-        if waterbodies.getWaterTile(gridKey, surfaceId) == waterBody.waterBodyId then
-            waterbodies.addNewWaterTile(gridKey, surfaceId, -1)
+        if waterbodies.getWaterTile(gridKey, surface) == waterBody.waterBodyId then
+            waterbodies.addNewWaterTile(gridKey, surface, -1)
         end
     end
 end
@@ -589,9 +589,9 @@ end
 waterbodies.MapMarker = {}
 waterbodies.MapMarker.__index = waterbodies.MapMarker
 
-function waterbodies.MapMarker:new(force, surfaceId, position, text, icon)
-    local tag = force.add_chart_tag(utils.GetSurface(surfaceId), {position = position, text = text, icon = icon})
-    local instance = {tag = tag, force=force, surfaceId=surfaceId, position=position, text=text, icon=icon}
+function waterbodies.MapMarker:new(force, surface, position, text, icon)
+    local tag = force.add_chart_tag(surface, {position = position, text = text, icon = icon})
+    local instance = {tag = tag, force=force, surface=surface, position=position, text=text, icon=icon}
     setmetatable(instance, waterbodies.MapMarker)
     return instance
 end
@@ -612,6 +612,6 @@ function waterbodies.MapMarker:update(position, text, icon)
     if position or text or icon then
         -- tag is read only so we need to destroy and create a new one
         self:destroy()
-        self.tag = self.force.add_chart_tag(utils.GetSurface(self.surfaceId), {position = self.position, text = self.text, icon = self.icon})
+        self.tag = self.force.add_chart_tag(self.surface, {position = self.position, text = self.text, icon = self.icon})
     end
 end

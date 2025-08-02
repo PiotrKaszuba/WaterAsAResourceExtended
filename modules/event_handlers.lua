@@ -26,7 +26,7 @@ function event_handlers.BuiltPump(entity)
     if not entities.validatePumpPlacement(pump) then
         utils.rejectEntityPlacement(pump.entity, "Must be placed on water edge and not on a dry (depleted) tile")
     else
-        local waterBodyId, created = waterbody_scan.createWaterBodyFromTileIfNotExists(pump.input_position, pump.surfaceId)
+        local waterBodyId, created = waterbody_scan.createWaterBodyFromTileIfNotExists(pump.input_position, pump.surface)
         entities.registerPumpAndAddToWaterBody(waterBodyId, pump)
         waterbodies.signalPerForce(waterbodies.getWaterBody(waterBodyId), created and event_handlers.signalCreatedWaterBodyPendingScanningToPlayer or event_handlers.signalAttachedToWaterBody)
     end
@@ -78,9 +78,11 @@ end
 function event_handlers.handlePlayerTileEvents(event)
     if event.mod_name == "creative-mod" then return end
     
+    local surface = utils.GetSurfaceById(event.surface_index)
+
     tiles.handleTileEventsInternal(
         event.tiles,
-        event.surface_index,
+        surface,
         event.tile.name
     )
 end
@@ -95,9 +97,11 @@ function event_handlers.handleScriptTileEvents(event)
         game.print("Warning: script_raised_set_tiles with multiple tile types - processing all")
     end
 
+    local surface = utils.GetSurfaceById(event.surface_index)
+    
     tiles.handleTileEventsInternal(
         event.tiles,
-        event.surface_index
+        surface
     )
 end
 

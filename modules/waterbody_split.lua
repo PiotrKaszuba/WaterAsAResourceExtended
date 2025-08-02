@@ -31,7 +31,7 @@ function waterbody_split.getWaterBodyLimitedBoundingBox(shape_data, center_posit
 	return bbox, rect_area_ratio
 end
 
-function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surfaceId, center_position, updateBudget)
+function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surface, center_position, updateBudget)
 	local current_check_size = 2
 	local rect_area_ratio = 0.0
 	local start_tile_gridKey = utils.PositionToString(start_tile_pos)
@@ -49,7 +49,7 @@ function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, o
 			updateBudget.budget = updateBudget.budget - (current_check_size * current_check_size) / 4
 		end
 		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody.waterBodyShapeData, center_position, current_check_size)
-		local all_connected_tiles = utils.GetSurface(surfaceId).get_connected_tiles(start_tile_pos, utils.GetWaterTileNamesArray(), true, bbox)
+		local all_connected_tiles = surface.get_connected_tiles(start_tile_pos, utils.GetWaterTileNamesArray(), true, bbox)
 		for _, tile_pos in pairs(all_connected_tiles) do
 			local tile_pos_gridKey = utils.PositionToString(tile_pos)
 			if missing_tiles[tile_pos_gridKey] then
@@ -89,12 +89,12 @@ function waterbody_split.signalWaterBodySplitToPlayer(waterBody, force, num_new_
 	return string.format("%s split into %s waterbodies.", waterbodies.getFullNameForWaterBody(waterBody), num_new_water_bodies)
 end
 
-function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, surfaceId, updateBudget)
+function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, surface, updateBudget)
 	-- assume split_position is left-top corner already
 
 	-- water body got split if there is no path between 2 neigboring water tiles (to the landfilled tile)
 	-- check all adjacent water tiles
-	local adjacent_waterbody_tiles, _ = waterbody_scan.getAdjacentWaterAndLandTiles(split_position, surfaceId, waterBodyId)
+	local adjacent_waterbody_tiles, _ = waterbody_scan.getAdjacentWaterAndLandTiles(split_position, surface, waterBodyId)
 
 	-- we need to check if there is a path between any of the adjacent water tiles
 	-- we can use get_connected_tiles with increasing area (BoundingBox)
@@ -114,7 +114,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 			updateBudget.budget = updateBudget.budget - 1
 		end
 		local start_tile_pos = table.remove(missing_tiles_positions)
-		local connected_tiles, missing_tiles = waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, missing_tiles_positions, surfaceId, split_position, updateBudget)
+		local connected_tiles, missing_tiles = waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, missing_tiles_positions, surface, split_position, updateBudget)
 		connected_tile_sets[#connected_tile_sets + 1] = connected_tiles
 
 		new_missing_tiles_positions = {}
@@ -154,7 +154,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		local new_water_body_id = nil
 		for _, tile_set in ipairs(connected_tile_sets) do
 			first_tile_pos = tile_set[1]
-			_, new_water_body_id = waterbodies.createNewWaterBody(surfaceId)
+			_, new_water_body_id = waterbodies.createNewWaterBody(surface)
 			new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = first_tile_pos}
 		end
 
@@ -163,11 +163,11 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 			if pump_data and pump_data.entity.valid and pump_data.type == "pump" and not pump_data.disabled then
 				local pump_input_position = pump_data.input_position
 				-- check if this is still water tile
-				if utils.validate_tile_placement(pump_input_position, surfaceId, utils.WaterTiles) then
-					_, new_water_body_id = waterbodies.createNewWaterBody(surfaceId)
+				if utils.validate_tile_placement(pump_input_position, surface, utils.WaterTiles) then
+					_, new_water_body_id = waterbodies.createNewWaterBody(surface)
 					
 					-- fix position to left-top corner in case it was not
-					local tile = utils.GetTile(pump_input_position, surfaceId)
+					local tile = utils.GetTile(pump_input_position, surface)
 					local pump_input_top_left_corner = tile.position
 					
 					new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner}

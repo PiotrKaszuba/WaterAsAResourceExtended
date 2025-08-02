@@ -5,21 +5,22 @@ require("modules.waterbody_merge")
 waterbody_scan = {}
 
 -- return waterBodyId of existing or new water body
-function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surfaceId)
+function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surface)
 	-- for profiling only - if code hits inner line then it requires left-top corner fix
+	
 	if not utils.checkIfPositionIsLeftTopCorner(position) then
-		local profile_meter = 0
+		utils.profile_hits("checkIfPositionIsLeftTopCorner","waterbody_scan.createWaterBodyFromTileIfNotExists")
 	end
 	
 	-- fix position to left-top corner
-	local tile = utils.GetTile(position, surfaceId)
+	local tile = utils.GetTile(position, surface)
 	position = tile.position
 
     local gridKey = utils.PositionToString(position)
-    local waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+    local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
 
     if not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId) then
-        local _, waterBodyId = waterbodies.createNewWaterBody(surfaceId)
+        local _, waterBodyId = waterbodies.createNewWaterBody(surface)
 		-- scan can change waterBodyId if merge happened
 		waterBodyId = waterbody_scan.beginScanWaterArea(waterBodyId, position)
         return waterBodyId, true
@@ -36,9 +37,9 @@ function waterbody_scan.getAdditionalScanAmount()
     return settings.global["FluidArea-Additional-Tiles-Per-Second"].value
 end
 
-function waterbody_scan.getAdjacentWaterAndLandTiles(position, surfaceId, water_body_id)
+function waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, water_body_id)
 	-- fix position to left-top corner in case it was not
-	local tile = utils.GetTile(position, surfaceId)
+	local tile = utils.GetTile(position, surface)
 	position = tile.position
 	
 	-- if water_body_id is given then only return adjacent water tiles that are part of the water body
@@ -47,8 +48,8 @@ function waterbody_scan.getAdjacentWaterAndLandTiles(position, surfaceId, water_
 	for _, offset in pairs(utils.AdjacentOffsets) do
 		local adj_pos = {x = position.x + offset.x, y = position.y + offset.y}
 		local adj_gridKey = utils.PositionToString(adj_pos)
-		local adj_waterBodyId = waterbodies.getWaterTile(adj_gridKey, surfaceId)
-		local is_water_tile = utils.IsWaterOrDryTile(utils.GetTile(adj_pos, surfaceId).name)
+		local adj_waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
+		local is_water_tile = utils.IsWaterOrDryTile(utils.GetTile(adj_pos, surface).name)
 		if (water_body_id == nil or adj_waterBodyId == water_body_id) and is_water_tile then
 			adjacent_waterbody_tiles[#adjacent_waterbody_tiles + 1] = adj_pos
 		elseif not is_water_tile then
@@ -58,8 +59,8 @@ function waterbody_scan.getAdjacentWaterAndLandTiles(position, surfaceId, water_
 	return adjacent_waterbody_tiles, adjacent_land_tiles
 end
 
-function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surfaceId, updateBudget)
-	local adjacent_waterbody_tiles, adjacent_land_tiles = waterbody_scan.getAdjacentWaterAndLandTiles(position, surfaceId, waterBody.waterBodyId)
+function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surface, updateBudget)
+	local adjacent_waterbody_tiles, adjacent_land_tiles = waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, waterBody.waterBodyId)
     
 	-- remove from edge grid - all adjacent land tiles
 	for _, pos in pairs(adjacent_land_tiles) do
@@ -72,13 +73,13 @@ function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surf
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - 1
 		end
-		waterbody_scan.EdgePattern(pos, surfaceId, waterBody)
+		waterbody_scan.EdgePattern(pos, surface, waterBody)
 	end
 end
 
-function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody)
+function waterbody_scan.EdgePattern(searchPosition, surface, waterBody)
 	-- fix position to left-top corner in case it was not
-	local tile = utils.GetTile(searchPosition, surfaceId)
+	local tile = utils.GetTile(searchPosition, surface)
 	searchPosition = tile.position
 
 	local edgeFound = false
@@ -90,10 +91,10 @@ function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody)
         local position = {x = searchPosition.x + offset.x, y = searchPosition.y + offset.y}
         
 		-- is part of this waterbody or its edge
-		local tile = utils.GetTile(position, surfaceId)
+		local tile = utils.GetTile(position, surface)
 		position = tile.position
 		local gridKey = utils.PositionToString(position)
-		local tileWaterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+		local tileWaterBodyId = waterbodies.getWaterTile(gridKey, surface)
 
         local already_searched = tileWaterBodyId == waterBodyId or edgeGrid[gridKey] ~= nil
         if (not already_searched) then
@@ -102,7 +103,7 @@ function waterbody_scan.EdgePattern(searchPosition, surfaceId, waterBody)
 				searchData.searchQueue:enqueue(position)
 			else
 				if tileWaterBodyId == nil then
-					waterbodies.addNewWaterTile(gridKey, surfaceId, -1)
+					waterbodies.addNewWaterTile(gridKey, surface, -1)
 				elseif tileWaterBodyId == waterBodyId then
 					game.print("Testing: EdgePattern got non water tile of the same waterbody!")
 				elseif tileWaterBodyId ~= -1 then
@@ -120,11 +121,11 @@ end
 
 -- assign a tile to a water body
 -- if the tile is already assigned to a different water body, we have to merge the two water bodies
-function waterbody_scan.assignTileToWaterBody(gridKey, surfaceId, waterBodyId)
-    local tile_waterBodyId = waterbodies.getWaterTile(gridKey, surfaceId)
+function waterbody_scan.assignTileToWaterBody(gridKey, surface, waterBodyId)
+    local tile_waterBodyId = waterbodies.getWaterTile(gridKey, surface)
 	local new_water_body_id = waterBodyId
-    if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceId) then
-        waterbodies.addNewWaterTile(gridKey, surfaceId, waterBodyId)
+    if waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface) then
+        waterbodies.addNewWaterTile(gridKey, surface, waterBodyId)
     elseif tile_waterBodyId ~= waterBodyId then
         -- tile is already assigned to a different water body
         -- we have to merge the two water bodies
@@ -134,18 +135,18 @@ function waterbody_scan.assignTileToWaterBody(gridKey, surfaceId, waterBodyId)
 end
 
 -- Process a single water tile during scanning (internal helper)
-function waterbody_scan.processWaterTile(water_body, position, tile_name, surface_id)
+function waterbody_scan.processWaterTile(water_body, position, tile_name, surface)
 	local gridKey = utils.PositionToString(position)
 
-	if not utils.IsWaterTile(tile_name) and not waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface_id) then
+	if not utils.IsWaterTile(tile_name) and not waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface) then
 		-- Non-water tile - mark as searched without adding to water body and skip
-		waterbodies.addNewWaterTile(gridKey, surface_id, -1)
+		waterbodies.addNewWaterTile(gridKey, surface, -1)
 		return water_body
 	end
 	
     local waterBodyTileType = waterbodies.WaterTileToWaterBodyTileType[tile_name]
 	if waterBodyTileType ~= nil then
-		local new_water_body_id = waterbody_scan.assignTileToWaterBody(gridKey, surface_id, water_body.waterBodyId)
+		local new_water_body_id = waterbody_scan.assignTileToWaterBody(gridKey, surface, water_body.waterBodyId)
 		if new_water_body_id ~= water_body.waterBodyId then
 			water_body = waterbodies.getWaterBody(new_water_body_id)
 		else
@@ -154,7 +155,7 @@ function waterbody_scan.processWaterTile(water_body, position, tile_name, surfac
 				water_body.waterBodyTileCountData[waterBodyTileType] = water_body.waterBodyTileCountData[waterBodyTileType] + 1
 				
 				-- inherit depletion level from the original waterbody (if any)
-				local tile_percentage_water_used = waterbodies.getWaterTilePercentageWaterUsed(gridKey, surface_id)
+				local tile_percentage_water_used = waterbodies.getWaterTilePercentageWaterUsed(gridKey, surface)
 				water_body.waterBodyTileCountPercentagePenalty[waterBodyTileType] = water_body.waterBodyTileCountPercentagePenalty[waterBodyTileType] + tile_percentage_water_used
 				
 				water_body.searchData.totalArea = water_body.searchData.totalArea + 1
@@ -162,7 +163,7 @@ function waterbody_scan.processWaterTile(water_body, position, tile_name, surfac
 			end
 		end
 		-- Check for edge pattern and add adjacent tiles to search queue
-		waterbody_scan.EdgePattern(position, surface_id, water_body)
+		waterbody_scan.EdgePattern(position, surface, water_body)
 
 		waterbodies.updateBoundingBox(water_body.waterBodyShapeData, position)
 
@@ -186,7 +187,7 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 	end
 	local search_queue = water_body.searchData.searchQueue
 	-- fix position to left-top corner in case it was not
-	local tile = utils.GetTile(start_position, water_body.surfaceId)
+	local tile = utils.GetTile(start_position, water_body.surface)
 	start_position = tile.position
 	search_queue:enqueue(start_position)
 	local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount, updateBudget)
@@ -196,7 +197,7 @@ end
 -- Scan water area starting from a position and build tile data
 -- Returns: true if scan is complete, false if it is continuing
 function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
-	local surface_id = water_body.surfaceId
+	local surface = water_body.surface
 	local water_body_max_area = waterbodies.getMaxWaterBodySize()
 	if updateBudget then
 		search_amount = math.min(search_amount, updateBudget.budget)
@@ -208,17 +209,17 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	while not water_body.searchData.searchQueue:is_empty() and search_amount > 0 do
 		local search_position = water_body.searchData.searchQueue:dequeue()
 		-- fix position to left-top corner in case it was not
-		local tile = utils.GetTile(search_position, surface_id)
+		local tile = utils.GetTile(search_position, surface)
 		search_position = tile.position
 		local gridKey = utils.PositionToString(search_position)
 
-		local tile_waterBodyId = waterbodies.getWaterTile(gridKey, surface_id)
+		local tile_waterBodyId = waterbodies.getWaterTile(gridKey, surface)
 		-- already searched means that the tile is part of this waterbody or its edge
 		local already_searched = tile_waterBodyId == water_body.waterBodyId or water_body.gridsData.edgeGrid[gridKey] ~= nil
 		if not already_searched then
 			if water_body.searchData.totalArea <= water_body_max_area then
 				local tile_name = tile.name
-				water_body = waterbody_scan.processWaterTile(water_body, search_position, tile_name, surface_id)
+				water_body = waterbody_scan.processWaterTile(water_body, search_position, tile_name, surface)
 			end
 		end
 		search_amount = search_amount - 1

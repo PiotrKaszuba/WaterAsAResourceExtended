@@ -31,7 +31,7 @@ function waterbody_depletion.calculateFocusPoint(waterBody)
     -- The focus point is "opposite" the pump center relative to the water body center
     local focusPoint = { x = centerX + vectorX, y = centerY + vectorY }
     -- fix position to left-top corner
-    local tile = utils.GetTile(focusPoint, waterBody.surfaceId)
+    local tile = utils.GetTile(focusPoint, waterBody.surface)
     focusPoint = tile.position
     return focusPoint
 end
@@ -85,8 +85,7 @@ function waterbody_depletion.restoreAllVisuals(waterBody)
     end
 
     if #tilesToChange > 0 then
-        local surface = utils.GetSurface(waterBody.surfaceId)
-        surface.set_tiles(tilesToChange, nil, nil, nil, false) -- Pass false to prevent script_raised_set_tiles event
+        waterBody.surface.set_tiles(tilesToChange, nil, nil, nil, false) -- Pass false to prevent script_raised_set_tiles event
     end
 
     state.DriedTiles = 0
@@ -139,8 +138,7 @@ function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percent
     end
 
     if #tilesToChange > 0 then
-        local surface = utils.GetSurface(waterBody.surfaceId)
-        surface.set_tiles(tilesToChange, nil, nil, nil, false) -- Pass false to prevent script_raised_set_tiles event
+        waterBody.surface.set_tiles(tilesToChange, nil, nil, nil, false) -- Pass false to prevent script_raised_set_tiles event
     end
 end
 

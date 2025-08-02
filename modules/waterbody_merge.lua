@@ -24,7 +24,7 @@ function waterbody_merge.mergeSearchData(searchData, other_searchData, overlapTi
 	searchData.finished = searchData.searchQueue:is_empty()
 end
 
-function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surfaceId)
+function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surface)
 	local overlapTileCountData = waterbodies.initWaterBodyTileCountData()
 
 	for gridKey, tileData in pairs(other_gridsData.waterGridWithData) do
@@ -41,7 +41,7 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_glob
 
 		-- if include_global_water_tiles is true -> transfer ownership of the tile to the current water body
 		if include_global_water_tiles then
-			waterbodies.addNewWaterTile(gridKey, surfaceId, gridsData.waterBodyId)
+			waterbodies.addNewWaterTile(gridKey, surface, gridsData.waterBodyId)
 		end
 	end
 
@@ -129,7 +129,7 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	-- waterBody2 is merged into waterBody1
 
 	-- check if the water bodies are on the same surface
-	if waterBody1.surfaceId ~= waterBody2.surfaceId then
+	if waterBody1.surface.name ~= waterBody2.surface.name then
 		error("Water bodies are on different surfaces")
 	end
 
@@ -137,7 +137,7 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 		error("Water bodies are not valid")
 	end
 
-	local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surfaceId)
+	local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surface)
 	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData, overlapTileCountData)
 	waterbody_merge.mergeSearchData(waterBody1.searchData, waterBody2.searchData, overlapTileCountData)
 	waterbody_merge.mergeWaterBodyStateData(waterBody1.waterBodyStateData, waterBody2.waterBodyStateData)
@@ -159,9 +159,9 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	return waterBody1.waterBodyId
 end
 
-function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition, surfaceId)
+function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition, surface)
 	-- fix position to left-top corner in case it was not
-	local tile = utils.GetTile(triggerPosition, surfaceId)
+	local tile = utils.GetTile(triggerPosition, surface)
 	triggerPosition = tile.position
 
     if #waterBodyIds < 2 then return end

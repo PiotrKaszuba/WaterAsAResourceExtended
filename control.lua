@@ -12,10 +12,10 @@ control.periodic_update_ticks = 1
 control.desired_big_update_ticks = 30
 
 
-
 function initUpdateBudget()
 	return {budget = utils.normalize_values_per_second(storage.UpdateBudget, true)}
 end
+
 function EverySecond()
 	local updateBudget = initUpdateBudget()
 	-- events handling
