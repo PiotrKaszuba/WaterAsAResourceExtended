@@ -136,6 +136,17 @@ function waterbodies.addTileToWaterGrid(waterBody, position, tileName)
 end
 
 function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
+	-- handle dry tile removal
+	local currentTile = waterBody.gridsData.waterGridWithData[gridKey]
+    if utils.DryWaterTiles[currentTile.name] then
+        local state = waterBody.waterBodyStateData
+        if state.DriedTiles > 0 then
+            state.DriedTiles = state.DriedTiles - 1
+        else
+            game.print("Warning: DriedTiles is %d for a water body with dry tile being removed.")
+        end
+    end
+	-- remove from grid
     waterBody.gridsData.waterGridWithData[gridKey] = nil
 end
 
