@@ -176,9 +176,11 @@ end
 
 
 function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, surface, updateBudget)
-	local gridKey = hot_utils.GridKey(position)
     local tileType = waterbodies.WaterTileToWaterBodyTileType[originalTileName]
     if not tileType then return end
+
+    local gridKey = hot_utils.GridKey(position)
+    local surfaceName = surface.name
     
     -- 1. Reduce tile count that will be used for water amount calculation
     waterBody.waterBodyTileCountData[tileType] = 
@@ -193,7 +195,7 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
     
     -- 4. Mark tile as unassigned in global registry
-    waterbodies.addNewWaterTile(gridKey, surface, -1)
+    hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
     
     -- 5. Recalculate edges around this position
     waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surface, updateBudget)

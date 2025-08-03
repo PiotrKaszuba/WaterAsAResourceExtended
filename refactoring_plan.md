@@ -10,8 +10,7 @@ Needed:
 -> and depletion visuals are based on the grid tile data (current name vs original name)
 
 Maybe:
-- NEED to profile performance
--> getWaterTile called with surfaceName - in critical loops pass around surfaceName too not to access it
+- NEED to profile performance - partially done
 -> 
 
 2. Update budget on depletion appearance? - IDK

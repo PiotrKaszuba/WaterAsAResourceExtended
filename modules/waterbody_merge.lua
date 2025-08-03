@@ -25,9 +25,9 @@ function waterbody_merge.mergeSearchData(searchData, other_searchData, overlapTi
 	searchData.finished = searchData.searchQueue:is_empty()
 end
 
-function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surface)
+function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surface, targetWaterBodyId)
 	local overlapTileCountData = waterbodies.initWaterBodyTileCountData()
-
+	local surfaceName = surface.name
 	for gridKey, tileData in pairs(other_gridsData.waterGridWithData) do
 
 		-- check by the waterGrid if the tile is already in the current water body
@@ -42,7 +42,7 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_glob
 
 		-- if include_global_water_tiles is true -> transfer ownership of the tile to the current water body
 		if include_global_water_tiles then
-			waterbodies.addNewWaterTile(gridKey, surface, gridsData.waterBodyId)
+			hot_utils.addNewWaterTile(gridKey, surfaceName, targetWaterBodyId)
 		end
 	end
 
@@ -138,7 +138,7 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 		error("Water bodies are not valid")
 	end
 
-	local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surface)
+	local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surface, waterBody1.waterBodyId)
 	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData, overlapTileCountData)
 	waterbody_merge.mergeSearchData(waterBody1.searchData, waterBody2.searchData, overlapTileCountData)
 	waterbody_merge.mergeWaterBodyStateData(waterBody1.waterBodyStateData, waterBody2.waterBodyStateData)

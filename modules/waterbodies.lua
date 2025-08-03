@@ -41,22 +41,6 @@ function waterbodies.getMaxWaterBodySize()
     return settings.global["FluidArea-MaxFluidAreaSize"].value
 end
 
-
--- optional waterBodyId argument to link to a water body
--- if not present use as waterbodies.addNewWaterTile(position, surface, -1)
-function waterbodies.addNewWaterTile(gridKey, surface, waterBodyId)
-	local write_id, previous_owner = hot_utils.writeWaterTileAndGetPrevious(gridKey, surface, waterBodyId)
-	if previous_owner ~= nil then
-		storage.WaterBodyToNumTiles[previous_owner] = (storage.WaterBodyToNumTiles[previous_owner] or 0) - 1
-		if storage.WaterBodyToNumTiles[previous_owner] <= 0 then
-			-- remove from this table and add recycled water body id
-			storage.WaterBodyToNumTiles[previous_owner] = nil
-			table.insert(storage.RecycledWaterBodyIds, previous_owner)
-		end
-	end
-	storage.WaterBodyToNumTiles[write_id] = (storage.WaterBodyToNumTiles[write_id] or 0) + 1
-end
-
 function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
 	if waterBodyId == nil or waterBodyId == -1 then
 		return false
@@ -71,18 +55,6 @@ end
 function waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
     return not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
-end
-
-function waterbodies.getWaterTilePercentageWaterUsed(gridKey, surface)
-	local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
-	if waterBodyId == nil or waterBodyId == -1 then
-		return 0
-	end
-	local waterBody = waterbodies.getWaterBody(waterBodyId)
-	if waterBody and waterBody.valid == false then
-		return waterBody.PercentageWaterUsed
-	end
-	return 0
 end
 
 function waterbodies.getNextFreeWaterBodyId()
@@ -130,14 +102,6 @@ function waterbodies.getWaterAreaArray(waterBody)
     return waterArea
 end
 
-function waterbodies.addTileToWaterGrid(waterBody, position, tileName)
-    local gridKey = hot_utils.GridKey(position)
-    waterBody.gridsData.waterGridWithData[gridKey] = {
-        name = tileName,
-        position = position,
-        originalName = tileName
-    }
-end
 
 function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
 	-- handle dry tile removal
@@ -557,12 +521,12 @@ function waterbodies.removeWaterBody(waterBody)
 end
 
 function waterbodies.cleanupWaterBodyTiles(waterBody)
-    local surface = waterBody.surface
+    local surfaceName = waterBody.surface.name
     
     -- Remove tile assignments for this water body
     for gridKey, _ in pairs(waterBody.gridsData.waterGridWithData) do
-        if waterbodies.getWaterTile(gridKey, surface) == waterBody.waterBodyId then
-            waterbodies.addNewWaterTile(gridKey, surface, -1)
+        if hot_utils.getWaterTile(gridKey, surfaceName) == waterBody.waterBodyId then
+            hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
         end
     end
 end
