@@ -407,7 +407,7 @@ function waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 		end
 		local penalty_amount = waterBody.waterBodyTileCountPercentagePenalty[tileType]
 		if penalty_amount ~= nil then
-			local amountWaterPenalty = penalty_amount * waterbodies.GetAmountWaterForWaterBodyTileType(tileType) * multiplier
+			local amountWaterPenalty = penalty_amount / 100 * waterbodies.GetAmountWaterForWaterBodyTileType(tileType) * multiplier
 			penaltyWaterUsed = penaltyWaterUsed + amountWaterPenalty
 		end
 	end

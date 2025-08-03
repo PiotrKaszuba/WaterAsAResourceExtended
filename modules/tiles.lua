@@ -181,14 +181,15 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
 
     local gridKey = hot_utils.GridKey(position)
     local surfaceName = surface.name
-    
+
     -- 1. Reduce tile count that will be used for water amount calculation
     waterBody.waterBodyTileCountData[tileType] = 
         math.max(0, waterBody.waterBodyTileCountData[tileType] - 1)
     
-    -- 2. Regenerate some water used based on current percentage use (overall it will decrease amount of reamining water due to AmountWtr decreasing more than water used)
+    -- 2. Regenerate some water used based on current percentage use
+    -- reverse penalty (overall it will decrease amount of reamining water due to AmountWtr decreasing more than water used)
     local currentPercentageUsed = waterbodies.calculatePercentageWaterUsed(waterBody)
-    local toRegen = waterbodies.GetAmountWaterForWaterBodyTileType(tileType, true) * currentPercentageUsed
+    local toRegen = waterbodies.GetAmountWaterForWaterBodyTileType(tileType, true) * currentPercentageUsed / 100
     waterbody_update.updateWaterLevel(waterBody, 0, toRegen)
 
     -- 3. Remove from waterGrid
