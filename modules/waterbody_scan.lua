@@ -200,8 +200,11 @@ end
 function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local surface = water_body.surface
 	local water_body_max_area = waterbodies.getMaxWaterBodySize()
+	
+	local original_search_amount = search_amount
 	if updateBudget then
 		search_amount = math.min(search_amount, updateBudget.budget)
+		original_search_amount = search_amount
 	end
 
 	water_body.waterAreaData.ToCalculate = true
@@ -229,7 +232,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
 	end
 	if updateBudget then
-		updateBudget.budget = updateBudget.budget - search_amount
+		updateBudget.budget = updateBudget.budget - original_search_amount + search_amount
 	end
 	return waterbody_scan.checkIfScanningIsFinished(water_body), water_body
 end

@@ -11,6 +11,8 @@ Needed:
 
 Maybe:
 - NEED to profile performance
+-> getWaterTile called with surfaceName - in critical loops pass around surfaceName too not to access it
+-> 
 
 2. Update budget on depletion appearance? - IDK
 10. reevaluate mods additions (that were in original script) / mod updates, "ScenFunc" for scenario created games etc. - some additions that might handle logic in various cases and be useful
