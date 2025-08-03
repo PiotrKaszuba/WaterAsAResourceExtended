@@ -15,14 +15,14 @@ function waterbody_merge.merge_indicator_tables(table_result, table_other)
 end
 
 function waterbody_merge.mergeSearchData(searchData, other_searchData, overlapTileCountData)
-	searchData.searchQueue:merge(other_searchData.searchQueue)
+	utils.Queue.merge(searchData.searchQueue, other_searchData.searchQueue)
 	
 	local sum_overlap = 0
 	for k, v in pairs(overlapTileCountData) do
 		sum_overlap = sum_overlap + v
 	end
 	searchData.totalArea = searchData.totalArea + other_searchData.totalArea - sum_overlap
-	searchData.finished = searchData.searchQueue:is_empty()
+	searchData.finished = utils.Queue.is_empty(searchData.searchQueue)
 end
 
 function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surface, targetWaterBodyId)
@@ -188,7 +188,7 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
 		end
     end
 
-    targetWaterBody.searchData.searchQueue:enqueue(triggerPosition)
+    utils.Queue.enqueue(targetWaterBody.searchData.searchQueue, triggerPosition)
     targetWaterBody.searchData.finished = false
 	targetWaterBody.waterAreaData.ToCalculate = true
 	-- also remove the tile from edge grid

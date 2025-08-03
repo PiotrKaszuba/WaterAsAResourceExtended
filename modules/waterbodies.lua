@@ -120,7 +120,7 @@ end
 
 function waterbodies.InitSearchData()
 	return {
-		searchQueue = utils.Queue:new(),
+		searchQueue = utils.Queue.new(),
 		totalArea = 0,
 		finished = false,
 	}
@@ -502,7 +502,7 @@ end
 function waterbodies.destroyMapMarkers(waterBodyStateData)
 	for _, marker in pairs(waterBodyStateData.MapMarkers) do
 		if marker then
-			marker:destroy()
+			utils.MapMarker.destroy(marker)
 		end
 	end
 end
@@ -547,35 +547,4 @@ function waterbodies.calculatePercentageWaterUsed(waterbody)
 	local total_water_available = waterbody.waterAreaData.AmountWtr
 	if total_water_available == 0 then return 100 end
 	return math.max(math.min(total_water_used / total_water_available, 1), 0) * 100
-end
-
-
-waterbodies.MapMarker = {}
-waterbodies.MapMarker.__index = waterbodies.MapMarker
-
-function waterbodies.MapMarker:new(force, surface, position, text, icon)
-    local tag = force.add_chart_tag(surface, {position = position, text = text, icon = icon})
-    local instance = {tag = tag, force=force, surface=surface, position=position, text=text, icon=icon}
-    setmetatable(instance, waterbodies.MapMarker)
-    return instance
-end
-
-function waterbodies.MapMarker:valid()
-    return self.tag and self.tag.valid
-end
-
-function waterbodies.MapMarker:destroy()
-    if self:valid() then self.tag.destroy() end
-end
-
-function waterbodies.MapMarker:update(position, text, icon)
-    if not self:valid() then return end
-    if position then self.position = position end
-    if text then self.text = text end
-    if icon then self.icon = icon end
-    if position or text or icon then
-        -- tag is read only so we need to destroy and create a new one
-        self:destroy()
-        self.tag = self.force.add_chart_tag(self.surface, {position = self.position, text = self.text, icon = self.icon})
-    end
 end

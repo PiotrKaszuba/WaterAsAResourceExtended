@@ -143,39 +143,36 @@ function utils.merge_arrays(array1, array2)
 end
 
 utils.Queue = {}
-utils.Queue.__index = utils.Queue 
 
-function utils.Queue:new()
-    local obj = {
+function utils.Queue.new()
+    return {
         first = 1,
         last = 0,
         data = {}
     }
-    setmetatable(obj, utils.Queue)
-    return obj
 end
 
-function utils.Queue:enqueue(value)
-    self.last = self.last + 1
-    self.data[self.last] = value
+function utils.Queue.enqueue(queue, value)
+    queue.last = queue.last + 1
+    queue.data[queue.last] = value
 end
 
-function utils.Queue:dequeue()
-    if self:is_empty() then return nil end
-    local value = self.data[self.first]
-    self.data[self.first] = nil  -- Allow garbage collection
-    self.first = self.first + 1
+function utils.Queue.dequeue(queue)
+    if utils.Queue.is_empty(queue) then return nil end
+    local value = queue.data[queue.first]
+    queue.data[queue.first] = nil
+    queue.first = queue.first + 1
     return value
 end
 
-function utils.Queue:is_empty()
-    return self.first > self.last
+function utils.Queue.is_empty(queue)
+    return queue.first > queue.last
 end
 
-function utils.Queue:merge(other_queue)
-    while not other_queue:is_empty() do
-        local val = other_queue:dequeue()
-        self:enqueue(val)
+function utils.Queue.merge(queue, other_queue)
+    while not utils.Queue.is_empty(other_queue) do
+        local val = utils.Queue.dequeue(other_queue)
+        utils.Queue.enqueue(queue, val)
     end
 end
 
@@ -201,4 +198,55 @@ function utils.profile_hits(case_name, caller_name)
 		storage.profiling_hits[caller_name] = {}
 	end
 	storage.profiling_hits[caller_name][case_name] = (storage.profiling_hits[caller_name][case_name] or 0) + 1
+end
+
+
+utils.MapMarker = {}
+
+function utils.MapMarker.new(force, surface, position, text, icon)
+    local tag = force.add_chart_tag(surface, {position = position, text = text, icon = icon})
+    return {
+        tag = tag,
+        force = force,
+        surface = surface,
+        position = position,
+        text = text,
+        icon = icon
+    }
+end
+
+function utils.MapMarker.valid(marker)
+    return marker.tag and marker.tag.valid
+end
+
+function utils.MapMarker.destroy(marker)
+    if utils.MapMarker.valid(marker) then
+        marker.tag.destroy()
+    end
+end
+
+function utils.MapMarker.update(marker, position, text, icon)
+    if not utils.MapMarker.valid(marker) then return end
+
+    local position_changed = position ~= nil and hot_utils.GridKey(position) ~= hot_utils.GridKey(marker.position)
+    local text_changed = text ~= nil and text ~= marker.text
+    local icon_changed = icon ~= nil and (icon.type ~= marker.icon.type or icon.name ~= marker.icon.name)
+	
+	if position_changed then marker.position = position end
+	if text_changed then marker.text = text end
+    if icon_changed then marker.icon = icon end
+	
+    if position_changed then
+		-- position is read-only so we need to destroy and create a new tag
+        utils.MapMarker.destroy(marker)
+        marker.tag = marker.force.add_chart_tag(marker.surface, {
+            position = marker.position,
+            text = marker.text,
+            icon = marker.icon
+        })
+	elseif text_changed or icon_changed then
+		-- text and icon are mutable so we can update them
+		marker.tag.text = marker.text
+		marker.tag.icon = marker.icon
+    end
 end

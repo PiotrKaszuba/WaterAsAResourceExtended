@@ -10,7 +10,7 @@ tiles = {}
 
 function tiles.initTileEventQueue()
     if storage.TileEventQueue == nil then
-        storage.TileEventQueue = utils.Queue:new()
+        storage.TileEventQueue = utils.Queue.new()
     end
 end
 
@@ -69,15 +69,15 @@ end
 
 function tiles.addTileEvent(eventType, position, surface, tileData)
     -- assume position is left-top corner already
-    storage.TileEventQueue:enqueue(tiles.initTileEvent(eventType, position, surface, tileData))
+    utils.Queue.enqueue(storage.TileEventQueue, tiles.initTileEvent(eventType, position, surface, tileData))
 end
 
 function tiles.processTileEventQueue(maxEvents, updateBudget)
 	local queue = tiles.getTileEventQueue()
     local processedCount = 0
     
-    while not queue:is_empty() and processedCount < maxEvents and updateBudget.budget > 0 do
-        local event = queue:dequeue()
+    while not utils.Queue.is_empty(queue) and processedCount < maxEvents and updateBudget.budget > 0 do
+        local event = utils.Queue.dequeue(queue)
         
         if event.type == "landfill" then
             tiles.processLandfillEvent(event, updateBudget)
@@ -140,7 +140,7 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
         local waterBody = waterbodies.getWaterBody(waterBodyId)
         
         if waterBody then
-            waterBody.searchData.searchQueue:enqueue(position)
+            utils.Queue.enqueue(waterBody.searchData.searchQueue, position)
             waterBody.searchData.finished = false
             waterBody.waterAreaData.ToCalculate = true
 			-- also remove the tile from edge grid

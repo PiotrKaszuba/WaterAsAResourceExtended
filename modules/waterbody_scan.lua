@@ -108,7 +108,7 @@ function waterbody_scan.EdgePattern(searchPosition, surface, surfaceName, waterB
         if (not already_searched) then
 			local is_water_tile = utils.IsWaterTile(tile.name)
 			if is_water_tile then
-				searchData.searchQueue:enqueue(position)
+				utils.Queue.enqueue(searchData.searchQueue, position)
 			else
 				if tileWaterBodyId == nil then
 					hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
@@ -212,7 +212,7 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 	-- fix position to left-top corner in case it was not
 	local tile = utils.GetTile(start_position, water_body.surface)
 	start_position = tile.position
-	search_queue:enqueue(start_position)
+	utils.Queue.enqueue(search_queue, start_position)
 	local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount, updateBudget)
 	return water_body.waterBodyId
 end
@@ -237,8 +237,9 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	-- hot path
 
 	local surfaceName = water_body.surface.name
-	while not water_body.searchData.searchQueue:is_empty() and search_amount > 0 do
-		local search_position = water_body.searchData.searchQueue:dequeue()
+	local search_queue = water_body.searchData.searchQueue
+	while not utils.Queue.is_empty(search_queue) and search_amount > 0 do
+		local search_position = utils.Queue.dequeue(search_queue)
 		-- check if position is left-top corner
 		if not utils.checkIfPositionIsLeftTopCorner(search_position) then
 			utils.profile_hits("checkIfPositionIsLeftTopCorner","waterbody_scan.ScanWaterArea")
@@ -292,7 +293,7 @@ function waterbody_scan.scanningLoopPeriodic(water_body)
 end
 
 function waterbody_scan.checkIfScanningIsFinished(water_body)
-	return water_body.searchData.searchQueue:is_empty()
+	return utils.Queue.is_empty(water_body.searchData.searchQueue)
 end
 
 function waterbody_scan.duringScanning(water_body)
