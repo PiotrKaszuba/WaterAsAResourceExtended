@@ -18,18 +18,18 @@ function waterbody_update.createMapMarker(waterBody)
 
     local force_to_pump = entities.getFirstPumpPerForce(waterBody)
 
-    local text = "Pending..."
     local icon = {type = "fluid", name = "water"}
     local percent = waterbodies.calculatePercentageWaterUsed(waterBody)
     local depleted = waterBody.waterBodyStateData.Depleted
 
     local surface = waterBody.surface
-
-    if waterBody.searchData.finished and not depleted then
-        local remaining = math.ceil(waterBody.waterAreaData.AmountWtr * (100 - percent) / 100)
-        text = string.format("%s - %s - %.2f %%", waterbodies.getFullNameForWaterBody(waterBody), utils.comma_value(remaining), 100 - percent)
-    elseif waterBody.searchData.finished and depleted then
-        text = string.format("%s - Depleted", waterbodies.getFullNameForWaterBody(waterBody))
+    local remaining = math.ceil(waterBody.waterAreaData.AmountWtr * (100 - percent) / 100)
+    
+    local text = string.format("%s - %s - %.2f %%", waterbodies.getFullNameForWaterBody(waterBody), utils.comma_value(remaining), 100 - percent)
+    if not waterBody.searchData.finished then
+        text = "Pending... - " .. text
+    elseif depleted then
+        text = "Depleted! - " .. text
     end
 
     for force_name, _ in pairs(waterBody.entitiesData.forces) do
