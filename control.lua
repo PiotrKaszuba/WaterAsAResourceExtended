@@ -16,7 +16,7 @@ function initUpdateBudget()
 	return {budget = utils.normalize_values_per_second(storage.UpdateBudget, true)}
 end
 
-function EverySecond()
+function BigUpdate()
 	local updateBudget = initUpdateBudget()
 	-- events handling
 	tiles.processTileEventQueue(utils.normalize_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
@@ -38,7 +38,7 @@ end
 function PeriodicUpdate()
 	waterbody_update.collectWaterUsageStats(storage.LoopTick)
 	if SecondTickCounter(storage.LoopNumTicks) then
-		EverySecond()
+		BigUpdate()
 	end
 end
 
@@ -74,11 +74,8 @@ function Init()
 end
 
 
-
-
 -- SCRIPT EVENTS -- 
 script.on_init(Init)
-script.on_load(Init)
 
 script.on_nth_tick(control.periodic_update_ticks, PeriodicUpdate) -- Run the main update every tick
 

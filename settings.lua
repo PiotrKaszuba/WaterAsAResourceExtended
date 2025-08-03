@@ -21,17 +21,17 @@ data:extend({
         type = "int-setting",
         name = "FluidArea-Start-Area",
         setting_type = "runtime-global",
-        default_value = 100,
-        minimum_value = 100,
-        maximum_value = 100000
+        default_value = 50,
+        minimum_value = 10,
+        maximum_value = 1000
     },
 	{
         type = "int-setting",
         name = "FluidArea-Additional-Tiles-Per-Second",
         setting_type = "runtime-global",
-        default_value = 500,
-        minimum_value = 10,
-        maximum_value = 50000
+        default_value = 200,
+        minimum_value = 50,
+        maximum_value = 10000
     },
 	{
         type = "int-setting",
@@ -97,8 +97,8 @@ data:extend({
         type = "int-setting",
         name = "Update-Budget-Per-Second",
         setting_type = "runtime-global",
-        default_value = 500, 
-        minimum_value = 100,
+        default_value = 200, 
+        minimum_value = 50,
         maximum_value = 10000
     },
 

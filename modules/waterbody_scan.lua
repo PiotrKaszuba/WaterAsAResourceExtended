@@ -38,7 +38,7 @@ function waterbody_scan.getInitialScanAmount()
 end
 
 function waterbody_scan.getAdditionalScanAmount()
-    return settings.global["FluidArea-Additional-Tiles-Per-Second"].value
+    return utils.normalize_values_per_second(settings.global["FluidArea-Additional-Tiles-Per-Second"].value, true)
 end
 
 -- not a hot path - not periodic - used in tile events (currently only in landfills)
