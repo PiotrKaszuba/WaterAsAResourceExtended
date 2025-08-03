@@ -11,42 +11,11 @@ control = {}
 control.periodic_update_ticks = 1
 control.desired_big_update_ticks = 30
 
-
-function initUpdateBudget()
-	return {budget = utils.normalize_values_per_second(storage.UpdateBudget, true)}
-end
-
-function BigUpdate()
-	local updateBudget = initUpdateBudget()
-	-- events handling
-	tiles.processTileEventQueue(utils.normalize_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
-	waterbody_update.updateWaterBodies(updateBudget)
-	entities.updatePumpStates()
-end
-
-function SecondTickCounter(numTicks)
-	if storage.LoopTick == nil or storage.LoopTick >= numTicks then
-		storage.LoopTick = 0
-		storage.LoopNumTicks =  math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
-		return true
-	else
-		storage.LoopTick = storage.LoopTick + 1
-	end
-	return false
-end
-
-function PeriodicUpdate()
-	waterbody_update.collectWaterUsageStats(storage.LoopTick)
-	if SecondTickCounter(storage.LoopNumTicks) then
-		BigUpdate()
-	end
-end
-
-local function is_picker_dollies_available()
+function control.is_picker_dollies_available()
     return (remote and remote.interfaces['PickerDollies']) or false
 end
 
-function Init()
+function control.Init()
 	if storage.LoopTick == nil then
 		storage.LoopTick = 0
 	end
@@ -68,16 +37,50 @@ function Init()
 	entities.initTrackedEntities()
 	forces.initPlayerForces()
 
-	if is_picker_dollies_available() then
+	if control.is_picker_dollies_available() then
 		remote.call('PickerDollies', 'add_blacklist_name', entities.offshore_pump_prototype_type)
 	end
 end
 
 
--- SCRIPT EVENTS -- 
-script.on_init(Init)
+function control.initUpdateBudget()
+	return {budget = utils.normalize_values_per_second(storage.UpdateBudget, true)}
+end
 
-script.on_nth_tick(control.periodic_update_ticks, PeriodicUpdate) -- Run the main update every tick
+function control.BigUpdate()
+	local updateBudget = control.initUpdateBudget()
+	-- events handling
+	tiles.processTileEventQueue(utils.normalize_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
+	waterbody_update.updateWaterBodies(updateBudget)
+	entities.updatePumpStates()
+end
+
+-- on purpose outside of control module
+-- could it enhance performance not to access the module every tick?
+function PeriodicUpdate()
+	-- this is called every tick or 'small update'
+	-- local var to reduce amount of storage read access
+	local loopTick = storage.LoopTick
+
+	-- WaterUsage collection from last tick - so before increment
+	waterbody_update.collectWaterUsageStats()
+
+	if loopTick >= storage.LoopNumTicks then
+		-- this is on 'big update' once - no need to optimize too much
+		storage.LoopTick = 0
+		storage.LoopNumTicks =  math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
+		-- big update after reset so after increment
+		control.BigUpdate()
+	else
+		storage.LoopTick = loopTick + 1
+	end
+
+end
+
+-- SCRIPT EVENTS -- 
+script.on_init(control.Init)
+
+script.on_nth_tick(control.periodic_update_ticks, PeriodicUpdate) -- Run the main update - 'small update' - most likely every game tick
 
 script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_entity}, event_handlers.BuiltEntity)
 script.on_event({defines.events.on_player_mined_entity,defines.events.script_raised_destroy,defines.events.on_robot_mined_entity,defines.events.on_entity_died}, event_handlers.DestroyedEntity)

@@ -155,45 +155,7 @@ function waterbody_update.calculateEffectiveRegenAmount(waterBody)
     return regen_with_bonus
 end
 
-function waterbody_update.getWaterUsageStatsForPump(pump_data)
-	local water_usage = 0
-    if pump_data.entity.valid and pump_data.entity.active then
-        water_usage = pump_data.entity.pumped_last_tick
-        local force_data = forces.getPlayerForce(pump_data.forceName)
-        if force_data then
-            water_usage = water_usage * force_data.water_usage_multiplier
-        end
-    end
 
-    -- estimation of the water usage between ticks
-    -- i.e. if we sample pumped value every 10 ticks we assume
-    -- that it was the average value over these 10 ticks and calculate the total usage
-    water_usage = water_usage * storage.PeriodicEveryXTicks
-    
-	return water_usage
-end
-
-function waterbody_update.collectWaterUsageStatsForWaterBody(waterBodyId)
-	local waterBody = waterbodies.getWaterBody(waterBodyId)
-	if not waterBody or not waterBody.valid then return end
-	local total_pumping_water = 0
-	for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-		local pump_data = entities.getTrackedEntity(unit_number)
-		local pumpUsage = waterbody_update.getWaterUsageStatsForPump(pump_data)
-		total_pumping_water = total_pumping_water + pumpUsage
-	end
-	return total_pumping_water
-end
-
-function waterbody_update.waterBodyDepleted(waterBody)
-    local state = waterBody.waterBodyStateData
-    -- only call once per depletion
-    if not state.Depleted then
-        waterbodies.signalPerForce(waterBody, waterbody_update.signalDepletionToPlayer)
-    end
-    state.Depleted = true
-    entities.deactivateWaterBodyPumps(waterBody.waterBodyId)
-end
 
 function waterbody_update.waterBodyRestored(waterBody)
     local state = waterBody.waterBodyStateData
@@ -219,28 +181,70 @@ function waterbody_update.handleDepletion(waterBody)
     waterbody_depletion.updateDepletionAppearance(waterBody)
 end
 
-function waterbody_update.smallUpdateRemainingWaterDepletion(waterBody, waterbody_total_pumping_water)
-	local state = waterBody.waterBodyStateData
-    state.TempUsedWater = state.TempUsedWater + waterbody_total_pumping_water
-    if state.Depleted and waterbody_total_pumping_water > 0 then
-        game.print(string.format("Warning: waterbody %s is depleted but total pumping water is %s - how?", waterbodies.getFullNameForWaterBody(waterBody), waterbody_total_pumping_water))
+function waterbody_update.waterBodyDepleted(waterBody)
+    local state = waterBody.waterBodyStateData
+    -- only call once per depletion
+    if not state.Depleted then
+        waterbodies.signalPerForce(waterBody, waterbody_update.signalDepletionToPlayer)
     end
-    if state.TempUsedWater >= state.TempAvailableWater then
-        -- we call depleted if state is not depleted or if there is still some water being pumped
-        -- the remaining pumps will be deactivated by the depletion handler
-        if not state.Depleted or waterbody_total_pumping_water > 0 then
-            waterbody_update.waterBodyDepleted(waterBody)
-        end
-    end
-
+    state.Depleted = true
+    entities.deactivateWaterBodyPumps(waterBody.waterBodyId)
 end
 
-function waterbody_update.collectWaterUsageStats(loop_tick)
-	local validWaterBodies = waterbodies.getValidWaterBodies()
-    for id, _ in pairs(validWaterBodies) do
-        local waterbody_total_pumping_water = waterbody_update.collectWaterUsageStatsForWaterBody(id)
-		local waterbody = waterbodies.getWaterBody(id)
-        waterbody_update.smallUpdateRemainingWaterDepletion(waterbody, waterbody_total_pumping_water)
+function waterbody_update.collectWaterUsageStats()
+    -- every tick call -> optimized for performance not code maintenance - reduced function calls - just plain code
+    -- comments show otherwise would be called functions
+
+    -- initialize all variables once for performance?
+    local total_pumping_water, water_usage, pump_data, force_data, state, is_depleted, temp_used_water, entity
+    
+    for _, waterBody in pairs(storage.ValidWaterBodies) do -- pairs(waterbodies.getValidWaterBodies())
+        total_pumping_water = 0
+        -- waterbody_update.collectWaterUsageStatsForWaterBody(waterBody)
+        for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
+            pump_data = entities.getTrackedEntity(unit_number)
+            
+            -- waterbody_update.getWaterUsageStatsForPump(pump_data)
+            entity = pump_data.entity
+            water_usage = 0
+            if entity.valid and entity.active then
+                water_usage = entity.pumped_last_tick
+
+                force_data = storage.PlayerForces[pump_data.forceName] -- forces.getPlayerForce(pump_data.forceName)
+                
+                -- multiplication by storage.PeriodicEveryXTicks:
+                -- estimation of the water usage between ticks
+                -- i.e. if we sample pumped value every 10 ticks we assume
+                -- that it was the averageal usage
+                water_usage = water_usage * force_data.water_usage_multiplier * storage.PeriodicEveryXTicks
+                -- end of waterbody_update.getWaterUsageStatsForPump(pump_data)
+                
+                total_pumping_water = total_pumping_water + water_usage
+            end
+        end
+        -- end of waterbody_update.collectWaterUsageStatsForWaterBody(waterBody)
+
+        -- waterbody_update.smallUpdateRemainingWaterDepletion(waterBody, total_pumping_water)
+        state = waterBody.waterBodyStateData
+        temp_used_water = state.TempUsedWater + total_pumping_water -- get + update in one go
+        is_depleted = state.Depleted
+
+        state.TempUsedWater = temp_used_water -- update the state variable now
+    
+        if is_depleted and total_pumping_water > 0 then
+            utils.profile_hits("waterbody_update.collectWaterUsageStats", "depleted and pumping")
+            game.print(string.format("Warning: waterbody %s is depleted but total pumping water is %s - how?", waterbodies.getFullNameForWaterBody(waterBody), total_pumping_water))
+        end
+        if temp_used_water >= state.TempAvailableWater then
+            -- we call depleted if state is not depleted or if there is still some water being pumped
+            -- the remaining pumps will be deactivated by the depletion handler
+            if not is_depleted or total_pumping_water > 0 then
+
+                -- we dont optimize this - it will be called relatively very rarely
+                waterbody_update.waterBodyDepleted(waterBody)
+            end
+        end
+        -- end of waterbody_update.smallUpdateRemainingWaterDepletion(waterBody, total_pumping_water)
     end
 end
 
@@ -273,21 +277,53 @@ function waterbody_update.waterBodyCleanup(waterBody)
     end
 end
 
-function waterbody_update.updateWaterBody(waterBodyId, updateBudget)
-	local waterBody = waterbodies.getWaterBody(waterBodyId)
-    
-	if not waterBody or not waterBody.valid then return end
-
-	waterbody_scan.scanningLoop(waterBodyId, updateBudget)
+function waterbody_update.updateWaterBody(waterBody, updateBudget)
 	waterbody_update.bigUpdateWaterLevel(waterBody)
 	waterbody_update.handleDepletion(waterBody)
 	waterbody_update.createMapMarker(waterBody)
+
+    -- cleanup - similarly to scanning loop can remove/invalidate this waterbody
+    -- but not other waterbodies
+    -- since this is the last function we dont need to check validity after it
     waterbody_update.waterBodyCleanup(waterBody)
 end
 
 function waterbody_update.updateWaterBodies(updateBudget)
 	local validWaterBodies = waterbodies.getValidWaterBodies()
-    for waterBodyId, _ in pairs(validWaterBodies) do
-        waterbody_update.updateWaterBody(waterBodyId, updateBudget)
+
+    local validWaterBodiesArray = {}
+    -- need to iterate over copy of validWaterBodies
+    -- scanning loop can remove/invalidate current waterbody 
+    -- or any other waterbody - so removes it from storage.ValidWaterBodies
+    -- have to maintain a seprately created copy of valid waterbodies
+    -- because iteration over storage.ValidWaterBodies is not safe
+    for _, waterBody in pairs(validWaterBodies) do
+        validWaterBodiesArray[#validWaterBodiesArray + 1] = waterBody
+    end
+    
+    -- first run the disruptive scanning loop
+    -- we do it before all other updates because if merge happened
+    -- that removes waterbody after it has been update - i.e. regen applied per tile
+    -- it could be that another waterbody would have applied regen from the same tiles
+    -- there may be other cases where this is a problem too - the above is enough for separate initial loop
+    for _, waterBody in ipairs(validWaterBodiesArray) do
+        -- need validity check here - because scanning loop can remove/invalidate this waterbody
+        if waterBody.valid then
+            waterbody_scan.scanningLoop(waterBody, updateBudget)
+        end
+    end
+
+    -- then run the rest of the updates - but we need to collect validWaterBodiesArray again
+    validWaterBodiesArray = {}
+    for _, waterBody in pairs(validWaterBodies) do
+        validWaterBodiesArray[#validWaterBodiesArray + 1] = waterBody
+    end
+
+    for _, waterBody in ipairs(validWaterBodiesArray) do
+        -- no need to check validity here:
+        -- iterating new array of valid waterbodies
+        -- and waterBodyCleanup in updateWaterBody can only remove current waterbody - not others
+        -- so we can safely proceed with the valid waterbodies loop
+        waterbody_update.updateWaterBody(waterBody, updateBudget)
     end
 end

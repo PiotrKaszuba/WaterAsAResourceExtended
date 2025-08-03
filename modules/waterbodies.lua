@@ -8,7 +8,7 @@ function waterbodies.initWaterBodiesAndTiles()
         storage.WaterBodies = {}
 		storage.NextWaterBodyId = 1
 		storage.RecycledWaterBodyIds = {} -- array of waterBodyIds
-		storage.ValidWaterBodies = {} -- waterBodyId -> true
+		storage.ValidWaterBodies = {} -- waterBodyId -> waterBody (reference)
 
         storage.WaterTiles = {} -- surfaceName -> gridKey -> waterBodyId
 		storage.WaterBodyToNumTiles = {} -- waterBodyId -> numTiles
@@ -75,7 +75,7 @@ function waterbodies.addNewWaterBodyAndSetId(waterBody)
     local waterBodyId = waterbodies.getNextFreeWaterBodyId()
     storage.WaterBodies[waterBodyId] = waterBody
     waterBody.waterBodyId = waterBodyId
-	storage.ValidWaterBodies[waterBodyId] = true
+	storage.ValidWaterBodies[waterBodyId] = waterBody
     return waterBodyId
 end
 
@@ -314,8 +314,7 @@ function waterbodies.getAvailableNamesForWaterBodyType(waterBodyType)
 	local validWaterBodies = waterbodies.getValidWaterBodies()
 
 	local usedNames = {}
-	for waterBodyId, _ in pairs(validWaterBodies) do
-		local waterBody = waterbodies.getWaterBody(waterBodyId)
+	for _, waterBody in pairs(validWaterBodies) do
 		if waterBody and waterBody.waterBodyName then
 			usedNames[waterBody.waterBodyName] = true
 		end

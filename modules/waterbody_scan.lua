@@ -304,12 +304,10 @@ function waterbody_scan.duringScanning(water_body)
 	waterbody_scan.scanningLoopPeriodic(water_body)
 end
 
-function waterbody_scan.scanningLoop(water_body_id, updateBudget)
-	local water_body = waterbodies.getWaterBody(water_body_id)
+function waterbody_scan.scanningLoop(water_body, updateBudget)
 	if water_body and water_body.valid then
 		if not water_body.searchData.finished then
 			local finished, water_body = waterbody_scan.ScanWaterArea(water_body, waterbody_scan.getAdditionalScanAmount(), updateBudget)
-			water_body_id = water_body.waterBodyId
 			waterbody_scan.duringScanning(water_body)
 			if water_body.waterAreaData.ToCalculate then
 				waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
@@ -318,7 +316,7 @@ function waterbody_scan.scanningLoop(water_body_id, updateBudget)
 			waterbody_scan.finishedScanning(water_body)
 		end
 	end
-	return water_body_id
+	return water_body
 end
 
 function waterbody_scan.finishedScanning(water_body)
