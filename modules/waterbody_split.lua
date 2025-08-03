@@ -167,7 +167,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 				if utils.validate_tile_placement(pump_input_position, surface, utils.WaterTiles) then
 					_, new_water_body_id = waterbodies.createNewWaterBody(surface)
 					
-					-- fix position to left-top corner in case it was not
+					-- fix position to left-top corner - because it is center based - from entity position
 					local tile = utils.GetTile(pump_input_position, surface)
 					local pump_input_top_left_corner = tile.position
 					

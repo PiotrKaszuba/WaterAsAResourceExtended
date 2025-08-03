@@ -9,14 +9,8 @@ waterbody_scan = {}
 -- only on building pumps (for now - might have changed - double check if needed)
 -- 
 -- returns waterBodyId of existing or new water body
-function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surface)
-	-- for profiling only - if code hits inner line then it requires left-top corner fix
-	
-	if not utils.checkIfPositionIsLeftTopCorner(position) then
-		utils.profile_hits("checkIfPositionIsLeftTopCorner","waterbody_scan.createWaterBodyFromTileIfNotExists")
-	end
-	
-	-- fix position to left-top corner
+function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surface)	
+	-- fix position to left-top corner - tested in profiler case
 	local tile = utils.GetTile(position, surface)
 	position = tile.position
 
