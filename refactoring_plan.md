@@ -2,7 +2,11 @@ TODO:
 
 Needed:
 1. Initial scans for pumps / poles when mod hasn't been initialized yet? + update mod func?
+-> whole state - forces - techs need to be captured?
+
 9. comprehensive tests - plan out test suite (especially for merging/splitting water bodies) etc, lifecycles etc. - somewhat - now do them / -> actually tested manually without looking at the file - might have missed something but was too lazy ;)
+
+-> to test: techs unlocks (and forces)
 
 - WHAT happens when landfill is placed when there are some existing dry tiles?
 -> landfill will take place of some water tile but maybe something breaks?

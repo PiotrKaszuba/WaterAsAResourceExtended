@@ -22,6 +22,7 @@ end
 function event_handlers.BuiltPump(entity)
 
     local pump = initNewPump(entity)
+    forces.AddForceIfNotExists(pump.forceName)
 
     if not entities.validatePumpPlacement(pump) then
         utils.rejectEntityPlacement(pump.entity, "Must be placed on water edge and not on a dry (depleted) tile")
