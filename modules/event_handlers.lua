@@ -21,14 +21,13 @@ end
 
 function event_handlers.BuiltPump(entity)
 
-    local pump = initNewPump(entity)
-    forces.AddForceIfNotExists(pump.forceName)
+    local pump = entities.initAndRegisterNewPump(entity)
 
     if not entities.validatePumpPlacement(pump) then
         utils.rejectEntityPlacement(pump.entity, "Must be placed on water edge and not on a dry (depleted) tile")
     else
         local waterBodyId, created = waterbody_scan.createWaterBodyFromTileIfNotExists(pump.input_position, pump.surface)
-        entities.registerPumpAndAddToWaterBody(waterBodyId, pump)
+        entities.addPumpToWaterBody(waterBodyId, pump)
         waterbodies.signalPerForce(waterbodies.getWaterBody(waterBodyId), created and event_handlers.signalCreatedWaterBodyPendingScanningToPlayer or event_handlers.signalAttachedToWaterBody)
     end
 end

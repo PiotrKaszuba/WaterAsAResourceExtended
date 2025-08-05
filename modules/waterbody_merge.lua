@@ -8,9 +8,9 @@ waterbody_merge = {}
 
 
 -- MERGE Functionality Below
-function waterbody_merge.merge_indicator_tables(table_result, table_other)
-    for k in pairs(table_other) do
-        table_result[k] = true
+function waterbody_merge.merge_tables(table_result, table_other)
+    for k, v in pairs(table_other) do
+        table_result[k] = v
     end	
 end
 
@@ -46,24 +46,11 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_glob
 		end
 	end
 
-	waterbody_merge.merge_indicator_tables(gridsData.edgeGrid, other_gridsData.edgeGrid)
+	waterbody_merge.merge_tables(gridsData.edgeGrid, other_gridsData.edgeGrid)
 
 	return overlapTileCountData
 end
 
-function waterbody_merge.mergeEntitiesData(entitiesData, other_entitiesData, waterBodyId, other_waterBodyId)
-	other_pumps_unit_numbers = {}
-
-	for unit_number, _ in pairs(other_entitiesData.pumps) do
-		other_pumps_unit_numbers[#other_pumps_unit_numbers + 1] = unit_number
-	end
-
-	for _, unit_number in pairs(other_pumps_unit_numbers) do
-		entities.movePumpToWaterBody(unit_number, waterBodyId, other_waterBodyId)
-	end
-	
-	waterbody_merge.merge_indicator_tables(entitiesData.forces, other_entitiesData.forces)
-end
 
 function waterbody_merge.mergeShapeData(shapeData, other_shapeData)
 	shapeData.MinX = math.min(shapeData.MinX, other_shapeData.MinX)
@@ -79,7 +66,16 @@ function waterbody_merge.mergeWaterBodyTileCountData(tileCountData, other_tileCo
 	end
 end
 
-function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_waterBodyStateData)
+function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_waterBodyStateData, waterBodyId)
+	for _, pump_data in ipairs(other_waterBodyStateData.Pumps) do
+		entities.addPumpToWaterBody(waterBodyId, pump_data)
+	end
+	
+	waterbody_merge.merge_tables(waterBodyStateData.Forces, other_waterBodyStateData.Forces)
+
+	other_waterBodyStateData.Pumps = {}
+	other_waterBodyStateData.Forces = {}
+
 	waterBodyStateData.WaterUsed = waterBodyStateData.WaterUsed + other_waterBodyStateData.WaterUsed
 	waterBodyStateData.WaterUsedPrev = waterBodyStateData.WaterUsedPrev + other_waterBodyStateData.WaterUsedPrev
 
@@ -89,6 +85,7 @@ function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_water
 	waterBodyStateData.WaterUsedPenalty = waterBodyStateData.WaterUsedPenalty + other_waterBodyStateData.WaterUsedPenalty
 	waterBodyStateData.WaterUsedPenaltyRestored = waterBodyStateData.WaterUsedPenaltyRestored + other_waterBodyStateData.WaterUsedPenaltyRestored
 
+	waterBodyStateData.TempInactive = waterBodyStateData.TempInactive and other_waterBodyStateData.TempInactive
 	waterBodyStateData.Depleted = waterBodyStateData.Depleted and other_waterBodyStateData.Depleted
 
 	-- only take flags of messages from the target water body
@@ -141,13 +138,10 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surface, waterBody1.waterBodyId)
 	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData, overlapTileCountData)
 	waterbody_merge.mergeSearchData(waterBody1.searchData, waterBody2.searchData, overlapTileCountData)
-	waterbody_merge.mergeWaterBodyStateData(waterBody1.waterBodyStateData, waterBody2.waterBodyStateData)
+	waterbody_merge.mergeWaterBodyStateData(waterBody1.waterBodyStateData, waterBody2.waterBodyStateData, waterBody1.waterBodyId)
 
 	waterbody_merge.mergeShapeData(waterBody1.waterBodyShapeData, waterBody2.waterBodyShapeData)
 	
-	
-	waterbody_merge.mergeEntitiesData(waterBody1.entitiesData, waterBody2.entitiesData, waterBody1.waterBodyId, waterBody2.waterBodyId)
-
 	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty, {})
 
     -- there is no merge for WaterAreaData - it will be re-calculated totally based on other merged data

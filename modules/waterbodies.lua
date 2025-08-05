@@ -133,13 +133,6 @@ function waterbodies.initGridsData()
 	}
 end
 
-function waterbodies.initEntitiesData()
-	return {
-		pumps = {}, -- unit_number -> true -> indicator table for pumps - get pump in entities.getTrackedEntity(unit_number)
-		forces = {}, -- indicator table that stores force name -> true
-	}
-end
-
 function waterbodies.initShapeData()
     return {
         ["MinX"] = 0,
@@ -174,6 +167,9 @@ end
 
 function waterbodies.initWaterBodyStateData()
     return {
+		["Pumps"] = {}, -- array of pump_data (reference)
+		["Forces"] = {}, -- force name -> PlayerForce table (reference)
+		
         ["WaterUsed"] = 0,	-- the actual water used synchronized on 'big updates'
         ["WaterUsedPrev"] = 0,	-- the actual water used on the previous 'big update'
 
@@ -183,11 +179,11 @@ function waterbodies.initWaterBodyStateData()
 		
 		["WaterUsedPenalty"] = 0,	-- the water used penalty that is applied to the water body - it occurs when waterbody is created on the water tiles that had been used in previous waterbody depleted to some extent
 
-		["WaterUsedPenaltyRestored"] = 0,	-- the restored water (above WaterUsed) that can negate the WaterUsedPenalty (up to that amount)
+		["WaterUsedPenaltyRestored"] = 0,	-- the restored ater (above WaterUsed) that can negate the WaterUsedPenalty (up to that amount)
 
-
-        ["Depleted"] = false,	-- if true - the water body is depleted and all pumps are deactivated
-		
+		["TempInactive"] = true,	-- if true - the water body is inactive and all pumps are inactive - due to using all of the TempAvailableWater
+        ["Depleted"] = false,	-- if true - the water body is depleted and all pumps are inactive
+			
 		-- alarm flags
 		["Fired50"] = false,
 		["Fired75"] = false,
@@ -216,7 +212,6 @@ function waterbodies.InitWaterBody(
     surface,
 	waterAreaData,
 	gridsData,
-	entitiesData,
 
     waterBodyShapeData,
     waterBodyTileCountData,
@@ -236,7 +231,6 @@ function waterbodies.InitWaterBody(
 
 		waterAreaData = waterAreaData or waterbodies.initWaterAreaData(),
 		gridsData = gridsData or waterbodies.initGridsData(),
-		entitiesData = entitiesData or waterbodies.initEntitiesData(),
 		waterBodyShapeData = waterBodyShapeData or waterbodies.initShapeData(),
 		waterBodyTileCountData = waterBodyTileCountData or waterbodies.initWaterBodyTileCountData(),
 		searchData = searchData or waterbodies.InitSearchData(),
@@ -245,11 +239,6 @@ function waterbodies.InitWaterBody(
 		waterBodyTileCountPercentagePenalty = waterbodies.initWaterBodyTileCountData(),
 	}
 end
-
-function waterbodies.simpleInitWaterBody(surface)
-	return waterbodies.InitWaterBody(surface, nil, nil, nil, nil, nil, nil, nil, nil)
-end
-
 
 function waterbodies.isWaterBodyEmpty(waterBody)
     for _, count in pairs(waterBody.waterBodyTileCountData) do
@@ -261,8 +250,7 @@ function waterbodies.isWaterBodyEmpty(waterBody)
 end
 
 function waterbodies.isWaterBodyOrphaned(waterBody)
-    local hasPumps = next(waterBody.entitiesData.pumps) ~= nil
-    return not hasPumps
+    return #waterBody.waterBodyStateData.Pumps == 0
 end
 
 
@@ -448,9 +436,8 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 
 end
 
-
 function waterbodies.createNewWaterBody(surface)
-    local waterBody = waterbodies.simpleInitWaterBody(surface)
+    local waterBody = waterbodies.InitWaterBody(surface)
     local waterBodyId = waterbodies.addNewWaterBodyAndSetId(waterBody)
     return waterBody, waterBodyId
 end
@@ -480,10 +467,11 @@ function waterbodies.updateBoundingBox(shape_data, position)
 end
 
 function waterbodies.signalPerForce(water_body, signal_func, additional_args)
-	local water_body_forces = water_body.entitiesData.forces
-	for force_name, v in pairs(water_body_forces) do
-		if v then
-			forces.getGameForce(force_name).print(signal_func(water_body, force_name, additional_args))
+	local water_body_forces = water_body.waterBodyStateData.Forces
+	for force_name, force_data in pairs(water_body_forces) do
+		local force = force_data.force
+		if force.valid then
+			force.print(signal_func(water_body, force_name, additional_args))
 		end
 	end
 end
@@ -546,4 +534,8 @@ function waterbodies.calculatePercentageWaterUsed(waterbody)
 	local total_water_available = waterbody.waterAreaData.AmountWtr
 	if total_water_available == 0 then return 100 end
 	return math.max(math.min(total_water_used / total_water_available, 1), 0) * 100
+end
+
+function waterbodies.canPumpWaterNow(waterBodyStateData)
+	return not waterBodyStateData.Depleted and (waterBodyStateData.TempAvailableWater > waterBodyStateData.TempUsedWater)
 end

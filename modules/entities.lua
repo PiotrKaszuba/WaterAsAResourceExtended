@@ -1,5 +1,6 @@
 require("modules.utils")
 require("modules.waterbodies")
+require("modules.forces")
 
 entities = {}
 
@@ -23,18 +24,20 @@ end
 entities.offshore_pump_prototype_type = "offshore-pump"
 entities.offshore_drain_prototype_type = "offshore-drain"
 
-function initNewPump(entity)
+function entities.initAndRegisterNewPump(entity)
+    
     local input_position = utils.calculate_direction_offset(entity.position, entity.direction)
     
     -- "pump_data"
-    return {
+    local pump_data = {
         ["entity"] = entity,
+        ["unit_number"] = entity.unit_number,
         ["input_position"] = input_position,
         ["spritepos"] = entity.position,
         ["surface"] = entity.surface,
         ["direction"] = entity.direction,
         ["tileName"] = "water", -- Only water is supported now
-        ["forceName"] = entity.force.name,
+        ["playerForce"] = forces.AddForceIfNotExists(entity.force.name),
 
         ["type"] = "pump",
 
@@ -42,49 +45,43 @@ function initNewPump(entity)
 
         ["disabled"] = false,
     }
+    entities.registerTrackedEntity(pump_data.unit_number, pump_data)
+    return pump_data
 end
 
-function entities.registerPumpAndAddToWaterBody(waterBodyId, pump_data)
-    entities.registerTrackedEntity(pump_data.entity.unit_number, pump_data)
+function entities.addPumpToWaterBody(waterBodyId, pump_data)
     local waterBody = waterbodies.getWaterBody(waterBodyId)
     if not (waterBody and waterBody.valid) then
         game.print("Error:Water body not found or invalid: " .. tostring(waterBodyId))
     else
-        waterBody.entitiesData.pumps[pump_data.entity.unit_number] = true
-        waterBody.entitiesData.forces[pump_data.forceName] = true
+        local waterBodyStateData = waterBody.waterBodyStateData
+        waterBodyStateData.Pumps[#waterBodyStateData.Pumps + 1] = pump_data
+        waterBodyStateData.Forces[pump_data.playerForce.name] = pump_data.playerForce
         pump_data.waterBodyId = waterBodyId
-        if waterBody.waterBodyStateData.Depleted then
+        if waterBodyStateData.TempInactive then
             entities.deactivatePump(pump_data)
         end
     end
 end
 
 function entities.updateWaterBodyForces(waterBody)
-    waterBody.entitiesData.forces = {}
-    for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-		pump_data = entities.getTrackedEntity(unit_number)
-        waterBody.entitiesData.forces[pump_data.forceName] = true
+    local state = waterBody.waterBodyStateData
+    local new_forces = {}
+    for _, pump_data in ipairs(state.Pumps) do
+        local player_force = pump_data.playerForce
+        new_forces[player_force.name] = player_force
     end
+    state.Forces = new_forces
 end
 
 function entities.removePumpFromWaterBody(unit_number, waterBodyId)
     if waterBodyId ~= nil then
         local waterBody = waterbodies.getWaterBody(waterBodyId)
         if waterBody and waterBody.valid then
-            waterBody.entitiesData.pumps[unit_number] = nil
+            utils.remove_table_from_array(waterBody.waterBodyStateData.Pumps, "unit_number", unit_number)
             entities.updateWaterBodyForces(waterBody)
         end
     end
-end
-
-function entities.movePumpToWaterBody(unit_number, newWaterBodyId, oldWaterBodyId)
-    local pump_data = entities.getTrackedEntity(unit_number)
-    if not pump_data then
-        game.print("Error: Pump not found: " .. tostring(unit_number))
-        return
-    end
-    entities.registerPumpAndAddToWaterBody(newWaterBodyId, pump_data)
-    entities.removePumpFromWaterBody(unit_number, oldWaterBodyId)
 end
 
 function entities.validatePumpPlacement(pump_data)
@@ -94,21 +91,17 @@ function entities.validatePumpPlacement(pump_data)
     if not input_position_on_water then
         return false
     end
-    local base_position_on_water = utils.validate_tile_placement(pump_data.spritepos, surface, nil, utils.DryWaterTiles)
-    return base_position_on_water
+    local base_position_not_on_dry_tile = utils.validate_tile_placement(pump_data.spritepos, surface, nil, utils.DryWaterTiles)
+    return base_position_not_on_dry_tile
 end
 
 function entities.DestroyedPump(entity)
     local unit_number = entity.unit_number
-    if not entities.getTrackedEntity(unit_number) then
+    local pump_data = entities.getTrackedEntity(unit_number)
+    if not pump_data then
         return -- Not a tracked entity
     end
-    
-    local entity_data = entities.getTrackedEntity(unit_number)
-
-    local waterBodyId = entity_data.waterBodyId
-    entities.removePumpFromWaterBody(unit_number, waterBodyId)
-    
+    entities.removePumpFromWaterBody(unit_number, pump_data.waterBodyId)
     entities.removeTrackedEntity(unit_number)
 end
 
@@ -119,7 +112,7 @@ function entities.TeleportedPump(entity)
     local pump_data = entities.getTrackedEntity(entity.unit_number)
     if not pump_data then
         -- entity is not tracked - we still need to disable it and we need 'pump_data' for it
-        pump_data = initNewPump(entity)
+        pump_data = entities.initAndRegisterNewPump(entity)
     end
     entities.disablePump(pump_data)
     entities.DestroyedPump(entity)
@@ -155,8 +148,8 @@ end
 function entities.call_on_each_waterbody_pump(waterBodyId, func)
 	local waterBody = waterbodies.getWaterBody(waterBodyId)
 	if waterBody and waterBody.valid then
-		for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-			func(entities.getTrackedEntity(unit_number))
+		for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
+			func(pump_data)
 		end
 	end
 end
@@ -178,23 +171,12 @@ function entities.disablePumpsAndRemoveWaterBody(waterBody)
     waterbodies.removeWaterBody(waterBody)
 end
 
-function entities.getActivePumpCount(waterBody)
-    local count = 0
-    for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-        local pump_data = entities.getTrackedEntity(unit_number)
-        if not pump_data.disabled and pump_data.entity.valid and pump_data.entity.active then
-            count = count + 1
-        end
-    end
-    return count
-end
-
 function entities.getFirstPumpPerForce(waterBody)
 	local force_to_pump = {}
-	for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-		local pump_data = entities.getTrackedEntity(unit_number)
-		if not force_to_pump[pump_data.forceName] then
-			force_to_pump[pump_data.forceName] = pump_data
+	for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
+        local force_name = pump_data.playerForce.name
+		if not force_to_pump[force_name] then
+			force_to_pump[force_name] = pump_data
 		end
 	end
 	return force_to_pump
@@ -209,13 +191,16 @@ function entities.updatePumpStates()
                 entities.removePumpFromWaterBody(unit_number, pump_data.waterBodyId)
                 to_remove[unit_number] = true
             else
+                local should_be_active = false
                 local waterBody = waterbodies.getWaterBody(pump_data.waterBodyId)
-                local should_be_active = (
-                    waterBody and 
-                    waterBody.valid and 
-                    not waterBody.waterBodyStateData.Depleted and
-                    not pump_data.disabled
-                )
+                if waterBody and waterBody.valid then
+                    local state = waterBody.waterBodyStateData
+                    should_be_active = (
+                        not state.TempInactive and
+                        not state.Depleted and
+                        not pump_data.disabled
+                    )
+                end
                 
                 if should_be_active then
                     entities.activatePump(pump_data)

@@ -15,6 +15,7 @@ function forces.InitPlayerForce(name)
 	return {
 		name = name,
 		water_usage_multiplier = 1.0,
+		force = forces.getGameForce(name),
 	}
 end
 

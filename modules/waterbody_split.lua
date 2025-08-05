@@ -148,8 +148,8 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		waterbodies.signalPerForce(waterBody, waterbody_split.signalWaterBodySplitToPlayer, #connected_tile_sets)
 		local new_water_body_ids_and_positions = {}
 		-- TODO should notify interested parties
-		local pumps = waterBody.entitiesData.pumps
-		waterBody.entitiesData.pumps = {}
+		local pumps = waterBody.waterBodyStateData.Pumps
+		waterBody.waterBodyStateData.Pumps = {}
 		waterbodies.removeWaterBody(waterBody)
 		local first_tile_pos = nil
 		local new_water_body_id = nil
@@ -159,9 +159,8 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 			new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = first_tile_pos}
 		end
 
-		for pump_unit_number, _ in pairs(pumps) do
-			local pump_data = entities.getTrackedEntity(pump_unit_number)
-			if pump_data and pump_data.entity.valid and pump_data.type == "pump" and not pump_data.disabled then
+		for _, pump_data in ipairs(pumps) do
+			if pump_data.entity.valid and pump_data.type == "pump" and not pump_data.disabled then
 				local pump_input_position = pump_data.input_position
 				-- check if this is still water tile
 				if utils.validate_tile_placement(pump_input_position, surface, utils.WaterTiles) then
@@ -172,7 +171,8 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 					local pump_input_top_left_corner = tile.position
 					
 					new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner}
-					entities.movePumpToWaterBody(pump_unit_number, new_water_body_id, waterBodyId)
+					-- waterBody got removed - so we just need to add it to the new water body
+					entities.addPumpToWaterBody(new_water_body_id, pump_data)
 				else
 					entities.disablePump(pump_data)
 				end

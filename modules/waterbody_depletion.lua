@@ -11,8 +11,7 @@ function waterbody_depletion.calculateFocusPoint(waterBody)
 
     local pumpCount = 0
 	local totalX, totalY = 0, 0
-    for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-        local pump_data = entities.getTrackedEntity(unit_number)
+    for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
         totalX = totalX + pump_data.input_position.x
         totalY = totalY + pump_data.input_position.y
         pumpCount = pumpCount + 1

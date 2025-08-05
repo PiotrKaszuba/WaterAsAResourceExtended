@@ -71,12 +71,15 @@ function utils.calculate_direction_offset(position, direction)
 	return offset_position
 end
 
-function utils.rejectEntityPlacement(entity, reason, item)
-    if entity.last_user and entity.last_user.valid then
-        entity.last_user.print(reason)
-        entity.last_user.insert{name = item or entity.name, count = 1}
-    end
-    entity.destroy()
+function utils.rejectEntityPlacement(entity, reason)
+	if entity.valid then
+		if entity.last_user and entity.last_user.valid then
+			entity.last_user.print(reason)
+			entity.mine(entity.last_user.get_main_inventory(), true, true, true)
+		else
+			entity.destroy(false, true)
+		end
+	end
 end
 
 function utils.validate_tile_placement(position, surface, required_tile_types, forbidden_tile_types)
@@ -141,6 +144,17 @@ function utils.merge_arrays(array1, array2)
 	end
 	return array1
 end
+
+function utils.remove_table_from_array(array_of_tables, on_key, value_to_match)
+	for i, t in ipairs(array_of_tables) do
+		if t[on_key] == value_to_match then
+			table.remove(array_of_tables, i)
+			return true
+		end
+	end
+	return false
+end
+
 
 utils.Queue = {}
 

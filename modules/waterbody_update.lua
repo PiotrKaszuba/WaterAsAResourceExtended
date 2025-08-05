@@ -32,9 +32,8 @@ function waterbody_update.createMapMarker(waterBody)
         text = "Depleted! - " .. text
     end
 
-    for force_name, _ in pairs(waterBody.entitiesData.forces) do
+    for force_name, player_force in pairs(waterBody.waterBodyStateData.Forces) do
         local marker = waterBody.waterBodyStateData.MapMarkers[force_name]
-        local force = game.forces[force_name]
         local position = nil
         if force_to_pump[force_name] then
             position = force_to_pump[force_name].input_position
@@ -51,7 +50,7 @@ function waterbody_update.createMapMarker(waterBody)
         end
         
         if not marker or not utils.MapMarker.valid(marker) then
-            marker = utils.MapMarker.new(force, surface, position, text, icon)
+            marker = utils.MapMarker.new(player_force.force, surface, position, text, icon)
             waterBody.waterBodyStateData.MapMarkers[force_name] = marker
         else
             utils.MapMarker.update(marker, position, text, icon)
@@ -115,6 +114,8 @@ function waterbody_update.bigUpdateWaterLevel(waterBody)
     waterbody_update.updateWaterLevel(waterBody, waterUsedChange, regenAmount)
     state.TempAvailableWater = waterbodies.calculateRemainingWater(waterBody)
     state.TempUsedWater = 0
+    -- we don't set pumps to active here - it will be handled by pumps update
+    state.TempInactive = not waterbodies.canPumpWaterNow(state)
 end
 
 function waterbody_update.updateWaterLevel(waterBody, waterUsedChange, regenAmount)
@@ -171,7 +172,8 @@ function waterbody_update.handleDepletion(waterBody)
     local percentUsed = waterbodies.calculatePercentageWaterUsed(waterBody)
 
      -- Handle depletion state
-    if percentUsed >= 100 and not state.Depleted then
+     -- we only deplete if the waterbody is finished scanning - otherwise we will just keep TempInactive
+    if percentUsed >= 100 and not state.Depleted and waterBody.searchData.finished then
         waterbody_update.waterBodyDepleted(waterBody)
     elseif percentUsed < waterbody_update.getPumpsReactivationLevelPerThousand() / 10 and state.Depleted then
         waterbody_update.waterBodyRestored(waterBody)
@@ -196,27 +198,24 @@ function waterbody_update.collectWaterUsageStats()
     -- comments show otherwise would be called functions
 
     -- initialize all variables once for performance?
-    local total_pumping_water, water_usage, pump_data, force_data, state, is_depleted, temp_used_water, entity
-    
+    local total_pumping_water, water_usage, state, is_temp_inactive, temp_used_water, entity
+    local periodic_every_x_ticks = storage.PeriodicEveryXTicks
     for _, waterBody in pairs(storage.ValidWaterBodies) do -- pairs(waterbodies.getValidWaterBodies())
+        state = waterBody.waterBodyStateData
         total_pumping_water = 0
         -- waterbody_update.collectWaterUsageStatsForWaterBody(waterBody)
-        for unit_number, _ in pairs(waterBody.entitiesData.pumps) do
-            pump_data = entities.getTrackedEntity(unit_number)
-            
+        for _, pump_data in ipairs(state.Pumps) do
             -- waterbody_update.getWaterUsageStatsForPump(pump_data)
             entity = pump_data.entity
             water_usage = 0
             if entity.valid and entity.active then
                 water_usage = entity.pumped_last_tick
-
-                force_data = storage.PlayerForces[pump_data.forceName] -- forces.getPlayerForce(pump_data.forceName)
                 
                 -- multiplication by storage.PeriodicEveryXTicks:
                 -- estimation of the water usage between ticks
                 -- i.e. if we sample pumped value every 10 ticks we assume
                 -- that it was the averageal usage
-                water_usage = water_usage * force_data.water_usage_multiplier * storage.PeriodicEveryXTicks
+                water_usage = water_usage * pump_data.playerForce.water_usage_multiplier * periodic_every_x_ticks
                 -- end of waterbody_update.getWaterUsageStatsForPump(pump_data)
                 
                 total_pumping_water = total_pumping_water + water_usage
@@ -225,23 +224,24 @@ function waterbody_update.collectWaterUsageStats()
         -- end of waterbody_update.collectWaterUsageStatsForWaterBody(waterBody)
 
         -- waterbody_update.smallUpdateRemainingWaterDepletion(waterBody, total_pumping_water)
-        state = waterBody.waterBodyStateData
+        
         temp_used_water = state.TempUsedWater + total_pumping_water -- get + update in one go
-        is_depleted = state.Depleted
+        is_temp_inactive = state.TempInactive
 
         state.TempUsedWater = temp_used_water -- update the state variable now
     
-        if is_depleted and total_pumping_water > 0 then
-            utils.profile_hits("waterbody_update.collectWaterUsageStats", "depleted and pumping")
-            game.print(string.format("Warning: waterbody %s is depleted but total pumping water is %s - how?", waterbodies.getFullNameForWaterBody(waterBody), total_pumping_water))
+        if total_pumping_water > 0 then
+            if is_temp_inactive then
+                utils.profile_hits("waterbody_update.collectWaterUsageStats", "inactive and pumping")
+                game.print(string.format("Warning: waterbody %s is inactive but total pumping water is %s - how?", waterbodies.getFullNameForWaterBody(waterBody), total_pumping_water))
+            end
         end
         if temp_used_water >= state.TempAvailableWater then
-            -- we call depleted if state is not depleted or if there is still some water being pumped
-            -- the remaining pumps will be deactivated by the depletion handler
-            if not is_depleted or total_pumping_water > 0 then
-
-                -- we dont optimize this - it will be called relatively very rarely
-                waterbody_update.waterBodyDepleted(waterBody)
+            -- we call to deactivate if state is not inactive or if there is still some water being pumped
+            -- the remaining pumps will be deactivated
+            if not is_temp_inactive or total_pumping_water > 0 then
+                state.TempInactive = true
+                entities.deactivateWaterBodyPumps(waterBody.waterBodyId)
             end
         end
         -- end of waterbody_update.smallUpdateRemainingWaterDepletion(waterBody, total_pumping_water)
