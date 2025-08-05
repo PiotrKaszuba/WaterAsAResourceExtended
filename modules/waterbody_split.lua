@@ -50,7 +50,7 @@ function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, o
 			updateBudget.budget = updateBudget.budget - (current_check_size * current_check_size) / 4
 		end
 		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody.waterBodyShapeData, center_position, current_check_size)
-		local all_connected_tiles = surface.get_connected_tiles(start_tile_pos, utils.GetWaterTileNamesArray(), true, bbox)
+		local all_connected_tiles = surface.get_connected_tiles(start_tile_pos, utils.IndicatorTableToArray(utils.WaterAndDryTiles), true, bbox)
 		for _, tile_pos in pairs(all_connected_tiles) do
 			local tile_pos_gridKey = hot_utils.GridKey(tile_pos)
 			if missing_tiles[tile_pos_gridKey] then
@@ -163,7 +163,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 			if pump_data.entity.valid and pump_data.type == "pump" and not pump_data.disabled then
 				local pump_input_position = pump_data.input_position
 				-- check if this is still water tile
-				if utils.validate_tile_placement(pump_input_position, surface, utils.WaterTiles) then
+				if utils.validate_tile_placement(pump_input_position, surface, utils.WaterAndDryTiles) then
 					_, new_water_body_id = waterbodies.createNewWaterBody(surface)
 					
 					-- fix position to left-top corner - because it is center based - from entity position

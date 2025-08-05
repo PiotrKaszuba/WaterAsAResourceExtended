@@ -9,7 +9,10 @@ waterbody_scan = {}
 -- only on building pumps (for now - might have changed - double check if needed)
 -- 
 -- returns waterBodyId of existing or new water body
-function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surface)	
+function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surface)
+	local surfaceName = surface.name
+	waterbodies.initSurface(surfaceName)
+
 	-- fix position to left-top corner - tested in profiler case
 	local tile = utils.GetTile(position, surface)
 	position = tile.position
@@ -106,8 +109,8 @@ function waterbody_scan.EdgePattern(searchPosition, surface, surfaceName, waterB
 
         local already_searched = tileWaterBodyId == waterBodyId or edgeGrid[gridKey] ~= nil
         if (not already_searched) then
-			local is_water_tile = utils.IsWaterTile(tile.name)
-			if is_water_tile then
+			local is_water_or_dry_tile = utils.IsWaterOrDryTile(tile.name)
+			if is_water_or_dry_tile then
 				utils.Queue.enqueue(searchData.searchQueue, position)
 			else
 				if tileWaterBodyId == nil then
@@ -150,13 +153,29 @@ end
 function waterbody_scan.processWaterTile(water_body, position, tile, surface, surfaceName)
 	local gridKey = hot_utils.GridKey(position)
 	local tile_name = tile.name
-	if not utils.IsWaterTile(tile_name) and not hot_utils.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceName) then
+	local original_tile_name = tile_name
+	local is_dry_tile = utils.IsDryTile(tile_name)
+	local is_water_tile = utils.IsWaterTile(tile_name)
+	if not (is_water_tile or is_dry_tile) and not hot_utils.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceName) then
+		
+		-- is this code alive?
+		utils.profile_hits("processWaterTile", "does it happen?")
+		game.print("Testing: IT DOES HAPPEN: processWaterTile got non water or dry tile that is not assigned to a water body!.")
+
 		-- Non-water tile - mark as searched without adding to water body and skip
 		hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
 		return water_body
 	end
 	
-    local waterBodyTileType = waterbodies.WaterTileToWaterBodyTileType[tile_name]
+	if is_dry_tile then
+		original_tile_name = storage.OrphanedDryTilesOriginalName[surfaceName][gridKey]
+		if original_tile_name == nil then
+			utils.profile_hits("processWaterTile", "Orphaned dry tile is not in the table!")
+			game.print("Testing: Orphaned dry tile is not in the table!")
+		end
+	end
+	
+    local waterBodyTileType = waterbodies.WaterTileToWaterBodyTileType[original_tile_name]
 	if waterBodyTileType ~= nil then
 		local waterBodyId = water_body.waterBodyId
 		-- inherit depletion level from the original waterbody (if any) BEFORE assignment as it will remove possibility to read it
@@ -179,7 +198,13 @@ function waterbody_scan.processWaterTile(water_body, position, tile, surface, su
 				
 				local searchData = water_body.searchData
 				searchData.totalArea = searchData.totalArea + 1
-				hot_utils.addTileToWaterGrid(waterGridWithData, gridKey, tile_name, position)
+				waterbodies.addTileToWaterGrid(waterGridWithData, gridKey, tile_name, position, original_tile_name)
+				
+				if is_dry_tile then
+					local state = water_body.waterBodyStateData
+					state.DriedTiles = state.DriedTiles + 1
+					storage.OrphanedDryTilesOriginalName[surfaceName][gridKey] = nil
+				end
 			end
 		end
 		-- Check for edge pattern and add adjacent tiles to search queue

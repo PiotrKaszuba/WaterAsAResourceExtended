@@ -12,6 +12,8 @@ function waterbodies.initWaterBodiesAndTiles()
 
         storage.WaterTiles = {} -- surfaceName -> gridKey -> waterBodyId
 		storage.WaterBodyToNumTiles = {} -- waterBodyId -> numTiles
+
+		storage.OrphanedDryTilesOriginalName = {} -- surfaceName -> gridKey -> originalName
 	end
 end
 
@@ -24,6 +26,9 @@ function waterbodies.initSurface(surfaceName)
     if storage.WaterTiles[surfaceName] == nil then
         storage.WaterTiles[surfaceName] = {} -- gridKey -> waterBodyId
     end
+	if storage.OrphanedDryTilesOriginalName[surfaceName] == nil then
+		storage.OrphanedDryTilesOriginalName[surfaceName] = {} -- gridKey -> originalName
+	end
 end
 
 function waterbodies.getWaterTile(gridKey, surface)
@@ -476,6 +481,15 @@ function waterbodies.signalPerForce(water_body, signal_func, additional_args)
 	end
 end
 
+-- requires waterGridWithData + gridKey to be present in scope
+function waterbodies.addTileToWaterGrid(waterGridWithData, gridKey, tileName, position, originalName)
+    waterGridWithData[gridKey] = {
+        name = tileName,
+        position = position,
+        originalName = originalName
+    }
+end
+
 function waterbodies.initCleanedWaterBody(water_body)
 	return {
 		["PercentageWaterUsed"] = waterbodies.calculatePercentageWaterUsed(water_body),
@@ -494,10 +508,43 @@ function waterbodies.destroyMapMarkers(waterBodyStateData)
 	end
 end
 
+function waterbodies.getWaterBodyWaterOrDryTilesArray(waterBody, findDryTiles)
+	-- if findDryTiles is true, it will return dry tiles
+	-- otherwise it will return water tiles
+    local candidateTiles = {}
+    local gridData = waterBody.gridsData.waterGridWithData
+
+    if findDryTiles then
+        for _, tileData in pairs(gridData) do
+            if utils.DryWaterTiles[tileData.name] then
+                candidateTiles[#candidateTiles + 1] = tileData
+            end
+        end
+    else
+        for _, tileData in pairs(gridData) do
+            if utils.IsWaterTile(tileData.name) then
+                candidateTiles[#candidateTiles + 1] = tileData
+            end
+        end
+    end
+    return candidateTiles
+end
+
 function waterbodies.removeWaterBody(waterBody)
 	waterBody.valid = false
 	
 	waterbodies.destroyMapMarkers(waterBody.waterBodyStateData)
+	
+	-- dry tiles become orphaned - we need to remember their original name
+	if waterBody.waterBodyStateData.DriedTiles > 0 then
+		local dried_tiles = waterbodies.getWaterBodyWaterOrDryTilesArray(waterBody, true)
+		local surfaceName = waterBody.surface.name
+		local gridKey
+		for _, tileData in ipairs(dried_tiles) do
+			gridKey = hot_utils.GridKey(tileData.position)
+			storage.OrphanedDryTilesOriginalName[surfaceName][gridKey] = tileData.originalName
+		end
+	end
 	
 	-- Clean up tile assignments to this water body
     -- waterbodies.cleanupWaterBodyTiles(waterBody)

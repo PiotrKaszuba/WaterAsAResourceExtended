@@ -214,7 +214,7 @@ function waterbody_update.collectWaterUsageStats()
                 -- multiplication by storage.PeriodicEveryXTicks:
                 -- estimation of the water usage between ticks
                 -- i.e. if we sample pumped value every 10 ticks we assume
-                -- that it was the averageal usage
+                -- that it was the average usage
                 water_usage = water_usage * pump_data.playerForce.water_usage_multiplier * periodic_every_x_ticks
                 -- end of waterbody_update.getWaterUsageStatsForPump(pump_data)
                 

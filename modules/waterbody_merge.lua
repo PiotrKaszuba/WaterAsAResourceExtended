@@ -46,6 +46,10 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_glob
 		end
 	end
 
+	-- dry tiles won't become orphaned because they are inherited by the target water body
+	-- let's remove waterGridWithData from the other water body
+	other_gridsData.waterGridWithData = {}
+
 	waterbody_merge.merge_tables(gridsData.edgeGrid, other_gridsData.edgeGrid)
 
 	return overlapTileCountData
@@ -100,6 +104,8 @@ function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_water
 	waterBodyStateData.FiredCreated = waterBodyStateData.FiredCreated
 
 	waterBodyStateData.DriedTiles = waterBodyStateData.DriedTiles + other_waterBodyStateData.DriedTiles
+	-- let's remove dry tiles count from the other water body - so orphaned dry tiles won't trigger on waterbody removal
+	other_waterBodyStateData.DriedTiles = 0
 	
 	waterBodyStateData.ScanLoopCount = waterBodyStateData.ScanLoopCount
 	waterBodyStateData.OrphanedSecondsCount = waterBodyStateData.OrphanedSecondsCount + other_waterBodyStateData.OrphanedSecondsCount

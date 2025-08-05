@@ -63,17 +63,6 @@ function hot_utils.addNewWaterTile(gridKey, surfaceName, waterBodyId)
 	waterBodyToNumTiles[write_id] = (waterBodyToNumTiles[write_id] or 0) + 1
 end
 
--- same as waterbodies.addTileToWaterGrid() but optimized for hot paths
--- original function is removed as it wasn't used in other places
--- requires waterGridWithData + gridKey to be present in scope
-function hot_utils.addTileToWaterGrid(waterGridWithData, gridKey, tileName, position)
-    waterGridWithData[gridKey] = {
-        name = tileName,
-        position = position,
-        originalName = tileName
-    }
-end
-
 -- same as waterbodies.getWaterTilePercentageWaterUsed() but optimized for hot paths
 -- original function is removed as it wasn't used in other places
 -- uses surfaceName instead of surface

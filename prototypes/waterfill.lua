@@ -107,6 +107,11 @@ local waterfill_placer = {
     energy_usage="0.01W",
     fluid_source_offset={0, 0},
     tile_buildability_rules={{area={{-0.3, -1.0}, {0.3, -0.6}}, required_tiles={layers={water_tile=true}}}},
+    minable = {
+        mining_time = 0.1,
+        result = "waterfill",
+        count = 1
+    }
 }
 
 data:extend({

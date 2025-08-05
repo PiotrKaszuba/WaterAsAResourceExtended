@@ -16,6 +16,17 @@ utils.DryWaterTiles = {
 	["lake-deep"] = true,
 }
 
+utils.WaterAndDryTiles = {
+	["water"] = true,
+	["deepwater"] = true,
+	["water-green"] = true,
+	["water-shallow"] = true,
+	["water-mud"] = true,
+	["deepwater-green"] = true,
+	["lake-shallow"] = true,
+	["lake-deep"] = true,
+}
+
 -- Mapping from a wet water tile to its "dry" equivalent
 utils.WetToDryTileMap = {
 	["water"] = "lake-shallow",
@@ -30,12 +41,12 @@ function utils.getDryTileForWetTile(wetTileName)
 	return utils.WetToDryTileMap[wetTileName]
 end
 
-function utils.GetWaterTileNamesArray()
-	local water_tile_names = {}
-	for tile_name, _ in pairs(utils.WaterTiles) do
-		water_tile_names[#water_tile_names + 1] = tile_name
+function utils.IndicatorTableToArray(indicator_table)
+	local array = {}
+	for tile_name, _ in pairs(indicator_table) do
+		array[#array + 1] = tile_name
 	end
-	return water_tile_names
+	return array
 end
 
 utils.DeepWaterTiles = {
@@ -73,11 +84,15 @@ end
 
 function utils.rejectEntityPlacement(entity, reason)
 	if entity.valid then
-		if entity.last_user and entity.last_user.valid then
-			entity.last_user.print(reason)
-			entity.mine(entity.last_user.get_main_inventory(), true, true, true)
-		else
-			entity.destroy(false, true)
+		local mined = false
+		local last_user = entity.last_user
+		if last_user and last_user.valid then
+			last_user.print(reason)
+			mined = last_user.mine_entity(entity, true)
+		end
+
+		if not mined then
+			entity.destroy({raise_destroy=true})
 		end
 	end
 end
@@ -198,7 +213,14 @@ function utils.normalize_values_per_second(value, as_int_ceiling)
 	return normalized_value
 end
 
--- used for profiling only - a case: check if position is left-top corner and needs to be fixed
+function utils.fixPositionToLeftTopCorner(position)
+	if not utils.checkIfPositionIsLeftTopCorner(position) then
+		local x, y = position.x, position.y
+		return {x = x - x % 1, y = y - y % 1}
+	end
+	return position
+end
+
 function utils.checkIfPositionIsLeftTopCorner(position)
 	return position.x % 1 == 0 and position.y % 1 == 0
 end

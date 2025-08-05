@@ -7,12 +7,20 @@ Needed:
 9. comprehensive tests - plan out test suite (especially for merging/splitting water bodies) etc, lifecycles etc. - somewhat - now do them / -> actually tested manually without looking at the file - might have missed something but was too lazy ;)
 
 -> to test: techs unlocks (and forces)
--> to test: rejectEntityPlacement with mine instead of destroy - how waterfill behaves with it?
+-> (DONE) to test: rejectEntityPlacement with mine instead of destroy - how waterfill behaves with it?
 
 - WHAT happens when landfill is placed when there are some existing dry tiles?
--> landfill will take place of some water tile but maybe something breaks?
--> initial looks at code suggest its ok because landfill removes from grid
--> and depletion visuals are based on the grid tile data (current name vs original name)
+    
+    (THIS OK)
+    initial looks at code suggest its ok because landfill removes from grid
+    and depletion visuals are based on the grid tile data (current name vs original name)
+    
+    (DONE)
+    fix dry tiles being forgotten (orphaned) when waterbody removed (split) - they are still water tiles
+    and they should be treated as water tiles when scanning again after split
+    account for them (orphaned) in waterbody merge - no need to make orphans
+
+    test a bit more
 
 Maybe:
 - NEED to profile performance - partially done
@@ -30,8 +38,10 @@ Maybe:
 
 
 -> separate scanning loop update?
--> that happens a few times per second?
--> and calculate water area only on big updates cause it takes some time?
+    that happens a few times per second?
+    
+    and calculate water area only on big updates cause it takes some time?
+    
 -> update bounding box not after every tile but after whole batch - scan can hold min,max of visited tiles and then we can combine it at the end only!
 
 (DONE)

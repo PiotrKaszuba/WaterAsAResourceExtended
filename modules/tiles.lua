@@ -94,17 +94,30 @@ end
 function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
     if not tileArray or not surface then return end
 
+    local surfaceName = surface.name
+
     for _, tile_event in pairs(tileArray) do
         local position = tile_event.position
-        -- try to fix the position to left-top corner just in case
-        local current_tile = utils.GetTile(position, surface)
-        position = current_tile.position
 
-        local old_name = tile_event.old_tile and tile_event.old_tile.name
-        local new_name = tile_event.name or placed_name
+        -- try to fix the position to left-top corner just in case
+        position = utils.fixPositionToLeftTopCorner(position)
+        local old_tile = tile_event.old_tile
+        local old_name = old_tile and old_tile.name
+        local new_name = placed_name or tile_event.name
         
         if old_name == nil then
+            utils.profile_hits("handleTileEventsInternal", "no old tile name")
             game.print("Warning: script_raised_set_tiles with no old tile name. Problems may arise if landfill was placed not on water or waterfill was placed on water or dry (depleted) tile.")
+        end
+
+        if utils.IsDryTile(new_name) then
+            utils.profile_hits("handleTileEventsInternal", "new dry tile")
+            game.print("Testing: handleTileEventsInternal got dry tile - IT SHOULD NOT HAPPEN!")
+        elseif utils.IsDryTile(old_name) then
+            -- if something else than dry tile is placed on dry tile:
+            -- we can for sure remove it from OrphanedDryTilesOriginalName
+            local gridKey = hot_utils.GridKey(position)
+            storage.OrphanedDryTilesOriginalName[surfaceName][gridKey] = nil
         end
 
         if new_name == "landfill" and (old_name and utils.IsWaterTile(old_name)) or (not old_name) then

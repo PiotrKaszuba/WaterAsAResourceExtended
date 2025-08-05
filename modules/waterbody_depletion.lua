@@ -35,25 +35,7 @@ function waterbody_depletion.calculateFocusPoint(waterBody)
     return focusPoint
 end
 
-function waterbody_depletion.getCandidateTilesForVisualUpdate(waterBody, findDryTiles)
-    local candidateTiles = {}
-    local gridData = waterBody.gridsData.waterGridWithData
 
-    if findDryTiles then
-        for _, tileData in pairs(gridData) do
-            if utils.DryWaterTiles[tileData.name] then
-                candidateTiles[#candidateTiles + 1] = tileData
-            end
-        end
-    else
-        for _, tileData in pairs(gridData) do
-            if utils.IsWaterTile(tileData.name) then
-                candidateTiles[#candidateTiles + 1] = tileData
-            end
-        end
-    end
-    return candidateTiles
-end
 
 function waterbody_depletion.sortTilesByDistance(tiles, focusPoint, sortAscending)
     table.sort(tiles, function(a, b)
@@ -71,7 +53,7 @@ function waterbody_depletion.restoreAllVisuals(waterBody)
     local state = waterBody.waterBodyStateData
     if not state or state.DriedTiles == 0 then return end
 
-    local dryTiles = waterbody_depletion.getCandidateTilesForVisualUpdate(waterBody, true)
+    local dryTiles = waterbodies.getWaterBodyWaterOrDryTilesArray(waterBody, true)
     if #dryTiles == 0 then
         state.DriedTiles = 0
         return
@@ -104,7 +86,7 @@ function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percent
     if tilesToProcessCount == 0 then return end
 
     local isDepleting = tilesToProcessCount > 0
-    local candidateTiles = waterbody_depletion.getCandidateTilesForVisualUpdate(waterBody, not isDepleting)
+    local candidateTiles = waterbodies.getWaterBodyWaterOrDryTilesArray(waterBody, not isDepleting)
 
     if #candidateTiles == 0 then return end
 
