@@ -226,17 +226,19 @@ function waterbody_update.collectWaterUsageStats()
         -- waterbody_update.smallUpdateRemainingWaterDepletion(waterBody, total_pumping_water)
         
         temp_used_water = state.TempUsedWater + total_pumping_water -- get + update in one go
-        is_temp_inactive = state.TempInactive
-
         state.TempUsedWater = temp_used_water -- update the state variable now
     
+        -- this block will later be removed (it has duplicated is_temp_inactive - but it will be gone after comprehensive testing)
         if total_pumping_water > 0 then
+            is_temp_inactive = state.TempInactive
             if is_temp_inactive then
                 utils.profile_hits("waterbody_update.collectWaterUsageStats", "inactive and pumping")
                 game.print(string.format("Warning: waterbody %s is inactive but total pumping water is %s - how?", waterbodies.getFullNameForWaterBody(waterBody), total_pumping_water))
             end
         end
         if temp_used_water >= state.TempAvailableWater then
+            is_temp_inactive = state.TempInactive -- grab this only after condition - this should happen not that often
+            
             -- we call to deactivate if state is not inactive or if there is still some water being pumped
             -- the remaining pumps will be deactivated
             if not is_temp_inactive or total_pumping_water > 0 then
