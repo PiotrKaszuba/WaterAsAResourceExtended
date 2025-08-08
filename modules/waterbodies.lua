@@ -65,6 +65,12 @@ end
 function waterbodies.getNextFreeWaterBodyId()
 	if #storage.RecycledWaterBodyIds > 0 then
 		local recycledWaterBodyId = table.remove(storage.RecycledWaterBodyIds)
+		-- there might be an edge case when '-1' leaks into RecycledWaterBodyIds
+		-- in that case we simply ask for the next free water body id
+		-- as '-1' just got removed from the table
+		if recycledWaterBodyId == -1 then
+			return waterbodies.getNextFreeWaterBodyId()
+		end
 		return recycledWaterBodyId
 	end
 

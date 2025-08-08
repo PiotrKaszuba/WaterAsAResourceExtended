@@ -66,22 +66,6 @@ utils.AdjacentOffsets = {
 	{x = -1, y = -1}  -- northwest
 }
 
-function utils.calculate_direction_offset(position, direction)
-	local offset_position = {x = position.x, y = position.y}
-	
-	if direction == 0 then -- North
-		offset_position.y = position.y - 1
-	elseif direction == 4 then -- East  
-		offset_position.x = position.x + 1
-	elseif direction == 8 then -- South
-		offset_position.y = position.y + 1
-	elseif direction == 12 then -- West
-		offset_position.x = position.x - 1
-	end
-	
-	return offset_position
-end
-
 function utils.rejectEntityPlacement(entity, reason)
 	if entity.valid then
 		local mined = false
@@ -226,7 +210,7 @@ function utils.checkIfPositionIsLeftTopCorner(position)
 end
 
 -- used for profiling only - measure how many times a case was hit by a caller
-function utils.profile_hits(case_name, caller_name)
+function utils.profile_hits(caller_name, case_name)
 	if not storage.profiling_hits then
 		storage.profiling_hits = {}
 	end

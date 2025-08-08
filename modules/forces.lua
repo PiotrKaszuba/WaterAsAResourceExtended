@@ -1,3 +1,5 @@
+require("modules.utils")
+
 forces = {}
 
 
@@ -47,9 +49,9 @@ forces.TechYieldBoostLevels = {
 forces.TechYieldBoostLevelInfiniteBoost = 0.15
 
 function forces.GetTechYieldBoost(research_name, research_level)
-	if forces.CheckSubstring(research_name, forces.TechYieldBoostName) then
-		local maxLevel = forces.GetMaxKey(forces.TechYieldBoostLevels)
-		local boostLevel = tonumber(forces.RemovePrefix(research_name, forces.TechYieldBoostName))
+	if utils.CheckSubstring(research_name, forces.TechYieldBoostName) then
+		local maxLevel = utils.GetMaxKey(forces.TechYieldBoostLevels)
+		local boostLevel = tonumber(utils.RemovePrefix(research_name, forces.TechYieldBoostName))
 		
 		local boost = 1.0
 		if boostLevel > maxLevel then

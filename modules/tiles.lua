@@ -120,12 +120,12 @@ function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
             storage.OrphanedDryTilesOriginalName[surfaceName][gridKey] = nil
         end
 
-        if new_name == "landfill" and (old_name and utils.IsWaterTile(old_name)) or (not old_name) then
+        if new_name == "landfill" and ((old_name and utils.IsWaterTile(old_name)) or (not old_name)) then
             tiles.addTileEvent("landfill", position, surface, {
                 originalTileName = old_name,
 				tileName = new_name,
             })
-        elseif utils.IsWaterTile(new_name) and (old_name and not utils.IsWaterTile(old_name)) or (not old_name) then
+        elseif utils.IsWaterTile(new_name) and ((old_name and not utils.IsWaterTile(old_name)) or (not old_name)) then
             tiles.addTileEvent("waterfill", position, surface, {
 				originalTileName = old_name,
                 tileName = new_name,

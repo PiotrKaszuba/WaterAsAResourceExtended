@@ -86,7 +86,7 @@ end
 function waterbody_scan.EdgePattern(searchPosition, surface, surfaceName, waterBody)
 	-- for profiling only - if code hits inner line then it requires left-top corner fix
 	if not utils.checkIfPositionIsLeftTopCorner(searchPosition) then
-		utils.profile_hits("checkIfPositionIsLeftTopCorner","waterbody_scan.EdgePattern")
+		utils.profile_hits("waterbody_scan.EdgePattern", "checkIfPositionIsLeftTopCorner")
 	end
 
 	-- fix position to left-top corner in case it was not
@@ -267,7 +267,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		local search_position = utils.Queue.dequeue(search_queue)
 		-- check if position is left-top corner
 		if not utils.checkIfPositionIsLeftTopCorner(search_position) then
-			utils.profile_hits("checkIfPositionIsLeftTopCorner","waterbody_scan.ScanWaterArea")
+			utils.profile_hits("waterbody_scan.ScanWaterArea", "checkIfPositionIsLeftTopCorner")
 		end
 		-- fix position to left-top corner in case it was not
 		local tile = utils.GetTile(search_position, surface)

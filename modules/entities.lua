@@ -25,14 +25,11 @@ entities.offshore_pump_prototype_type = "offshore-pump"
 entities.offshore_drain_prototype_type = "offshore-drain"
 
 function entities.initAndRegisterNewPump(entity)
-    
-    local input_position = utils.calculate_direction_offset(entity.position, entity.direction)
-    
     -- "pump_data"
     local pump_data = {
         ["entity"] = entity,
         ["unit_number"] = entity.unit_number,
-        ["input_position"] = input_position,
+        ["input_position"] = entity.get_fluid_source_tile(),
         ["spritepos"] = entity.position,
         ["surface"] = entity.surface,
         ["direction"] = entity.direction,

@@ -125,21 +125,28 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	-- returns the merged water body
 	-- the other one has to be deleted from the storage
 
+	
+	if not waterBody1.valid or not waterBody2.valid then
+		utils.profile_hits("waterbody_merge.mergeWaterBody", "invalid waterbody")
+		game.print("Error: Water bodies are not valid")
+		
+		return waterBody1
+	end
+
+	-- check if the water bodies are on the same surface
+	if waterBody1.surface.name ~= waterBody2.surface.name then
+		utils.profile_hits("waterbody_merge.mergeWaterBody", "different surfaces")
+		game.print("Error: Water bodies are on different surfaces")
+		return waterBody1
+	end
+	
+
 	-- bigger water body absorbs the smaller one
 	if waterBody1.searchData.totalArea < waterBody2.searchData.totalArea then
 		waterBody1, waterBody2 = waterBody2, waterBody1
 	end
 
-	-- waterBody2 is merged into waterBody1
-
-	-- check if the water bodies are on the same surface
-	if waterBody1.surface.name ~= waterBody2.surface.name then
-		error("Water bodies are on different surfaces")
-	end
-
-	if not waterBody1.valid or not waterBody2.valid then
-		error("Water bodies are not valid")
-	end
+-- waterBody2 is merged into waterBody1
 
 	local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surface, waterBody1.waterBodyId)
 	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData, overlapTileCountData)

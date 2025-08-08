@@ -89,11 +89,15 @@ end
 
 function event_handlers.handleScriptTileEvents(event)
     local tileTypes = {}
+    local tileCount = 0
     for _, tile in pairs(event.tiles) do
-        tileTypes[tile.name] = true
+        if tileTypes[tile.name] == nil then
+            tileTypes[tile.name] = true
+            tileCount = tileCount + 1
+        end
     end
     
-    if #tileTypes > 1 then
+    if tileCount > 1 then
         game.print("Warning: script_raised_set_tiles with multiple tile types - processing all")
     end
 
@@ -106,7 +110,7 @@ function event_handlers.handleScriptTileEvents(event)
 end
 
 function event_handlers.TechTrack(event)
-    if forces.CheckSubstring(event.research.name, forces.TechYieldBoostName) then
+    if utils.CheckSubstring(event.research.name, forces.TechYieldBoostName) then
         forces.UpdateForceTechYieldBoost(event.research.force.name, event.research.name, event.research.level)
     end
 end
