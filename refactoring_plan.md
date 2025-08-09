@@ -50,11 +50,24 @@ Maybe:
     to gain quicker access to object
 
 
+(DONE - need test)
 -> separate scanning loop update?
     that happens a few times per second?
-    
+    (DONE - need test)
     and calculate water area only on big updates cause it takes some time?
     
+    (DONE - need test)
+    - looks good but need to add again update message on tile added on big updates - how?
+    Update message after calculate if flag on state to update msg is true - add this flag.
+    (DONE - need test)
+    Waterbodies could have their scan amounts at default value but after split only the retaining wb would have full scan value, and others will be have lower not to block different wbs too much - make that into as weight when dividing wbs scan amounts.
+
+-> Track waterbody mass center by accumulating x and y and dividing by added tiles - then formula with some state value of it - for efficiency.
+
+    Use above to determine waterbody split by split tiles distance and maybe retain the name and other states that should be kept. Merge waterbodies on priority - maybe waterbody type lake/sea etc that would be retained after split, only after on current scanned area.
+
+
+
 -> update bounding box not after every tile but after whole batch - scan can hold min,max of visited tiles and then we can combine it at the end only!
 
 (DONE)

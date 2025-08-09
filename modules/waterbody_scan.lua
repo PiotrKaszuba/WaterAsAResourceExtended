@@ -35,7 +35,7 @@ function waterbody_scan.getInitialScanAmount()
 end
 
 function waterbody_scan.getAdditionalScanAmount()
-    return utils.normalize_values_per_second(settings.global["FluidArea-Additional-Tiles-Per-Second"].value, true)
+    return utils.normalize_update_values_per_second(settings.global["FluidArea-Additional-Tiles-Per-Second"].value, true, storage.PeriodicTicksPerScanningUpdate)
 end
 
 -- not a hot path - not periodic - used in tile events (currently only in landfills)
@@ -219,9 +219,19 @@ function waterbody_scan.processWaterTile(water_body, position, tile, surface, su
 end
 
 -- not a hot path - only called from events currently (landfills - waterbody split - new wb creation + scan)
-function waterbody_scan.continueScanWaterArea(water_body_id, scan_amount)
+function waterbody_scan.continueScanWaterArea(water_body_id, scan_amount, updateBudget)
 	local water_body = waterbodies.getWaterBody(water_body_id)
-	local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount)
+	if not (water_body and water_body.valid) then
+		utils.profile_hits("waterbody_scan.continueScanWaterArea", "water_body invalid before scan")
+		-- game.print("Error: Water body invalid in continueScanWaterArea (before scan)")
+		return nil
+	end
+    local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount, updateBudget)
+	if not (water_body and water_body.valid) then
+		utils.profile_hits("waterbody_scan.continueScanWaterArea", "water_body invalid after scan")
+		game.print("Error: Water body invalid in continueScanWaterArea (after scan)")
+		return nil
+	end
 	return water_body.waterBodyId
 end
 
@@ -230,7 +240,8 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 	local scan_amount = scan_amount or waterbody_scan.getInitialScanAmount()
 	local water_body = waterbodies.getWaterBody(water_body_id)
 	if not (water_body and water_body.valid) then
-		game.print("Error: Water body nil or invalid in beginScanWaterArea")
+		utils.profile_hits("waterbody_scan.beginScanWaterArea", "water_body nil or invalid before scan")
+		-- game.print("Error: Water body nil or invalid in beginScanWaterArea (before scan)")
 		return nil
 	end
 	local search_queue = water_body.searchData.searchQueue
@@ -239,6 +250,11 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 	start_position = tile.position
 	utils.Queue.enqueue(search_queue, start_position)
 	local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount, updateBudget)
+    if not (water_body and water_body.valid) then
+		utils.profile_hits("waterbody_scan.beginScanWaterArea", "water_body invalid after scan")
+		game.print("Error: Water body invalid in beginScanWaterArea (after scan)")
+		return nil
+	end
 	return water_body.waterBodyId
 end
 
@@ -256,7 +272,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		original_search_amount = search_amount
 	end
 
-	water_body.waterAreaData.ToCalculate = true
+	water_body.waterBodyStateData.ToCalculate = true
 	
 	-- Process tiles from search queue
 	-- hot path
@@ -284,9 +300,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		end
 		search_amount = search_amount - 1
 	end
-	if water_body.waterAreaData.ToCalculate then
-		waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
-	end
+	
 	if updateBudget then
 		updateBudget.budget = updateBudget.budget - original_search_amount + search_amount
 	end
@@ -309,7 +323,7 @@ function waterbody_scan.getScanningLoopPeriod()
 end
 
 function waterbody_scan.scanningLoopPeriodic(water_body)
-	water_body.waterBodyStateData.ScanLoopCount = water_body.waterBodyStateData.ScanLoopCount + utils.normalize_values_per_second(1)
+	water_body.waterBodyStateData.ScanLoopCount = water_body.waterBodyStateData.ScanLoopCount + utils.normalize_update_values_per_second(1, false, storage.PeriodicTicksPerScanningUpdate)
 
 	if water_body.waterBodyStateData.ScanLoopCount >= waterbody_scan.getScanningLoopPeriod() then
 		waterbodies.signalPerForce(water_body, waterbody_scan.signalScanningAlarmToPlayer)
@@ -321,37 +335,62 @@ function waterbody_scan.checkIfScanningIsFinished(water_body)
 	return utils.Queue.is_empty(water_body.searchData.searchQueue)
 end
 
-function waterbody_scan.duringScanning(water_body)
-	if waterbody_scan.checkIfScanningIsFinished(water_body) then
-		waterbody_scan.finishedScanning(water_body)
-		return
+function waterbody_scan.signalCreatedOrUpdated(water_body)
+	local state = water_body.waterBodyStateData
+	if (not state.FiredCreated) or (state.ToUpdate and settings.global["Alarms-Tile-Message"].value) then
+		waterbodies.signalPerForce(water_body, waterbody_scan.signalFinishedScanningToPlayer)
+		state.FiredCreated = true
+		state.ToUpdate = false
 	end
-	waterbody_scan.scanningLoopPeriodic(water_body)
-end
-
-function waterbody_scan.scanningLoop(water_body, updateBudget)
-	if water_body and water_body.valid then
-		if not water_body.searchData.finished then
-			local finished, water_body = waterbody_scan.ScanWaterArea(water_body, waterbody_scan.getAdditionalScanAmount(), updateBudget)
-			waterbody_scan.duringScanning(water_body)
-			if water_body.waterAreaData.ToCalculate then
-				waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
-			end
-		elseif water_body.waterAreaData.ToCalculate then
-			waterbody_scan.finishedScanning(water_body)
-		end
-	end
-	return water_body
 end
 
 function waterbody_scan.finishedScanning(water_body)
 	waterbodies.CalculateAndUpdateWaterBodyAreaData(water_body)
-	water_body.searchData.finished = true
+	local search_data = water_body.searchData
+	search_data.finished = true
+	search_data.ScanWeight = 1.0 -- reset to default value
 	if (not water_body.waterBodyStateData.FiredCreated) then
 		waterbodies.GenerateWaterBodyName(water_body)
 	end
-	if (not water_body.waterBodyStateData.FiredCreated) or settings.global["Alarms-Tile-Message"].value then
-		waterbodies.signalPerForce(water_body, waterbody_scan.signalFinishedScanningToPlayer)
-		water_body.waterBodyStateData.FiredCreated = true
+	waterbody_scan.signalCreatedOrUpdated(water_body)
+end
+
+-- Iterate scanning over all valid water bodies. This is intended to be called
+-- by a separate periodic scanning loop, independent from the big update.
+function waterbody_scan.scanningUpdateAll(updateBudget)
+	if updateBudget and updateBudget.budget <= 0 then
+		return
 	end
+    local validWaterBodies = waterbodies.getValidWaterBodies()
+	local sum_scan_weights = 0 -- some waterbodies could have priority to be scanned more
+    -- Copy to an array because scanning can invalidate water bodies during iteration
+    local scanned_waterbodies_array = {}
+    for _, waterBody in pairs(validWaterBodies) do
+		local search_data = waterBody.searchData
+		if not search_data.finished then
+			scanned_waterbodies_array[#scanned_waterbodies_array + 1] = waterBody
+			sum_scan_weights = sum_scan_weights + search_data.ScanWeight
+		end
+    end
+	-- distribute computation load over scanned waterbodies
+	if sum_scan_weights <= 0 then
+		return
+	end
+	local scan_amount_per_waterbody_weight = math.min(waterbody_scan.getAdditionalScanAmount(), updateBudget.budget) / sum_scan_weights
+    for _, waterBody in ipairs(scanned_waterbodies_array) do
+		local search_data = waterBody.searchData
+		-- repeat checks in case it changed during iteration
+        if waterBody.valid and not search_data.finished then
+			local scan_amount = math.ceil(search_data.ScanWeight * scan_amount_per_waterbody_weight)
+			local finished, waterBody = waterbody_scan.ScanWaterArea(waterBody, scan_amount, updateBudget)
+			if finished then
+				waterbody_scan.finishedScanning(waterBody)
+			else
+				waterbody_scan.scanningLoopPeriodic(waterBody)
+			end
+        end
+        if updateBudget and updateBudget.budget <= 0 then
+            break
+        end
+    end
 end

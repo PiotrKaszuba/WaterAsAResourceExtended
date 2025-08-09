@@ -78,13 +78,13 @@ function tiles.processTileEventQueue(maxEvents, updateBudget)
     
     while not utils.Queue.is_empty(queue) and processedCount < maxEvents and updateBudget.budget > 0 do
         local event = utils.Queue.dequeue(queue)
-        
-        if event.type == "landfill" then
-            tiles.processLandfillEvent(event, updateBudget)
-        elseif event.type == "waterfill" then
-            tiles.processWaterfillEvent(event, updateBudget)
+        if event then
+            if event.type == "landfill" then
+                tiles.processLandfillEvent(event, updateBudget)
+            elseif event.type == "waterfill" then
+                tiles.processWaterfillEvent(event, updateBudget)
+            end
         end
-        
         processedCount = processedCount + 1
     end
     
@@ -155,7 +155,8 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
         if waterBody then
             utils.Queue.enqueue(waterBody.searchData.searchQueue, position)
             waterBody.searchData.finished = false
-            waterBody.waterAreaData.ToCalculate = true
+            waterBody.waterBodyStateData.ToCalculate = true
+            waterBody.waterBodyStateData.ToUpdate = true
 			-- also remove the tile from edge grid
 			waterBody.gridsData.edgeGrid[hot_utils.GridKey(position)] = nil
         end
@@ -215,7 +216,8 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surface, updateBudget)
     
     -- 6. Mark for water amount recalculation
-    waterBody.waterAreaData.ToCalculate = true
+    waterBody.waterBodyStateData.ToCalculate = true
+    waterBody.waterBodyStateData.ToUpdate = true
     
     -- 7. Check if water body becomes empty
     if waterbodies.isWaterBodyEmpty(waterBody) then
@@ -239,7 +241,7 @@ function tiles.processLandfillEvent(tileEvent, updateBudget)
 			end
             tiles.reduceTileFromWaterBody(waterBody, tileEvent.tileData.originalTileName, position, surface, updateBudget)
         end
-		if waterBody.valid then
+        if waterBody and waterBody.valid then
 			waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, position, surface, updateBudget)
 		end
     end

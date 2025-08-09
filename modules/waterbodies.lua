@@ -86,7 +86,9 @@ function waterbodies.addNewWaterBodyAndSetId(waterBody)
     local waterBodyId = waterbodies.getNextFreeWaterBodyId()
     storage.WaterBodies[waterBodyId] = waterBody
     waterBody.waterBodyId = waterBodyId
-	storage.ValidWaterBodies[waterBodyId] = waterBody
+	if waterBody.valid then
+		storage.ValidWaterBodies[waterBodyId] = waterBody
+	end
     return waterBodyId
 end
 
@@ -134,6 +136,10 @@ function waterbodies.InitSearchData()
 		searchQueue = utils.Queue.new(),
 		totalArea = 0,
 		finished = false,
+		-- relative amount of scanning that will be done on the waterbody in the scanning loop
+		-- 1.0 is default and assummed max value - use lower values for waterbodies that should be scanned less
+		["ScanWeight"] = 1.0,
+
 	}
 end
 
@@ -167,7 +173,6 @@ end
 
 function waterbodies.initWaterAreaData()
     return {
-		["ToCalculate"] = true,
         ["WaterBodyType"] = 0,
         ["BonusValue"] = 0,
         ["AmountWtr"] = 0,
@@ -211,8 +216,10 @@ function waterbodies.initWaterBodyStateData()
 		["ScanLoopCount"] = 0,  -- the number of big updates since started scanning
 		["OrphanedSecondsCount"] = 0, -- the number of seconds since the water body was orphaned
 
-		-- TODO: create class for map marker that will handle all the map marker logic
-		-- and have .destroy() ethod
+		["ToCalculate"] = true, -- if true, the water body area data needs to be calculated
+		["ToUpdate"] = true, -- if true, the water body will emit update message
+
+
         ["MapMarkers"] = {},
     }
 end
@@ -426,6 +433,7 @@ function waterbodies.GetWaterBodyRegen(totalArea)
 end
 
 function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
+	local area_data = waterBody.waterAreaData
 	
 	local totalArea, totalWater, penaltyWaterUsed = waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 	local waterBodyType = waterbodies.GetWaterBodyType(totalArea)
@@ -434,16 +442,17 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 
 	local regenAmount = waterbodies.GetWaterBodyRegen(totalArea)
 
-	waterBody.waterAreaData.TotalArea = totalArea
-    waterBody.waterAreaData.BonusValue = bonusValue
-	waterBody.waterAreaData.AmountWtr = amountWater
-	waterBody.waterAreaData.RegenAmount = regenAmount
-	waterBody.waterAreaData.WaterBodyType = waterBodyType
+	area_data.TotalArea = totalArea
+    area_data.BonusValue = bonusValue
+	area_data.AmountWtr = amountWater
+	area_data.RegenAmount = regenAmount
+	area_data.WaterBodyType = waterBodyType
 	
-	waterBody.waterBodyStateData.WaterUsedPenalty = penaltyWaterUsed
-	waterBody.waterBodyStateData.TempAvailableWater = waterbodies.calculateRemainingWater(waterBody)
+	local state_data = waterBody.waterBodyStateData
+	state_data.WaterUsedPenalty = penaltyWaterUsed
+	state_data.TempAvailableWater = waterbodies.calculateRemainingWater(waterBody)
 
-	waterBody.waterAreaData.ToCalculate = false
+	state_data.ToCalculate = false
 
 end
 

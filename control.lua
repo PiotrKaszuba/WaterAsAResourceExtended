@@ -4,23 +4,28 @@ require("modules.entities")
 require("modules.forces")
 require("modules.tiles")
 require("modules.waterbody_update")
+require("modules.waterbody_scan")
 require("modules.event_handlers")
 
 control = {}
 
-control.periodic_update_ticks = 1
-control.desired_big_update_ticks = 30
+control.periodic_update_ticks = 1 -- periodic update every tick: 60/s
+control.desired_big_update_ticks = 30 -- big update 2x per second: 2/s
+control.scanning_update_ticks = 10 -- scanning loop a few times per second: 6/s - but not on big update, so less than 6/s -> 4/s
 
 function control.is_picker_dollies_available()
     return (remote and remote.interfaces['PickerDollies']) or false
 end
 
 function control.Init()
-	if storage.LoopTick == nil then
-		storage.LoopTick = 0
+	if storage.PeriodicTick == nil then
+		storage.PeriodicTick = 0
 	end
-	if storage.LoopNumTicks == nil then
-		storage.LoopNumTicks =  math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
+    if storage.PeriodicTicksPerBigUpdate == nil then
+        storage.PeriodicTicksPerBigUpdate =  math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
+    end
+	if storage.PeriodicTicksPerScanningUpdate == nil then
+		storage.PeriodicTicksPerScanningUpdate =  math.ceil(control.scanning_update_ticks / control.periodic_update_ticks)
 	end
 	if storage.UpdateBudget == nil then
 		storage.UpdateBudget = settings.global["Update-Budget-Per-Second"].value
@@ -31,6 +36,10 @@ function control.Init()
 	end
 
 	storage.PeriodicEveryXTicks = control.periodic_update_ticks
+
+	if storage.CurrentUpdateBudget == nil then
+		storage.CurrentUpdateBudget = control.initUpdateBudget()
+	end
 	
 	waterbodies.initWaterBodiesAndTiles()
 	tiles.initTileEventQueue()
@@ -42,16 +51,15 @@ function control.Init()
 	end
 end
 
-
-function control.initUpdateBudget()
-	return {budget = utils.normalize_values_per_second(storage.UpdateBudget, true)}
+function control.initUpdateBudget(periodic_ticks_per_update)
+	local periodic_ticks_per_update = periodic_ticks_per_update or storage.PeriodicTicksPerBigUpdate
+	return {budget = utils.normalize_update_values_per_second(storage.UpdateBudget, true, periodic_ticks_per_update)}
 end
 
-function control.BigUpdate()
-	local updateBudget = control.initUpdateBudget()
+function control.BigUpdate(updateBudget)
 	-- events handling
-	tiles.processTileEventQueue(utils.normalize_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
-	waterbody_update.updateWaterBodies(updateBudget)
+	tiles.processTileEventQueue(utils.normalize_update_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
+    waterbody_update.updateWaterBodies(updateBudget)
 	entities.updatePumpStates()
 end
 
@@ -60,20 +68,24 @@ end
 function PeriodicUpdate()
 	-- this is called every tick or 'small update'
 	-- local var to reduce amount of storage read access
-	local loopTick = storage.LoopTick
+	local periodicTick = storage.PeriodicTick
 
 	-- WaterUsage collection from last tick - so before increment
 	waterbody_update.collectWaterUsageStats()
 
-	if loopTick >= storage.LoopNumTicks then
-		-- this is on 'big update' once - no need to optimize too much
-		storage.LoopTick = 0
-		storage.LoopNumTicks =  math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
-		-- big update after reset so after increment
-		control.BigUpdate()
+	local big_update_tick = periodicTick % storage.PeriodicTicksPerBigUpdate
+	if big_update_tick == 0 then
+		storage.CurrentUpdateBudget = control.initUpdateBudget()
+		control.BigUpdate(storage.CurrentUpdateBudget)
 	else
-		storage.LoopTick = loopTick + 1
+		-- if not big update tick, we need to check for scanning update
+		local scanning_update_tick = periodicTick % storage.PeriodicTicksPerScanningUpdate
+        if scanning_update_tick == 0 then
+            -- reuse the same per-second budget across big/scanning updates
+            waterbody_scan.scanningUpdateAll(storage.CurrentUpdateBudget)
+		end
 	end
+	storage.PeriodicTick = periodicTick + 1
 
 end
 

@@ -153,10 +153,11 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		waterbodies.removeWaterBody(waterBody)
 		local first_tile_pos = nil
 		local new_water_body_id = nil
+		local new_water_body = nil
 		for _, tile_set in ipairs(connected_tile_sets) do
 			first_tile_pos = tile_set[1]
-			_, new_water_body_id = waterbodies.createNewWaterBody(surface)
-			new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = first_tile_pos}
+			new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
+			new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = first_tile_pos, waterBody = new_water_body}
 		end
 
 		for _, pump_data in ipairs(pumps) do
@@ -164,13 +165,13 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 				local pump_input_position = pump_data.input_position
 				-- check if this is still water tile
 				if utils.validate_tile_placement(pump_input_position, surface, utils.WaterAndDryTiles) then
-					_, new_water_body_id = waterbodies.createNewWaterBody(surface)
+					new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
 					
 					-- fix position to left-top corner - because it is center based - from entity position
 					local tile = utils.GetTile(pump_input_position, surface)
 					local pump_input_top_left_corner = tile.position
 					
-					new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner}
+					new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner, waterBody = new_water_body}
 					-- waterBody got removed - so we just need to add it to the new water body
 					entities.addPumpToWaterBody(new_water_body_id, pump_data)
 				else
@@ -178,13 +179,22 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 				end
 			end
 		end
-
-		for _, new_water_body_id_and_position in pairs(new_water_body_ids_and_positions) do
-			waterbody_scan.beginScanWaterArea(new_water_body_id_and_position.waterBodyId, new_water_body_id_and_position.position, 1, updateBudget)
+		local new_waterbodies_still_valid = {}
+		local num_new_water_bodies = #new_water_body_ids_and_positions
+		for _, new_water_body_id_and_position in ipairs(new_water_body_ids_and_positions) do
+			local waterBody = new_water_body_id_and_position.waterBody
+			if waterBody and waterBody.valid then
+				waterBody.waterBodyStateData.ScanWeight = 1.0 / num_new_water_bodies
+				new_water_body_id = waterbody_scan.beginScanWaterArea(new_water_body_id_and_position.waterBodyId, new_water_body_id_and_position.position, 1)
+				if new_water_body_id then
+					new_waterbodies_still_valid[#new_waterbodies_still_valid + 1] = new_water_body_id
+				end
+			end
 		end
 
-		for _, new_water_body_id_and_position in pairs(new_water_body_ids_and_positions) do
-			waterbody_scan.continueScanWaterArea(new_water_body_id_and_position.waterBodyId, math.ceil(waterbody_scan.getInitialScanAmount() / #new_water_body_ids_and_positions))
+		local scan_amount = math.ceil(waterbody_scan.getInitialScanAmount() / #new_waterbodies_still_valid)
+		for _, new_water_body_id in ipairs(new_waterbodies_still_valid) do
+			waterbody_scan.continueScanWaterArea(new_water_body_id, scan_amount, updateBudget)
 		end
 		
 		if updateBudget then

@@ -23,6 +23,9 @@ function waterbody_merge.mergeSearchData(searchData, other_searchData, overlapTi
 	end
 	searchData.totalArea = searchData.totalArea + other_searchData.totalArea - sum_overlap
 	searchData.finished = utils.Queue.is_empty(searchData.searchQueue)
+
+	searchData.ScanWeight = math.min(1.0, searchData.ScanWeight + other_searchData.ScanWeight)
+
 end
 
 function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surface, targetWaterBodyId)
@@ -158,7 +161,9 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty, {})
 
     -- there is no merge for WaterAreaData - it will be re-calculated totally based on other merged data
-	waterBody1.waterAreaData.ToCalculate = true
+	
+	waterBody1.waterBodyStateData.ToCalculate = true
+	waterBody1.waterBodyStateData.ToUpdate = false -- no need to update after merge - there is dedicated signal for that
 	waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody1)
 	waterbodies.signalPerForce(waterBody1, waterbody_merge.signalWaterBodyMergedToPlayer, waterBody2)
 
@@ -197,7 +202,8 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
 
     utils.Queue.enqueue(targetWaterBody.searchData.searchQueue, triggerPosition)
     targetWaterBody.searchData.finished = false
-	targetWaterBody.waterAreaData.ToCalculate = true
+	targetWaterBody.waterBodyStateData.ToCalculate = true
+	targetWaterBody.waterBodyStateData.ToUpdate = true
 	-- also remove the tile from edge grid
 	targetWaterBody.gridsData.edgeGrid[hot_utils.GridKey(triggerPosition)] = nil
 

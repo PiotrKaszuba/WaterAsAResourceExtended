@@ -142,7 +142,7 @@ end
 
 function waterbody_update.calculateEffectiveRegenAmount(waterBody)
 	-- Placeholder for regen calculation
-	local regen_base = utils.normalize_values_per_second(waterBody.waterAreaData.RegenAmount)
+	local regen_base = utils.normalize_update_values_per_second(waterBody.waterAreaData.RegenAmount)
     local missing_water_percentage = waterbodies.calculatePercentageWaterUsed(waterBody)/100
     -- best regen is at 75% missing water -> 150%
     -- at 100% missing water, regen is at 50% and at 0% missing water, regen is at 75%
@@ -266,7 +266,7 @@ function waterbody_update.waterBodyCleanup(waterBody)
     local state = waterBody.waterBodyStateData
 
     if isOrphaned then
-        state.OrphanedSecondsCount = state.OrphanedSecondsCount + utils.normalize_values_per_second(1)
+        state.OrphanedSecondsCount = state.OrphanedSecondsCount + utils.normalize_update_values_per_second(1)
         -- remove only unnamed waterbody types and after bigUpdates higher than their area
         if ((waterbodies.WaterBodyTypeToNamesCollection[waterBody.waterAreaData.WaterBodyType] == nil) and state.OrphanedSecondsCount > waterBody.waterAreaData.TotalArea)
             or (waterbody_update.getRemoveDepletedOrphaned() and state.Depleted) then
@@ -280,6 +280,11 @@ function waterbody_update.waterBodyCleanup(waterBody)
 end
 
 function waterbody_update.updateWaterBody(waterBody, updateBudget)
+    local state_data = waterBody.waterBodyStateData
+    if state_data.ToCalculate then
+        waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
+        waterbody_scan.signalCreatedOrUpdated(waterBody)
+    end
 	waterbody_update.bigUpdateWaterLevel(waterBody)
 	waterbody_update.handleDepletion(waterBody)
 	waterbody_update.createMapMarker(waterBody)
@@ -292,40 +297,14 @@ end
 
 function waterbody_update.updateWaterBodies(updateBudget)
 	local validWaterBodies = waterbodies.getValidWaterBodies()
-
     local validWaterBodiesArray = {}
-    -- need to iterate over copy of validWaterBodies
-    -- scanning loop can remove/invalidate current waterbody 
-    -- or any other waterbody - so removes it from storage.ValidWaterBodies
-    -- have to maintain a seprately created copy of valid waterbodies
-    -- because iteration over storage.ValidWaterBodies is not safe
-    for _, waterBody in pairs(validWaterBodies) do
-        validWaterBodiesArray[#validWaterBodiesArray + 1] = waterBody
-    end
-    
-    -- first run the disruptive scanning loop
-    -- we do it before all other updates because if merge happened
-    -- that removes waterbody after it has been update - i.e. regen applied per tile
-    -- it could be that another waterbody would have applied regen from the same tiles
-    -- there may be other cases where this is a problem too - the above is enough for separate initial loop
-    for _, waterBody in ipairs(validWaterBodiesArray) do
-        -- need validity check here - because scanning loop can remove/invalidate this waterbody
-        if waterBody.valid then
-            waterbody_scan.scanningLoop(waterBody, updateBudget)
-        end
-    end
-
-    -- then run the rest of the updates - but we need to collect validWaterBodiesArray again
-    validWaterBodiesArray = {}
+    -- need to iterate over copy of validWaterBodies as current waterbody may be removed during update
     for _, waterBody in pairs(validWaterBodies) do
         validWaterBodiesArray[#validWaterBodiesArray + 1] = waterBody
     end
 
     for _, waterBody in ipairs(validWaterBodiesArray) do
-        -- no need to check validity here:
-        -- iterating new array of valid waterbodies
-        -- and waterBodyCleanup in updateWaterBody can only remove current waterbody - not others
-        -- so we can safely proceed with the valid waterbodies loop
+        -- no need to check validity here: waterBodyCleanup in updateWaterBody can only remove current waterbody
         waterbody_update.updateWaterBody(waterBody, updateBudget)
     end
 end

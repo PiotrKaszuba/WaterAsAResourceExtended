@@ -189,8 +189,9 @@ function utils.Queue.merge(queue, other_queue)
     end
 end
 
-function utils.normalize_values_per_second(value, as_int_ceiling)
-	local normalized_value = value * storage.LoopNumTicks * storage.PeriodicEveryXTicks / 60
+function utils.normalize_update_values_per_second(value, as_int_ceiling, periodic_tick_per_update)
+	local periodic_ticks_per_update = periodic_tick_per_update or storage.PeriodicTicksPerBigUpdate
+	local normalized_value = value * periodic_ticks_per_update * storage.PeriodicEveryXTicks / 60
 	if as_int_ceiling then
 		return math.ceil(normalized_value)
 	end
