@@ -150,15 +150,171 @@ function waterbodies.initGridsData()
 	}
 end
 
+function waterbodies.calculateDimensions(shape_data)
+	shape_data["Hdif"] = shape_data["MaxX"] - shape_data["MinX"]
+	shape_data["Vdif"] = shape_data["MaxY"] - shape_data["MinY"]
+	shape_data["Hyp"] = math.sqrt((shape_data["Hdif"]^2) + (shape_data["Vdif"]^2))
+end
+
+-- changing the order of these names will break the code in
+-- waterbodies.getGeometryValuesArray
+-- for performance reasons it does not read the expected indices but just fills the array
+waterbodies.UpdateGeometryNames = {
+	[1] = "MinX",
+	[2] = "MaxX",
+	[3] = "MinY",
+	[4] = "MaxY",
+	[5] = "SumX",
+	[6] = "SumY",
+	[7] = "TileCount",
+}
+
+local function sumf(a, b) return a + b end
+
+waterbodies.LimitGeometryNamesToCompareOp = {
+	[1] = math.min,
+	[2] = math.max,
+	[3] = math.min,
+	[4] = math.max,
+	[5] = sumf,
+	[6] = sumf,
+	[7] = sumf,
+}
+
+-- it uses either other_shape_data or batch values - not both at the same time
+function waterbodies.getGeometryValuesArray(
+	other_shape_data,
+	batchMinX, batchMaxX,
+	batchMinY, batchMaxY,
+
+	batchSumX, batchSumY, batchTileCount
+	)
+	if other_shape_data == nil then
+		return {
+			batchMinX,
+			batchMaxX,
+			batchMinY,
+			batchMaxY,
+			batchSumX,
+			batchSumY,
+			batchTileCount,
+		}
+	end
+	return {
+		other_shape_data["MinX"],
+		other_shape_data["MaxX"],
+		other_shape_data["MinY"],
+		other_shape_data["MaxY"],
+		other_shape_data["SumX"],
+		other_shape_data["SumY"],
+		other_shape_data["TileCount"],
+	}
+end
+
+-- it uses either other_shape_data or batch values - not both at the same time
+-- should be used for batch updates from primitives (during scanning)
+-- or merging two shapes
+function waterbodies.updateGeometry(
+	shape_data, other_shape_data,
+	batchMinX, batchMaxX,
+	batchMinY, batchMaxY,
+	batchSumX, batchSumY, batchTileCount
+	)
+	if other_shape_data == nil and batchTileCount <= 0 then
+		return
+	end
+    local values = waterbodies.getGeometryValuesArray(
+		other_shape_data,
+		batchMinX, batchMaxX,
+		batchMinY, batchMaxY,
+		batchSumX, batchSumY, batchTileCount
+	)
+    for i, name in ipairs(waterbodies.UpdateGeometryNames) do
+		local value = values[i]
+		if value ~= nil then
+			shape_data[name] = waterbodies.LimitGeometryNamesToCompareOp[i](shape_data[name], value)
+		end
+    end
+    waterbodies.calculateDimensions(shape_data)
+end
+
+function waterbodies.updateGeometryOnRemove(shape_data, batchSumX, batchSumY, batchTileCount)
+	-- we don't handle updates of MinX, MaxX, MinY, MaxY for removal
+	waterbodies.updateGeometry(shape_data, nil, nil, nil, nil, nil, batchSumX, batchSumY, batchTileCount)
+end
+
+function waterbodies.getCentroid(waterBody)
+    local shape = waterBody.waterBodyShapeData
+	local tile_count = shape.TileCount
+    if tile_count <= 0 then
+		if tile_count < 0 then
+			utils.profile_hits("waterbodies.getCentroid", "tile_count < 0")
+			game.print("Error: Tile count is negative in getCentroid")
+		end
+		if tile_count == 0 then
+			utils.profile_hits("waterbodies.getCentroid", "tile_count == 0")
+			game.print("Error: Tile count is 0 in getCentroid")
+		end
+        return { x = 0, y = 0 }
+    end
+    return { x = shape.SumX / tile_count, y = shape.SumY / tile_count }
+end
+
+function waterbodies.getPumpCentroid(waterBody)
+	local pumpCount = 0
+	local totalX, totalY = 0, 0
+    for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
+		local position = pump_data.input_position
+        totalX = totalX + position.x
+        totalY = totalY + position.y
+        pumpCount = pumpCount + 1
+    end
+
+    if pumpCount == 0 then
+        return nil
+    end
+
+    local pumpCenterX = totalX / pumpCount
+    local pumpCenterY = totalY / pumpCount
+	return { x = pumpCenterX, y = pumpCenterY }
+end
+
+function waterbodies.calculateDepletionFocusPoint(waterBody)
+    local centroid = waterbodies.getCentroid(waterBody)
+	local pumpCentroid = waterbodies.getPumpCentroid(waterBody)
+	if pumpCentroid == nil then
+		return centroid
+	end
+	local centerX, centerY = centroid.x, centroid.y
+	local vectorX = centerX - pumpCentroid.x
+	local vectorY = centerY - pumpCentroid.y
+
+    -- The focus point is "opposite" the pump center relative to the water body center
+    local focusPoint = { x = centerX + vectorX, y = centerY + vectorY }
+    -- fix position to left-top corner - needed because average position is not fixed
+    local tile = utils.GetTile(focusPoint, waterBody.surface)
+    focusPoint = tile.position
+    return focusPoint
+end
+
 function waterbodies.initShapeData()
     return {
-        ["MinX"] = 0,
-        ["MaxX"] = 0,
-        ["MinY"] = 0,
-        ["MaxY"] = 0,
+		-- min/max positions are limit values ever seen on the waterbody
+		-- they are not exact because removal of tiles does not check
+		-- whether these values 'shrink' - they can only 'expand'
+		-- they should be used for the bounding area that the waterbody fits into
+        ["MinX"] = math.huge,  -- max X position ever seen on the waterbody
+        ["MaxX"] = -math.huge,
+        ["MinY"] = math.huge,
+        ["MaxY"] = -math.huge,
+		
+		["SumX"] = 0,
+        ["SumY"] = 0,
+        ["TileCount"] = 0,
         ["Hdif"] = 0,
-        ["Vdif"] = 0,     
+        ["Vdif"] = 0,
 		["Hyp"] = 0,
+        
     }
 end
 
@@ -463,28 +619,7 @@ function waterbodies.createNewWaterBody(surface)
 end
 
 
-function waterbodies.calculateDimensions(shape_data)
-	shape_data["Hdif"] = shape_data["MaxX"] - shape_data["MinX"]
-	shape_data["Vdif"] = shape_data["MaxY"] - shape_data["MinY"]
-	shape_data["Hyp"] = math.sqrt((shape_data["Hdif"]^2) + (shape_data["Vdif"]^2))
-end
 
--- Update water body bounding box (internal helper)
-function waterbodies.updateBoundingBox(shape_data, position)
-	if shape_data["MinX"] == 0 or position.x < shape_data["MinX"] then
-		shape_data["MinX"] = position.x
-	end
-	if shape_data["MaxX"] == 0 or position.x > shape_data["MaxX"] then
-		shape_data["MaxX"] = position.x
-	end
-	if shape_data["MinY"] == 0 or position.y < shape_data["MinY"] then
-		shape_data["MinY"] = position.y
-	end
-	if shape_data["MaxY"] == 0 or position.y > shape_data["MaxY"] then
-		shape_data["MaxY"] = position.y
-	end
-	waterbodies.calculateDimensions(shape_data)
-end
 
 function waterbodies.signalPerForce(water_body, signal_func, additional_args)
 	local water_body_forces = water_body.waterBodyStateData.Forces

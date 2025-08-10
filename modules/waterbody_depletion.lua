@@ -4,39 +4,6 @@ require("modules.utils")
 
 waterbody_depletion = {}
 
-function waterbody_depletion.calculateFocusPoint(waterBody)
-    local shapeData = waterBody.waterBodyShapeData
-    local centerX = (shapeData.MinX + shapeData.MaxX) / 2
-    local centerY = (shapeData.MinY + shapeData.MaxY) / 2
-
-    local pumpCount = 0
-	local totalX, totalY = 0, 0
-    for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
-        totalX = totalX + pump_data.input_position.x
-        totalY = totalY + pump_data.input_position.y
-        pumpCount = pumpCount + 1
-    end
-
-    if pumpCount == 0 then
-        return { x = centerX, y = centerY } -- Default to water body center if no pumps
-    end
-
-    local pumpCenterX = totalX / pumpCount
-    local pumpCenterY = totalY / pumpCount
-
-    local vectorX = centerX - pumpCenterX
-    local vectorY = centerY - pumpCenterY
-
-    -- The focus point is "opposite" the pump center relative to the water body center
-    local focusPoint = { x = centerX + vectorX, y = centerY + vectorY }
-    -- fix position to left-top corner
-    local tile = utils.GetTile(focusPoint, waterBody.surface)
-    focusPoint = tile.position
-    return focusPoint
-end
-
-
-
 function waterbody_depletion.sortTilesByDistance(tiles, focusPoint, sortAscending)
     table.sort(tiles, function(a, b)
         local distA = (a.position.x - focusPoint.x)^2 + (a.position.y - focusPoint.y)^2
@@ -90,7 +57,7 @@ function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percent
 
     if #candidateTiles == 0 then return end
 
-    local focusPoint = waterbody_depletion.calculateFocusPoint(waterBody)
+    local focusPoint = waterbodies.calculateDepletionFocusPoint(waterBody)
     waterbody_depletion.sortTilesByDistance(candidateTiles, focusPoint, not isDepleting) -- Sort ascending for restoring, descending for depleting
 
     local tilesToChange = {}

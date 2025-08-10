@@ -58,13 +58,8 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_glob
 	return overlapTileCountData
 end
 
-
 function waterbody_merge.mergeShapeData(shapeData, other_shapeData)
-	shapeData.MinX = math.min(shapeData.MinX, other_shapeData.MinX)
-	shapeData.MaxX = math.max(shapeData.MaxX, other_shapeData.MaxX)
-	shapeData.MinY = math.min(shapeData.MinY, other_shapeData.MinY)
-	shapeData.MaxY = math.max(shapeData.MaxY, other_shapeData.MaxY)
-	waterbodies.calculateDimensions(shapeData)
+	waterbodies.updateGeometry(shapeData, other_shapeData)
 end
 
 function waterbody_merge.mergeWaterBodyTileCountData(tileCountData, other_tileCountData, overlapTileCountData)

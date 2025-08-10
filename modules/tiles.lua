@@ -208,6 +208,8 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
 
     -- 3. Remove from waterGrid
     waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
+    -- 3a. Update centroid geometry on removal
+    waterbodies.updateGeometryOnRemove(waterBody.waterBodyShapeData, -position.x, -position.y, -1)
     
     -- 4. Mark tile as unassigned in global registry
     hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
