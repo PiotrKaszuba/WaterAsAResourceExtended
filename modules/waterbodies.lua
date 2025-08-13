@@ -403,6 +403,7 @@ function waterbodies.InitWaterBody(
         surface = surface or nil,
         waterBodyId = waterBodyId or nil,
         waterBodyName = waterBodyName or nil,
+        merge_priority = 0,
 
 		waterAreaData = waterAreaData or waterbodies.initWaterAreaData(),
 		gridsData = gridsData or waterbodies.initGridsData(),

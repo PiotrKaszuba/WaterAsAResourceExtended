@@ -189,6 +189,10 @@ function utils.Queue.merge(queue, other_queue)
     end
 end
 
+function utils.periodic_ticks_to_seconds(num_periodic_ticks)
+	return num_periodic_ticks * storage.PeriodicEveryXTicks / 60
+end
+
 function utils.normalize_update_values_per_second(value, as_int_ceiling, periodic_tick_per_update)
 	local periodic_ticks_per_update = periodic_tick_per_update or storage.PeriodicTicksPerBigUpdate
 	local normalized_value = value * periodic_ticks_per_update * storage.PeriodicEveryXTicks / 60

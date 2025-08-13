@@ -2,6 +2,7 @@ require("modules.utils")
 require("modules.hot_utils")
 require("modules.waterbodies")
 require("modules.waterbody_merge")
+require("modules.split_families")
 
 waterbody_scan = {}
 
@@ -571,6 +572,8 @@ function waterbody_scan.finishedScanning(water_body)
 		waterbodies.GenerateWaterBodyName(water_body)
 	end
 	waterbody_scan.signalCreatedOrUpdated(water_body)
+	
+    split_families.on_scan_finished(water_body.waterBodyId)
 end
 
 -- Iterate scanning over all valid water bodies. This is intended to be called

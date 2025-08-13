@@ -2,6 +2,7 @@ require("modules.waterbodies")
 require("modules.utils")
 require("modules.hot_utils")
 require("modules.entities")
+require("modules.split_families")
 
 waterbody_merge = {}
 
@@ -140,13 +141,19 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	
 
 	-- bigger water body absorbs the smaller one
-	if waterBody1.searchData.totalArea < waterBody2.searchData.totalArea then
+    if waterBody1.searchData.totalArea < waterBody2.searchData.totalArea then
 		waterBody1, waterBody2 = waterBody2, waterBody1
 	end
 
 -- waterBody2 is merged into waterBody1
 
-	local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surface, waterBody1.waterBodyId)
+    -- Decide name to keep based on merge_priority first
+    local name_to_keep = waterBody1.waterBodyName
+    if waterBody2.merge_priority > waterBody1.merge_priority and waterBody2.waterBodyName ~= nil then
+        name_to_keep = waterBody2.waterBodyName
+    end
+
+    local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surface, waterBody1.waterBodyId)
 	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData, overlapTileCountData)
 	waterbody_merge.mergeSearchData(waterBody1.searchData, waterBody2.searchData, overlapTileCountData)
 	waterbody_merge.mergeWaterBodyStateData(waterBody1.waterBodyStateData, waterBody2.waterBodyStateData, waterBody1.waterBodyId)
@@ -159,10 +166,19 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	
 	waterBody1.waterBodyStateData.ToCalculate = true
 	waterBody1.waterBodyStateData.ToUpdate = false -- no need to update after merge - there is dedicated signal for that
-	waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody1)
+    -- preserve name and merge_priority
+    if name_to_keep ~= nil then
+        waterBody1.waterBodyName = name_to_keep
+    end
+    waterBody1.merge_priority = math.max(waterBody1.merge_priority, waterBody2.merge_priority)
+    waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody1)
 	waterbodies.signalPerForce(waterBody1, waterbody_merge.signalWaterBodyMergedToPlayer, waterBody2)
 
-	waterbodies.removeWaterBody(waterBody2)
+    local removedId = waterBody2.waterBodyId
+    waterbodies.removeWaterBody(waterBody2)
+    if removedId then
+        split_families.on_merged(waterBody1.waterBodyId, removedId, waterBody1.waterBodyId)
+    end
 
 	return waterBody1.waterBodyId
 end
@@ -194,7 +210,7 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
 			end
 		end
     end
-
+	-- assuming target waterBody shuold be valid
     utils.Queue.enqueue(targetWaterBody.searchData.searchQueue, triggerPosition)
     targetWaterBody.searchData.finished = false
 	targetWaterBody.waterBodyStateData.ToCalculate = true

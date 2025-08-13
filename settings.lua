@@ -101,5 +101,35 @@ data:extend({
         minimum_value = 50,
         maximum_value = 10000
     },
+    {
+        type = "bool-setting",
+        name = "Splits-EnableFamilies",
+        setting_type = "runtime-global",
+        default_value = true
+    },
+    {
+        type = "int-setting",
+        name = "Splits-Family-Timeout-Seconds",
+        setting_type = "runtime-global",
+        default_value = 120,
+        minimum_value = 0,
+        maximum_value = 36000
+    },
+    {
+        type = "double-setting",
+        name = "Splits-Reeval-Threshold",
+        setting_type = "runtime-global",
+        default_value = 0.10,
+        minimum_value = 0.0,
+        maximum_value = 1.0
+    },
+    {
+        type = "int-setting",
+        name = "Split-Max-BBox-Side",
+        setting_type = "runtime-global",
+        default_value = 32,
+        minimum_value = 8,
+        maximum_value = 1024
+    },
 
 })

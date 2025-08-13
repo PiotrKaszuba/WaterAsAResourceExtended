@@ -6,6 +6,7 @@ require("modules.tiles")
 require("modules.waterbody_update")
 require("modules.waterbody_scan")
 require("modules.event_handlers")
+require("modules.split_families")
 
 control = {}
 
@@ -46,6 +47,8 @@ function control.Init()
 	entities.initTrackedEntities()
 	forces.initPlayerForces()
 
+	split_families.init_storage()
+
 	if control.is_picker_dollies_available() then
 		remote.call('PickerDollies', 'add_blacklist_name', entities.offshore_pump_prototype_type)
 	end
@@ -56,11 +59,13 @@ function control.initUpdateBudget(periodic_ticks_per_update)
 	return {budget = utils.normalize_update_values_per_second(storage.UpdateBudget, true, periodic_ticks_per_update)}
 end
 
-function control.BigUpdate(updateBudget)
+function control.BigUpdate(updateBudget, periodicTick)
 	-- events handling
 	tiles.processTileEventQueue(utils.normalize_update_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
     waterbody_update.updateWaterBodies(updateBudget)
 	entities.updatePumpStates()
+	-- families of split waterbodies: maintenance
+	split_families.updateSplitFamilies(updateBudget, periodicTick)
 end
 
 -- on purpose outside of control module
@@ -76,7 +81,7 @@ function PeriodicUpdate()
 	local big_update_tick = periodicTick % storage.PeriodicTicksPerBigUpdate
 	if big_update_tick == 0 then
 		storage.CurrentUpdateBudget = control.initUpdateBudget()
-		control.BigUpdate(storage.CurrentUpdateBudget)
+		control.BigUpdate(storage.CurrentUpdateBudget, periodicTick)
 	else
 		-- if not big update tick, we need to check for scanning update
 		local scanning_update_tick = periodicTick % storage.PeriodicTicksPerScanningUpdate

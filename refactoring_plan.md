@@ -23,6 +23,8 @@ Needed:
     test a bit more
 
 
+-> searchData.total_area is incorrect after tile operations. either fix it or update to on ToCalculate to reflect actual area??
+
 -> Optimize the depletion appearance as it is very slow. Options include (can be mixed with re-trials to grab WBs tiles to change):
     guessing tiles around focus point
     sampling limited tiles and sorting - sorting too expensive in full way? so maybe just taking some of the the tiles below moving average? some will be worse (or maybe initial ones can be dropped regardless until moving average stabilizes)
@@ -63,11 +65,19 @@ Maybe:
     (DONE - need test)
     Waterbodies could have their scan amounts at default value but after split only the retaining wb would have full scan value, and others will be have lower not to block different wbs too much - make that into as weight when dividing wbs scan amounts.
 
+(NAH - NOT NEEDED ATM)
+-> separate tile event loop update? - probably not needed now
+    similar to scanning loop?
+
 (DONE)
 -> Track waterbody mass center by accumulating x and y and dividing by added tiles - then formula with some state value of it - for efficiency.
 
-    (TODO)
+    (DONE)
     Use above to determine waterbody split by split tiles distance and maybe retain the name and other states that should be kept. Merge waterbodies on priority - maybe waterbody type lake/sea etc that would be retained after split, only after on current scanned area.
+
+    Optional improvements on initial successor choice logic:
+        Optional corridor penalty: add a small local-density term around the split point to further reduce corridor manipulation, only when hit_cap is true.
+        Pump-seed weighting (optional): if a seed has a pump inside its connected tiles and scores are close, nudge towards that seed for UX.
 
 (DONE)
 -> update bounding box not after every tile but after whole batch - scan can hold min,max of visited tiles and then we can combine it at the end only!
