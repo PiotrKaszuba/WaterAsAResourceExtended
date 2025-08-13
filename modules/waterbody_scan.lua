@@ -41,12 +41,13 @@ end
 -- not a hot path - not periodic - used in tile events (currently only in landfills)
 -- could be treated as somewhat hot if we wanted to very quickly process tile events
 -- but not a priority - looks fine as is
-function waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, water_body_id)
+function waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, water_body_id, skip_water_tiles_current_state)
 	-- fix position to left-top corner in case it was not
 	local tile = utils.GetTile(position, surface)
 	position = tile.position
 	
 	-- if water_body_id is given then only return adjacent water tiles that are part of the water body
+	-- if skip_water_tiles_current_state is true then treat adjacent tiles that have id == water_body_id as water tiles
 	local adjacent_waterbody_tiles = {}
 	local adjacent_land_tiles = {}
 	for _, offset in pairs(utils.AdjacentOffsets) do
@@ -54,7 +55,7 @@ function waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, water_bo
 		local adj_gridKey = hot_utils.GridKey(adj_pos)
 		local adj_waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
 		local is_water_tile = utils.IsWaterOrDryTile(utils.GetTile(adj_pos, surface).name)
-		if (water_body_id == nil or adj_waterBodyId == water_body_id) and is_water_tile then
+		if (water_body_id == nil or adj_waterBodyId == water_body_id) and (is_water_tile or (skip_water_tiles_current_state and adj_waterBodyId == water_body_id)) then
 			adjacent_waterbody_tiles[#adjacent_waterbody_tiles + 1] = adj_pos
 		elseif not is_water_tile then
 			adjacent_land_tiles[#adjacent_land_tiles + 1] = adj_pos
@@ -63,7 +64,7 @@ function waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, water_bo
 	return adjacent_waterbody_tiles, adjacent_land_tiles
 end
 
--- not a hot path: same as waterbody_scan.getAdjacentWaterAndLandTiles()
+-- not a hot path: same as waterbody_scan.getAdjacentWaterAndLandTiles
 function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surface, updateBudget)
 	local adjacent_waterbody_tiles, adjacent_land_tiles = waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, waterBody.waterBodyId)
     
@@ -158,10 +159,22 @@ function waterbody_scan.EdgePattern(
 				if tileWaterBodyId == nil then
 					addNewWaterTile(gridKey, surfaceName, -1)
 				elseif tileWaterBodyId == waterBodyId then
+					utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of the same waterbody!")
 					game.print("Testing: EdgePattern got non water tile of the same waterbody!")
 				elseif tileWaterBodyId ~= -1 then
-					game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT shouldn't happen - investigate or fix the conditions around here.")
-
+					local tileWaterBody = waterbodies.getWaterBody(tileWaterBodyId)
+					if tileWaterBody then
+						if tileWaterBody.valid then
+							utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! IT IS VALID!")
+							game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT IS VALID!")
+						else
+							utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! IT IS INVALID!")
+							game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT IS INVALID!")
+						end
+					else
+						utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! NO WATERBODY REFERENCE!")
+						game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! NO WATERBODY REFERENCE!")
+					end
 				end
 				edgeGrid[gridKey] = true
 			end

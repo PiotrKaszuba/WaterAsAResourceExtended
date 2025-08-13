@@ -43,6 +43,7 @@ function waterbody_update.createMapMarker(waterBody)
         else
             local _, tileData = next(waterBody.gridsData.waterGridWithData)
             if not tileData or not tileData.position then
+                utils.profile_hits("waterbody_update.createMapMarker", string.format("no position found for waterbody %s and force %s", waterbodies.getFullNameForWaterBody(waterBody), force_name))
                 game.print(string.format("Warning: no position found for waterbody %s and force %s", waterbodies.getFullNameForWaterBody(waterBody), force_name))
                 break
             end
@@ -268,8 +269,10 @@ function waterbody_update.waterBodyCleanup(waterBody)
     if isOrphaned then
         state.OrphanedSecondsCount = state.OrphanedSecondsCount + utils.normalize_update_values_per_second(1)
         -- remove only unnamed waterbody types and after bigUpdates higher than their area
-        if ((waterbodies.WaterBodyTypeToNamesCollection[waterBody.waterAreaData.WaterBodyType] == nil) and state.OrphanedSecondsCount > waterBody.waterAreaData.TotalArea)
-            or (waterbody_update.getRemoveDepletedOrphaned() and state.Depleted) then
+        -- also remove orphaned depleted waterbodies
+        -- remove only if search is finished to account that we might not have the total area right yet
+        if (((waterbodies.WaterBodyTypeToNamesCollection[waterBody.waterAreaData.WaterBodyType] == nil) and state.OrphanedSecondsCount > waterBody.waterAreaData.TotalArea)
+            or (waterbody_update.getRemoveDepletedOrphaned() and state.Depleted)) and waterBody.searchData.finished then
             
             waterbodies.signalPerForce(waterBody, waterbody_update.signalOrphanedToPlayer)
             waterbodies.removeWaterBody(waterBody)
@@ -283,7 +286,6 @@ function waterbody_update.updateWaterBody(waterBody, updateBudget)
     local state_data = waterBody.waterBodyStateData
     if state_data.ToCalculate then
         waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
-        waterbody_scan.signalCreatedOrUpdated(waterBody)
     end
 	waterbody_update.bigUpdateWaterLevel(waterBody)
 	waterbody_update.handleDepletion(waterBody)

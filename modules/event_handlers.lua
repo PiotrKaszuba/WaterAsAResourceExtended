@@ -98,6 +98,7 @@ function event_handlers.handleScriptTileEvents(event)
     end
     
     if tileCount > 1 then
+        utils.profile_hits("event_handlers.handleScriptTileEvents", "script_raised_set_tiles with multiple tile types - processing all")
         game.print("Warning: script_raised_set_tiles with multiple tile types - processing all")
     end
 

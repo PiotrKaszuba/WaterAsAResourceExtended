@@ -49,6 +49,7 @@ end
 function entities.addPumpToWaterBody(waterBodyId, pump_data)
     local waterBody = waterbodies.getWaterBody(waterBodyId)
     if not (waterBody and waterBody.valid) then
+        utils.profile_hits("entities.addPumpToWaterBody", "water body not found or invalid: " .. tostring(waterBodyId))
         game.print("Error:Water body not found or invalid: " .. tostring(waterBodyId))
     else
         local waterBodyStateData = waterBody.waterBodyStateData
@@ -105,6 +106,7 @@ end
 
 function entities.TeleportedPump(entity)
     -- it shouldn't happen - issue a warning and disable the pump
+    utils.profile_hits("entities.TeleportedPump", "a pump was teleported")
     game.print("Warning: a pump was teleported")
     local pump_data = entities.getTrackedEntity(entity.unit_number)
     if not pump_data then

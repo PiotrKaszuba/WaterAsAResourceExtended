@@ -124,7 +124,8 @@ function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
         if state.DriedTiles > 0 then
             state.DriedTiles = state.DriedTiles - 1
         else
-            game.print("Warning: DriedTiles is %d for a water body with dry tile being removed.")
+            utils.profile_hits("waterbodies.removeTileFromWaterGrid", string.format("DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
+            game.print(string.format("Warning: DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
         end
     end
 	-- remove from grid
@@ -372,8 +373,8 @@ function waterbodies.initWaterBodyStateData()
 		["ScanLoopCount"] = 0,  -- the number of big updates since started scanning
 		["OrphanedSecondsCount"] = 0, -- the number of seconds since the water body was orphaned
 
-		["ToCalculate"] = true, -- if true, the water body area data needs to be calculated
-		["ToUpdate"] = true, -- if true, the water body will emit update message
+		["ToCalculate"] = false, -- if true, the water body area data needs to be calculated
+		["ToUpdate"] = false, -- if true, the water body will emit update message
 
 
         ["MapMarkers"] = {},

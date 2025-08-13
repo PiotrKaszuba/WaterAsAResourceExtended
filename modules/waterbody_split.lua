@@ -95,7 +95,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 
 	-- water body got split if there is no path between 2 neigboring water tiles (to the landfilled tile)
 	-- check all adjacent water tiles
-	local adjacent_waterbody_tiles, _ = waterbody_scan.getAdjacentWaterAndLandTiles(split_position, surface, waterBodyId)
+	local adjacent_waterbody_tiles, _ = waterbody_scan.getAdjacentWaterAndLandTiles(split_position, surface, waterBodyId, true)
 
 	-- we need to check if there is a path between any of the adjacent water tiles
 	-- we can use get_connected_tiles with increasing area (BoundingBox)
@@ -130,6 +130,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 
 	local check_result = waterbody_split.checkIfAllTilesAreUsedAndUnique(adjacent_waterbody_tiles, connected_tile_sets)
 	if check_result ~= "ok" then
+		utils.profile_hits("waterbody_split.checkIfWaterBodyGotSplit", string.format("Water body got split, validation of neighboring water tiles failed: %s", check_result))
 		game.print(string.format("WARNING: Water body got split, validation of neighboring water tiles failed: %s", check_result))
 	end
 	
