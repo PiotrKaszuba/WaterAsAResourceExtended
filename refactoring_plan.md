@@ -87,6 +87,8 @@ Maybe:
     need some 'temp restriction' - maybe another field ? that deactivates the pump but not THE same depletion interface - and no depletion message either
     water area recalc would add more water and then something else (or recalc?) can lift restriction - all of this on big update or scanning update? - big looks good
 
+-> Maybe make all dry tiles unbuildable on and lake-deep unpathable for player - so player won't die on water restoration.
+
 -> What if we held global tile info including tile_name and original name (not only waterBodyId) - probably bad idea because slower access to waterBodyId + still would rather have waterGridWithData for depletion - tile selection purposes - then it might be indicator but w/e. HOWEVER option with separate than waterBodyId would mitigate this problem only increase WRITE time when scanning + general maintenance of this part - but it might be viable because then less grabbing tiles from surface. AND this would eliminate OrphanedDryTiles.
 -> CONTRARY TO ABOVE - we could have less grabbing tiles from surface by grabbing connected chunks of water+dry tiles when scanning in some relatively big area, storing it in tiles to 'search' or 'process' and then processing them with or without edgepattern - both are viable but without edge pattern we wont have EdgeGrid. However, EdgeGrid seems to have no effect currently other than limiting search (already searched)
 

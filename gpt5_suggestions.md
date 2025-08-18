@@ -5,11 +5,6 @@
   - Wrap hot-path prints (usage collection, edge scan, split checks) with a cheap boolean early-return.
   - Consider a simple rate limiter for warnings that might otherwise spam (e.g., once per N seconds per waterbody/case).
 
-- Map marker updates
-  - Update markers only when a meaningful threshold changes, e.g., percentage-used crosses integer percent or configured step (5%).
-  - Keep a cached marker position per waterbody (e.g., centroid of pumps or bounding-box center) and only recreate when the anchor moves substantially; otherwise update text/icon in place.
-  - Optionally allow a global toggle per-force to disable markers for that force.
-
 - Unified use of surface.set_tiles raise_event
   - Standardize calls to `surface.set_tiles` so that scripted changes used for visuals (depletion/restoration) pass `raise_event = false` to avoid double handling; explicit booleans for the first 4 parameters improve readability.
   - For programmatic water placement (`tiles.placerWater`), either rely exclusively on manual queueing (current `handleTileEventsInternal`) with `raise_event = false`, or let the engine raise events and remove the manual queueing to prevent duplicate work.

@@ -444,15 +444,14 @@ waterbodies.WaterBodyTypesToName = {
 	[6] = "Ocean"
 }
 
-waterbodies.WaterBodyTypeToWaterBonusValue = {
-	[0] = 0.01,
-	[1] = 0.5,
-	[2] = 1,
-	[3] = 1.5,
-	[4] = 2,
-	[5] = 2.5,
-	[6] = 3
-}
+waterbodies.WaterBodyTypeRegenScaling = 0.4
+waterbodies.WaterBodyTypeToRegenBonusValue = {} 
+
+-- 1.0 regen is for Lake
+for waterBodyTypeInd, _ in pairs(waterbodies.WaterBodyTypesToName) do
+	waterbodies.WaterBodyTypeToRegenBonusValue[waterBodyTypeInd] = 
+		waterbodies.WaterBodyTypeRegenScaling ^ (waterBodyTypeInd - 3)
+end
 
 -- max area of water body, has to strictly increase
 waterbodies.WaterBodyTypeThresholdArea = {
@@ -585,9 +584,9 @@ function waterbodies.GetWaterBodyType(totalArea)
 	end
 end
 
-function waterbodies.GetWaterBodyRegen(totalArea)
+function waterbodies.GetWaterBodyRegen(totalArea, bonusValue)
 	local regenRate = settings.global["FluidArea-RegenRate"].value / 10000
-	return regenRate * totalArea
+	return regenRate * totalArea * bonusValue
 end
 
 function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
@@ -595,10 +594,10 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 	
 	local totalArea, totalWater, penaltyWaterUsed = waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 	local waterBodyType = waterbodies.GetWaterBodyType(totalArea)
-	local bonusValue = waterbodies.WaterBodyTypeToWaterBonusValue[waterBodyType]
-	local amountWater = totalWater * bonusValue
+	local bonusValue = waterbodies.WaterBodyTypeToRegenBonusValue[waterBodyType]
+	local amountWater = totalWater
 
-	local regenAmount = waterbodies.GetWaterBodyRegen(totalArea)
+	local regenAmount = waterbodies.GetWaterBodyRegen(totalArea, bonusValue)
 
 	area_data.TotalArea = totalArea
     area_data.BonusValue = bonusValue
@@ -609,6 +608,11 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 	local state_data = waterBody.waterBodyStateData
 	state_data.WaterUsedPenalty = penaltyWaterUsed
 	state_data.TempAvailableWater = waterbodies.calculateRemainingWater(waterBody)
+
+	local search_data = waterBody.searchData
+	-- search data totalArea is not well tracked otherwise - update to this value
+	search_data.totalArea = totalArea
+
 
 	state_data.ToCalculate = false
 
