@@ -199,7 +199,7 @@ local function rb_grow(q)
     return true
 end
 
-function utils.Queue.enqueue(queue, value)
+function utils.Queue.enqueue(queue, value, at_front)
     -- Hot path: cache fields locally to reduce table lookups
     local buffer = queue.buffer
     local size = queue.size
@@ -215,20 +215,29 @@ function utils.Queue.enqueue(queue, value)
         capacity = queue.capacity
     end
 
-    local tail = queue.tail
-    buffer[tail] = value
-    -- branch wrap instead of modulo
-    if tail == capacity then
-        tail = 1
-    else
-        tail = tail + 1
-    end
-    size = size + 1
-
-    -- write back mutated fields
-    queue.tail = tail
-    queue.size = size
-    return true
+	if at_front then
+		-- decrement head position and write value at that position
+		local head = queue.head
+		if head <= 1 then -- wrap around
+			head = capacity
+		else
+			head = head - 1
+		end
+		buffer[head] = value
+		queue.head = head
+	else
+		local tail = queue.tail
+		buffer[tail] = value
+		if tail >= capacity then -- wrap around
+			tail = 1
+		else
+			tail = tail + 1
+		end
+		queue.tail = tail
+	end
+	size = size + 1
+	queue.size = size
+	return true
 end
 
 function utils.Queue.dequeue(queue)

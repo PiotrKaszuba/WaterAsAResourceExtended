@@ -38,8 +38,7 @@ function waterbody_update.createMapMarker(waterBody)
         if force_to_pump[force_name] then
             position = force_to_pump[force_name].input_position
             -- fix position to left-top corner
-            local tile = utils.GetTile(position, surface)
-            position = tile.position
+            position = utils.fixPositionToLeftTopCorner(position)
         else
             local _, tileData = next(waterBody.gridsData.waterGridWithData)
             if not tileData or not tileData.position then

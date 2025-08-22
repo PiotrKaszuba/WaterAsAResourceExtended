@@ -1,14 +1,15 @@
 TODO:
 
-Needed:
-1. Initial scans for pumps / poles when mod hasn't been initialized yet? + update mod func?
--> whole state - forces - techs need to be captured?
+-----
+TESTING SECTION
+-----
 
+(DONE partially)
 9. comprehensive tests - plan out test suite (especially for merging/splitting water bodies) etc, lifecycles etc. - somewhat - now do them / -> actually tested manually without looking at the file - might have missed something but was too lazy ;)
 
 -> to test: techs unlocks (and forces)
--> (DONE) to test: rejectEntityPlacement with mine instead of destroy - how waterfill behaves with it?
 
+(DONE partially)
 -> WHAT happens when landfill is placed when there are some existing dry tiles?
     
     (THIS OK)
@@ -22,7 +23,32 @@ Needed:
 
     test a bit more
 
+(DONE partially)
+-> Test multiple landfills at once / big landfill brush (i.e. 10x10)
 
+(DONE partially)
+-> Test multiple waterfills at once (no brush currently available)
+
+
+(DONE)
+-> to test: rejectEntityPlacement with mine instead of destroy - how waterfill behaves with it?
+
+(DONE partially)
+-> NEED to profile performance
+
+
+-> profiling of other cases with top-left vs center of tile fixing
+
+-----
+END OF TESTING SECTION
+-----
+
+
+1. Initial scans for pumps / poles when mod hasn't been initialized yet? + update mod func?
+-> whole state - forces - techs need to be captured?
+
+
+(DONE - calculation updates this)
 -> searchData.total_area is incorrect after tile operations. either fix it or update to on ToCalculate to reflect actual area??
 
 -> Optimize the depletion appearance as it is very slow. Options include (can be mixed with re-trials to grab WBs tiles to change):
@@ -38,8 +64,7 @@ Needed:
 
 
 Maybe:
-- NEED to profile performance - partially done
--> profiling of other cases with top-left vs center of tile fixing
+
 
 -> can remake scan algorithm to start with EdgePattern and apply processTile for each there - our current 'already searched' method will trigger on these tiles so:
     then scan calling EdgePattern cannot block 'already searched' tiles because we haven't got their EdgePatterns yet
@@ -75,8 +100,11 @@ Maybe:
     (DONE)
     Use above to determine waterbody split by split tiles distance and maybe retain the name and other states that should be kept. Merge waterbodies on priority - maybe waterbody type lake/sea etc that would be retained after split, only after on current scanned area.
 
+    (NOPE, SOLVED)
     Optional improvements on initial successor choice logic:
+        (NOPE - solved overall problem by split families)
         Optional corridor penalty: add a small local-density term around the split point to further reduce corridor manipulation, only when hit_cap is true.
+        (NOPE)
         Pump-seed weighting (optional): if a seed has a pump inside its connected tiles and scores are close, nudge towards that seed for UX.
 
 (DONE)
@@ -88,6 +116,10 @@ Maybe:
     water area recalc would add more water and then something else (or recalc?) can lift restriction - all of this on big update or scanning update? - big looks good
 
 -> Maybe make all dry tiles unbuildable on and lake-deep unpathable for player - so player won't die on water restoration.
+
+----
+ADDITIONAL IDEAS:
+----
 
 -> What if we held global tile info including tile_name and original name (not only waterBodyId) - probably bad idea because slower access to waterBodyId + still would rather have waterGridWithData for depletion - tile selection purposes - then it might be indicator but w/e. HOWEVER option with separate than waterBodyId would mitigate this problem only increase WRITE time when scanning + general maintenance of this part - but it might be viable because then less grabbing tiles from surface. AND this would eliminate OrphanedDryTiles.
 -> CONTRARY TO ABOVE - we could have less grabbing tiles from surface by grabbing connected chunks of water+dry tiles when scanning in some relatively big area, storing it in tiles to 'search' or 'process' and then processing them with or without edgepattern - both are viable but without edge pattern we wont have EdgeGrid. However, EdgeGrid seems to have no effect currently other than limiting search (already searched)

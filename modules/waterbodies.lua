@@ -293,8 +293,7 @@ function waterbodies.calculateDepletionFocusPoint(waterBody)
     -- The focus point is "opposite" the pump center relative to the water body center
     local focusPoint = { x = centerX + vectorX, y = centerY + vectorY }
     -- fix position to left-top corner - needed because average position is not fixed
-    local tile = utils.GetTile(focusPoint, waterBody.surface)
-    focusPoint = tile.position
+    focusPoint = utils.fixPositionToLeftTopCorner(focusPoint)
     return focusPoint
 end
 

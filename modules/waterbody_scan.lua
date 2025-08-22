@@ -200,6 +200,7 @@ function waterbody_scan.processWaterTile(
 		water_body,
 		position,
 		tile,
+		tile_name,
 		surface,
 		surfaceName,
 		extra_args_passed, -- this is boolean - if false extra args have to be created
@@ -267,7 +268,6 @@ function waterbody_scan.processWaterTile(
 		tile_waterBodyId = getWaterTile(gridKey, surfaceName)
 	end
 
-	local tile_name = tile.name
 	local original_tile_name = tile_name
 	local is_dry_tile = IsDryTile(tile_name)
 	local is_water_tile = IsWaterTile(tile_name)
@@ -424,6 +424,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local addTileToWaterGrid = waterbodies.addTileToWaterGrid
 	local EdgePattern = waterbody_scan.EdgePattern
 	local IsWaterOrDryTile = utils.IsWaterOrDryTile
+	local fixPositionToLeftTopCorner = utils.fixPositionToLeftTopCorner
 
 	-- local variables
 	local search_position, tile, gridKey, tile_waterBodyId, already_searched, added_tile, waterbody_changed, total_area_increase, dried_tiles_increase = nil, nil, nil, nil, false, false, false, 0, 0
@@ -444,17 +445,43 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local huge_val = math.huge
     local batchMinX, batchMaxX, batchMinY, batchMaxY, batchSumX, batchSumY, batchTileCount = huge_val, -huge_val, huge_val, -huge_val, 0, 0, 0
 	
+	local out_of_map_tile_name = "out-of-map"
+
 	state.ToCalculate = true
 
 	while not is_empty(search_queue) and search_amount > 0 do
+		search_amount = search_amount - 1
 		search_position = dequeue(search_queue)
 		-- check if position is left-top corner
 		if not checkIfPositionIsLeftTopCorner(search_position) then
 			utils.profile_hits("waterbody_scan.ScanWaterArea", "checkIfPositionIsLeftTopCorner")
 		end
 		-- fix position to left-top corner in case it was not
+		search_position = fixPositionToLeftTopCorner(search_position)
+
 		tile = GetTile(search_position)
-		search_position = tile.position
+		tile_name = tile.name
+
+		if not tile.valid or tile_name == out_of_map_tile_name then
+			utils.profile_hits("waterbody_scan.ScanWaterArea", "tile not valid")
+			
+			-- it most likely means the tile wasn't generated - check it
+			local chunk_position = {x=search_position.x/32, y=search_position.y/32}
+			local is_chunk_generated = surface.is_chunk_generated(chunk_position)
+
+			if not is_chunk_generated then
+				surface.request_to_generate_chunks(chunk_position, 1)
+				-- do not block waiting for the chunk to be generated, instead:
+				-- re-enqueue the position (at front of the queue) to be processed again and exit the loop for now
+				enqueue(search_queue, search_position, true)
+				break
+			else
+				utils.profile_hits("waterbody_scan.ScanWaterArea", "tile not valid but chunk is generated")
+				-- continue with the next tile, dont re-enqueue it - we don't know the reason why it is not valid - drop it
+				goto continue
+			end
+		end
+		
 		gridKey = GridKey(search_position)
 
 		tile_waterBodyId = getWaterTile(gridKey, surfaceName)
@@ -464,7 +491,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		if not already_searched then
             if totalArea <= max_water_body_size then
                 water_body, added_tile, total_area_increase, dried_tiles_increase, waterbody_changed = processWaterTile(
-					water_body, search_position, tile, surface, surfaceName, true,
+					water_body, search_position, tile, tile_name, surface, surfaceName, true,
 					waterbody_id, gridsData, waterGridWithData,
 					search_queue, edgeGrid, 
 					
@@ -507,7 +534,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
                 end
             end
         end
-		search_amount = search_amount - 1
+		::continue::
 	end
 	
 	if updateBudget then

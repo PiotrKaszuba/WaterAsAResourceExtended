@@ -234,8 +234,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 					new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
 					
 					-- fix position to left-top corner - because it is center based - from entity position
-					local tile = utils.GetTile(pump_input_position, surface)
-					local pump_input_top_left_corner = tile.position
+					local pump_input_top_left_corner = utils.fixPositionToLeftTopCorner(pump_input_position)
 					
 					new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner, waterBody = new_water_body, seed_stats = nil}
 					-- waterBody got removed - so we just need to add it to the new water body
