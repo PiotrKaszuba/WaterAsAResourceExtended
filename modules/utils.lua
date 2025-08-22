@@ -157,29 +157,100 @@ end
 
 utils.Queue = {}
 
-function utils.Queue.new()
+-- Ring buffer queue with optional bounding.
+-- API remains compatible: new(), enqueue(), dequeue(), is_empty(), merge()
+-- Default: unbounded (capacity grows as needed). If max_capacity is provided,
+-- the queue is bounded and new items are dropped when full (enqueue returns false).
+function utils.Queue.new(initial_capacity, max_capacity, growth_factor)
+    local cap = initial_capacity or 1024
+    if cap < 1 then cap = 1 end
     return {
-        first = 1,
-        last = 0,
-        data = {}
+        buffer = {},
+        capacity = cap,
+        size = 0,
+        head = 1, -- next index to read
+        tail = 1, -- next index to write
+        max_capacity = max_capacity, -- nil => unbounded
+        growth_factor = growth_factor or 2.0,
+        dropped = 0,
     }
 end
 
+local function rb_grow(q)
+    -- Grow capacity if unbounded or below max; return true if grown
+    if q.max_capacity ~= nil and q.capacity >= q.max_capacity then
+        return false
+    end
+    local new_cap = math.max(1, math.floor(q.capacity * (q.growth_factor or 2.0)))
+    if q.max_capacity ~= nil then
+        if new_cap > q.max_capacity then new_cap = q.max_capacity end
+        if new_cap <= q.capacity then return false end
+    end
+    local new_buf = {}
+    -- copy existing elements in logical order into new buffer [1..size]
+    for i = 1, q.size do
+        local idx = ((q.head - 1 + i - 1) % q.capacity) + 1
+        new_buf[i] = q.buffer[idx]
+    end
+    q.buffer = new_buf
+    q.capacity = new_cap
+    q.head = 1
+    q.tail = q.size + 1
+    return true
+end
+
 function utils.Queue.enqueue(queue, value)
-    queue.last = queue.last + 1
-    queue.data[queue.last] = value
+    -- Hot path: cache fields locally to reduce table lookups
+    local buffer = queue.buffer
+    local size = queue.size
+    local capacity = queue.capacity
+    if size >= capacity then
+        -- Might grow (unbounded) or drop (bounded)
+        if not rb_grow(queue) then
+            queue.dropped = (queue.dropped or 0) + 1
+            return false
+        end
+        -- Rebind locals after possible growth
+        buffer = queue.buffer
+        capacity = queue.capacity
+    end
+
+    local tail = queue.tail
+    buffer[tail] = value
+    -- branch wrap instead of modulo
+    if tail == capacity then
+        tail = 1
+    else
+        tail = tail + 1
+    end
+    size = size + 1
+
+    -- write back mutated fields
+    queue.tail = tail
+    queue.size = size
+    return true
 end
 
 function utils.Queue.dequeue(queue)
-    if utils.Queue.is_empty(queue) then return nil end
-    local value = queue.data[queue.first]
-    queue.data[queue.first] = nil
-    queue.first = queue.first + 1
+    if queue.size == 0 then return nil end
+    local buffer = queue.buffer
+    local head = queue.head
+    local capacity = queue.capacity
+    local value = buffer[head]
+    buffer[head] = nil
+    -- branch wrap instead of modulo
+    if head == capacity then
+        head = 1
+    else
+        head = head + 1
+    end
+    queue.head = head
+    queue.size = queue.size - 1
     return value
 end
 
 function utils.Queue.is_empty(queue)
-    return queue.first > queue.last
+    return queue.size == 0
 end
 
 function utils.Queue.merge(queue, other_queue)
