@@ -34,20 +34,7 @@ function waterbody_update.createMapMarker(waterBody)
 
     for force_name, player_force in pairs(waterBody.waterBodyStateData.Forces) do
         local marker = waterBody.waterBodyStateData.MapMarkers[force_name]
-        local position = nil
-        if force_to_pump[force_name] then
-            position = force_to_pump[force_name].input_position
-            -- fix position to left-top corner
-            position = utils.fixPositionToLeftTopCorner(position)
-        else
-            local _, tileData = next(waterBody.gridsData.waterGridWithData)
-            if not tileData or not tileData.position then
-                utils.profile_hits("waterbody_update.createMapMarker", string.format("no position found for waterbody %s and force %s", waterbodies.getFullNameForWaterBody(waterBody), force_name))
-                game.print(string.format("Warning: no position found for waterbody %s and force %s", waterbodies.getFullNameForWaterBody(waterBody), force_name))
-                break
-            end
-            position = tileData.position
-        end
+        local position = waterbodies.getCentroid(waterBody)
         
         if not marker or not utils.MapMarker.valid(marker) then
             marker = utils.MapMarker.new(player_force.force, surface, position, text, icon)
@@ -307,5 +294,127 @@ function waterbody_update.updateWaterBodies(updateBudget)
     for _, waterBody in ipairs(validWaterBodiesArray) do
         -- no need to check validity here: waterBodyCleanup in updateWaterBody can only remove current waterbody
         waterbody_update.updateWaterBody(waterBody, updateBudget)
+    end
+end
+
+
+
+function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxExtraWork, update_budget_per_move)
+    local work_done = 0
+    -- start with search queue
+    local searchData = waterBody.searchData
+    local lazySearchQueue = searchData.lazySearchQueue
+    local moved, extra_data_array
+    if #lazySearchQueue > 0 then
+        -- move lazy search queue to search queue
+        moved, extra_data_array = utils.LazyTables.moveLazyTables(searchData.searchQueue, lazySearchQueue, maxExtraWork, maxExtraWork, true, nil)
+        work_done = work_done + moved
+        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for search queue
+        if work_done >= maxExtraWork then
+            return
+        end
+    end
+
+    local gridsData = waterBody.gridsData
+
+    local lazyEdgeGrid = gridsData.lazyEdgeGrid
+
+    if #lazyEdgeGrid > 0 then
+        -- move lazy edge grid to edge grid
+        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.edgeGrid, lazyEdgeGrid, maxExtraWork, maxExtraWork, false, nil)
+        work_done = work_done + moved
+        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move)
+        if work_done >= maxExtraWork then
+            return
+        end
+    end
+    local surfaceName = waterBody.surface.name
+    local waterBodyRef = storage.WaterBodyRef[waterBody.waterBodyId]
+
+    local function callback(gridKey, tileData)
+        waterbodies.replaceWithNewRef(gridKey, waterBodyRef, surfaceName)
+    end
+
+    local lazyDriedTilesGridWithData = gridsData.lazyDriedTilesGridWithData
+    if #lazyDriedTilesGridWithData > 0 then
+        -- move lazy dried tiles grid to dried tiles grid
+        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedTilesGridWithData, lazyDriedTilesGridWithData, maxExtraWork, maxExtraWork, false, callback)
+        work_done = work_done + moved
+        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for callback
+        if utils.LazyTables.wasAnyTableEmptied(extra_data_array) then
+            waterbodies.removeOldRefs(waterBody, surfaceName)
+        end
+        
+        if work_done >= maxExtraWork then
+            return
+        end
+    end
+
+    local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
+    if #lazyWaterGridWithData > 0 then
+        -- move lazy water grid to water grid
+        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.waterGridWithData, lazyWaterGridWithData, maxExtraWork, maxExtraWork, false, callback)
+        work_done = work_done + moved
+        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for callback
+        if utils.LazyTables.wasAnyTableEmptied(extra_data_array) then
+            waterbodies.removeOldRefs(waterBody, surfaceName)
+        end
+
+        if work_done >= maxExtraWork then
+            return
+        end
+    end
+
+end
+
+function waterbody_update.getExtraWorkAmount()
+    return utils.normalize_update_values_per_second(storage.MaxExtraWorkPerSecond, true, storage.PeriodicTicksPerExtraWorkUpdate)
+end
+
+function waterbody_update.prepareUpdateConditionFunc(waterBody)
+    local gridsData = waterBody.gridsData
+    -- if any of lazy arrays is not empty, we need to update it
+    if #gridsData.lazyWaterGridWithData > 0 or #gridsData.lazyDriedTilesGridWithData > 0 or #gridsData.lazyEdgeGrid > 0 or #waterBody.searchData.lazySearchQueue > 0 then
+        return true
+    end
+    return false
+end
+
+function waterbody_update.extraWorkUpdate(updateBudget)
+    local update_budget_per_move = 1/100
+    local initial_work_weight = 0
+    local work_weight_per_surface = 1
+    local lazyOrphanedDryTilesOriginalName = storage.lazyOrphanedDryTilesOriginalName
+    local surfaces_to_work_on = {}
+    -- check every surface
+    for surface_name, lazyArray in pairs(lazyOrphanedDryTilesOriginalName) do
+        if #lazyArray > 0 then
+            surfaces_to_work_on[surface_name] = true
+            initial_work_weight = initial_work_weight + work_weight_per_surface
+        end
+    end
+
+    local working_waterbodies_array, work_amount_per_waterbody_weight = waterbody_scan.prepareDistributedBudgetUpdateForValidWaterBodies(waterbody_update.getExtraWorkAmount(), updateBudget, waterbody_update.prepareUpdateConditionFunc, initial_work_weight)
+    if working_waterbodies_array == nil or work_amount_per_waterbody_weight == nil then
+        return
+    end
+
+    -- first update orphaned dry tiles
+    for surface_name, _ in pairs(surfaces_to_work_on) do
+        local lazyArray = lazyOrphanedDryTilesOriginalName[surface_name]
+        local work_amount = math.ceil(work_weight_per_surface * work_amount_per_waterbody_weight)
+        local moved, extra_data_array = utils.LazyTables.moveLazyTables(storage.OrphanedDryTilesOriginalName[surface_name], lazyArray, work_amount, work_amount, false, nil)
+        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move)
+        if updateBudget.budget <= 0 then
+            break
+        end
+    end
+
+    for _, waterBody in ipairs(working_waterbodies_array) do
+		local work_amount = math.ceil(waterBody.searchData.ScanWeight * work_amount_per_waterbody_weight)
+		waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, work_amount, update_budget_per_move)
+        if updateBudget and updateBudget.budget <= 0 then
+            break
+        end
     end
 end

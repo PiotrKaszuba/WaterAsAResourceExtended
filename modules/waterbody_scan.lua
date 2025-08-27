@@ -71,7 +71,8 @@ function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surf
     
 	-- remove from edge grid - all adjacent land tiles
 	for _, pos in pairs(adjacent_land_tiles) do
-		waterBody.gridsData.edgeGrid[hot_utils.GridKey(pos)] = nil
+		local gridsData = waterBody.gridsData
+		utils.LazyTables.remove(hot_utils.GridKey(pos), gridsData.edgeGrid, gridsData.lazyEdgeGrid)
 	end
 	local surfaceName = surface.name
 	-- rebuild edges using EdgePattern
@@ -91,7 +92,7 @@ end
 --     The function will eagerly bind all hot references (IDs, queues, grids, helpers) from modules and tables.
 --     This is convenient but does table indexing on every call.
 -- - If extra_args_passed == true:
---     All aux arguments must be provided (pre-bound locals for: tile, waterBodyId, searchQueue, edgeGrid,
+--     All aux arguments must be provided (pre-bound locals for: tile, waterBodyId, searchQueue, edgeGrid, lazyEdgeGrid,
 --     GetTile, GridKey, getWaterTile, IsWaterOrDryTile, enqueue, addNewWaterTile).
 --     This avoids repeated table indexing in inner loops and is faster.
 -- In both modes:
@@ -109,6 +110,7 @@ function waterbody_scan.EdgePattern(
 		waterBodyId,
 		searchQueue,
 		edgeGrid,
+		lazyEdgeGrid,
 
 		GetTile,
 		GridKey,
@@ -122,7 +124,9 @@ function waterbody_scan.EdgePattern(
 	if not extra_args_passed then
 		waterBodyId = waterBody.waterBodyId
 		searchQueue = waterBody.searchData.searchQueue
-		edgeGrid = waterBody.gridsData.edgeGrid
+		local gridsData = waterBody.gridsData
+		edgeGrid = gridsData.edgeGrid
+		lazyEdgeGrid = gridsData.lazyEdgeGrid
 
 		GetTile = function(pos) return surface.get_tile(pos) end
 		tile = GetTile(searchPosition)
@@ -151,7 +155,7 @@ function waterbody_scan.EdgePattern(
 		local gridKey = GridKey(position)
 		local tileWaterBodyId = getWaterTile(gridKey, surfaceName)
 
-        local already_searched = tileWaterBodyId == waterBodyId or edgeGrid[gridKey] ~= nil
+        local already_searched = tileWaterBodyId == waterBodyId or utils.LazyTables.get(gridKey, edgeGrid, lazyEdgeGrid) ~= nil
         if (not already_searched) then
 			local is_water_or_dry_tile = IsWaterOrDryTile(tile.name)
 			if is_water_or_dry_tile then
@@ -176,6 +180,8 @@ function waterbody_scan.EdgePattern(
 						utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! NO WATERBODY REFERENCE!")
 						game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! NO WATERBODY REFERENCE!")
 					end
+					-- fix stale ref
+					addNewWaterTile(gridKey, surfaceName, -1)
 				end
 				edgeGrid[gridKey] = true
 			end
@@ -183,7 +189,7 @@ function waterbody_scan.EdgePattern(
     end    
 end
 
--- hot path - from waterbody_scan.ScanWaterArea()
+-- hot path - from waterbody_scan.ScanWaterArea
 -- Hot-path: Assign a single tile to a water body or merge bodies if conflict; enqueue neighbors via EdgePattern.
 -- Two execution modes for performance:
 -- - If extra_args_passed == false:
@@ -208,8 +214,12 @@ function waterbody_scan.processWaterTile(
 		waterBodyId,
 		gridsData,
 		waterGridWithData,
+		lazyWaterGridWithData,
+		driedTilesGridWithData,
+		lazyDriedTilesGridWithData,
 		searchQueue,
 		edgeGrid,
+		lazyEdgeGrid,
 
 		GridKey,
 		waterBodyTileCountData,
@@ -222,6 +232,7 @@ function waterbody_scan.processWaterTile(
 		mergeWaterBody,
 		ValidWaterBodies,
 		OrphanedDryTilesOriginalName,
+		lazyOrphanedDryTilesOriginalName,
 		WaterTileToWaterBodyTileType,
 		getWaterTilePercentageWaterUsed,
 		getWaterBody,
@@ -241,8 +252,12 @@ function waterbody_scan.processWaterTile(
 		waterBodyId = water_body.waterBodyId
 		gridsData = water_body.gridsData
 		waterGridWithData = gridsData.waterGridWithData
+		lazyWaterGridWithData = gridsData.lazyWaterGridWithData
+		driedTilesGridWithData = gridsData.driedTilesGridWithData
+		lazyDriedTilesGridWithData = gridsData.lazyDriedTilesGridWithData
 		searchQueue = water_body.searchData.searchQueue
 		edgeGrid = gridsData.edgeGrid
+		lazyEdgeGrid = gridsData.lazyEdgeGrid
 
 		waterBodyTileCountData = water_body.waterBodyTileCountData
 		waterBodyTileCountPercentagePenalty = water_body.waterBodyTileCountPercentagePenalty
@@ -255,6 +270,7 @@ function waterbody_scan.processWaterTile(
 		mergeWaterBody = waterbody_merge.mergeWaterBody
 		ValidWaterBodies = storage.ValidWaterBodies
 		OrphanedDryTilesOriginalName = storage.OrphanedDryTilesOriginalName
+		lazyOrphanedDryTilesOriginalName = storage.lazyOrphanedDryTilesOriginalName
 		WaterTileToWaterBodyTileType = waterbodies.WaterTileToWaterBodyTileType
 		getWaterTilePercentageWaterUsed = hot_utils.getWaterTilePercentageWaterUsed
 		getWaterBody = waterbodies.getWaterBody
@@ -288,7 +304,7 @@ function waterbody_scan.processWaterTile(
 	end
 	
 	if is_dry_tile then
-		original_tile_name = OrphanedDryTilesOriginalName[surfaceName][gridKey]
+		original_tile_name = utils.LazyTables.get(gridKey, OrphanedDryTilesOriginalName[surfaceName], lazyOrphanedDryTilesOriginalName[surfaceName])
 		if original_tile_name == nil then
 			utils.profile_hits("processWaterTile", "Orphaned dry tile is not in the table!")
 			game.print("Testing: Orphaned dry tile is not in the table!")
@@ -320,18 +336,19 @@ function waterbody_scan.processWaterTile(
 			-- it is an else block after merge check
 			-- because if merge happened this tile was already in the other water body
 			-- and is now incorporated into the current water body by merge
-			if waterGridWithData[gridKey] == nil then
+			if not hot_utils.isTileInGrid(waterGridWithData, lazyWaterGridWithData, driedTilesGridWithData, lazyDriedTilesGridWithData, gridKey) then
 				waterBodyTileCountData[waterBodyTileType] = waterBodyTileCountData[waterBodyTileType] + 1
 				waterBodyTileCountPercentagePenalty[waterBodyTileType] = waterBodyTileCountPercentagePenalty[waterBodyTileType] + tile_percentage_water_used
-				
+			
 				total_area_increase = 1
-				addTileToWaterGrid(waterGridWithData, gridKey, tile_name, position, original_tile_name)
-                
 				added_tile = true
 				
 				if is_dry_tile then
+					addTileToWaterGrid(driedTilesGridWithData, gridKey, tile_name, position, original_tile_name)
 					dried_tiles_increase = 1
-					OrphanedDryTilesOriginalName[surfaceName][gridKey] = nil
+					utils.LazyTables.remove(gridKey, OrphanedDryTilesOriginalName[surfaceName], lazyOrphanedDryTilesOriginalName[surfaceName])
+				else
+					addTileToWaterGrid(waterGridWithData, gridKey, tile_name, position, original_tile_name)
 				end
 			end
 		end
@@ -339,7 +356,7 @@ function waterbody_scan.processWaterTile(
 		EdgePattern(position, surface, surfaceName, water_body, false,
 			true, -- extra_args_passed
 			tile,
-			waterBodyId, searchQueue, edgeGrid,
+			waterBodyId, searchQueue, edgeGrid, lazyEdgeGrid,
 			GetTile, GridKey, getWaterTile, IsWaterOrDryTile, enqueue, addNewWaterTile
 			
 		)
@@ -418,6 +435,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local mergeWaterBody = waterbody_merge.mergeWaterBody
 	local ValidWaterBodies = storage.ValidWaterBodies
 	local OrphanedDryTilesOriginalName = storage.OrphanedDryTilesOriginalName
+	local lazyOrphanedDryTilesOriginalName = storage.lazyOrphanedDryTilesOriginalName
 	local WaterTileToWaterBodyTileType = waterbodies.WaterTileToWaterBodyTileType
 	local getWaterTilePercentageWaterUsed = hot_utils.getWaterTilePercentageWaterUsed
 	local getWaterBody = waterbodies.getWaterBody
@@ -432,7 +450,11 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local waterbody_id = water_body.waterBodyId
 	local gridsData = water_body.gridsData
 	local edgeGrid = gridsData.edgeGrid
+	local lazyEdgeGrid = gridsData.lazyEdgeGrid
 	local waterGridWithData = gridsData.waterGridWithData
+	local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
+	local driedTilesGridWithData = gridsData.driedTilesGridWithData
+	local lazyDriedTilesGridWithData = gridsData.lazyDriedTilesGridWithData
 	local searchData = water_body.searchData
 	local totalArea = searchData.totalArea
 	
@@ -486,18 +508,18 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 
 		tile_waterBodyId = getWaterTile(gridKey, surfaceName)
 		-- already searched means that the tile is part of this waterbody or its edge
-		already_searched = tile_waterBodyId == waterbody_id or edgeGrid[gridKey] ~= nil
+		already_searched = tile_waterBodyId == waterbody_id or utils.LazyTables.get(gridKey, edgeGrid, lazyEdgeGrid) ~= nil
         
 		if not already_searched then
             if totalArea <= max_water_body_size then
                 water_body, added_tile, total_area_increase, dried_tiles_increase, waterbody_changed = processWaterTile(
 					water_body, search_position, tile, tile_name, surface, surfaceName, true,
-					waterbody_id, gridsData, waterGridWithData,
-					search_queue, edgeGrid, 
+					waterbody_id, gridsData, waterGridWithData, lazyWaterGridWithData, driedTilesGridWithData, lazyDriedTilesGridWithData,
+					search_queue, edgeGrid, lazyEdgeGrid,
 					
 					GridKey, waterBodyTileCountData, waterBodyTileCountPercentagePenalty,
 					IsDryTile, IsWaterTile, getWaterTile, addNewWaterTile, mergeWaterBody,
-					ValidWaterBodies, OrphanedDryTilesOriginalName, WaterTileToWaterBodyTileType,
+					ValidWaterBodies, OrphanedDryTilesOriginalName, lazyOrphanedDryTilesOriginalName, WaterTileToWaterBodyTileType,
 					getWaterTilePercentageWaterUsed,
 					getWaterBody, addTileToWaterGrid, EdgePattern,
 					GetTile, IsWaterOrDryTile, enqueue,
@@ -508,7 +530,11 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 					waterbody_id = water_body.waterBodyId
 					gridsData = water_body.gridsData
 					edgeGrid = gridsData.edgeGrid
+					lazyEdgeGrid = gridsData.lazyEdgeGrid
 					waterGridWithData = gridsData.waterGridWithData
+					lazyWaterGridWithData = gridsData.lazyWaterGridWithData
+					driedTilesGridWithData = gridsData.driedTilesGridWithData
+					lazyDriedTilesGridWithData = gridsData.lazyDriedTilesGridWithData
 					searchData = water_body.searchData
 					totalArea = searchData.totalArea
 					search_queue = searchData.searchQueue
@@ -550,7 +576,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
     searchData.totalArea = totalArea
 	state.DriedTiles = dried_tiles
 	
-	return waterbody_scan.checkIfScanningIsFinished(water_body), water_body
+	return waterbodies.checkIfScanningIsFinished(searchData), water_body
 end
 
 function waterbody_scan.signalScanningAlarmToPlayer(water_body)
@@ -577,9 +603,6 @@ function waterbody_scan.scanningLoopPeriodic(water_body)
 	end
 end
 
-function waterbody_scan.checkIfScanningIsFinished(water_body)
-	return utils.Queue.is_empty(water_body.searchData.searchQueue)
-end
 
 function waterbody_scan.signalCreatedOrUpdated(water_body)
 	local state = water_body.waterBodyStateData
@@ -603,33 +626,47 @@ function waterbody_scan.finishedScanning(water_body)
     split_families.on_scan_finished(water_body.waterBodyId)
 end
 
--- Iterate scanning over all valid water bodies. This is intended to be called
--- by a separate periodic scanning loop, independent from the big update.
-function waterbody_scan.scanningUpdateAll(updateBudget)
+function waterbody_scan.prepareDistributedBudgetUpdateForValidWaterBodies(total_work_amount, updateBudget, condition_func, initial_work_weight)
 	if updateBudget and updateBudget.budget <= 0 then
-		return
+		return nil, nil
 	end
     local validWaterBodies = waterbodies.getValidWaterBodies()
-	local sum_scan_weights = 0 -- some waterbodies could have priority to be scanned more
+	local sum_work_weights = initial_work_weight or 0 -- some waterbodies could have priority to be worked on more
     -- Copy to an array because scanning can invalidate water bodies during iteration
-    local scanned_waterbodies_array = {}
+    local working_waterbodies_array = {}
     for _, waterBody in pairs(validWaterBodies) do
-		local search_data = waterBody.searchData
-		if not search_data.finished then
-			scanned_waterbodies_array[#scanned_waterbodies_array + 1] = waterBody
-			sum_scan_weights = sum_scan_weights + search_data.ScanWeight
+		if condition_func(waterBody) then
+			working_waterbodies_array[#working_waterbodies_array + 1] = waterBody
+			sum_work_weights = sum_work_weights + waterBody.searchData.ScanWeight
 		end
     end
 	-- distribute computation load over scanned waterbodies
-	if sum_scan_weights <= 0 then
+	if sum_work_weights <= 0 then
+		return nil, nil
+	end
+	local work_amount_per_waterbody_weight = math.min(total_work_amount, updateBudget.budget) / sum_work_weights
+	return working_waterbodies_array, work_amount_per_waterbody_weight
+end
+
+function waterbody_scan.prepareUpdateConditionFunc(waterBody)
+	local search_data = waterBody.searchData
+	return not search_data.finished
+end
+
+-- Iterate scanning over all valid water bodies. This is intended to be called
+-- by a separate periodic scanning loop, independent from the big update.
+function waterbody_scan.scanningUpdateAll(updateBudget)
+	local working_waterbodies_array, work_amount_per_waterbody_weight = waterbody_scan.prepareDistributedBudgetUpdateForValidWaterBodies(waterbody_scan.getAdditionalScanAmount(), updateBudget, waterbody_scan.prepareUpdateConditionFunc)
+	
+	if working_waterbodies_array == nil or work_amount_per_waterbody_weight == nil then
 		return
 	end
-	local scan_amount_per_waterbody_weight = math.min(waterbody_scan.getAdditionalScanAmount(), updateBudget.budget) / sum_scan_weights
-    for _, waterBody in ipairs(scanned_waterbodies_array) do
+	
+    for _, waterBody in ipairs(working_waterbodies_array) do
 		local search_data = waterBody.searchData
 		-- repeat checks in case it changed during iteration
         if waterBody.valid and not search_data.finished then
-			local scan_amount = math.ceil(search_data.ScanWeight * scan_amount_per_waterbody_weight)
+			local scan_amount = math.ceil(search_data.ScanWeight * work_amount_per_waterbody_weight)
 			local finished, waterBody = waterbody_scan.ScanWaterArea(waterBody, scan_amount, updateBudget)
 			if finished then
 				waterbody_scan.finishedScanning(waterBody)

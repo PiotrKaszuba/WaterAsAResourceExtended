@@ -13,6 +13,7 @@ control = {}
 control.periodic_update_ticks = 1 -- periodic update every tick: 60/s
 control.desired_big_update_ticks = 30 -- big update 2x per second: 2/s
 control.scanning_update_ticks = 10 -- scanning loop a few times per second: 6/s - but not on big update, so less than 6/s -> 4/s
+control.extra_work_update_ticks = 5 -- would be 12/s, but not on big nor on scanning update -> 6/s
 
 function control.is_picker_dollies_available()
     return (remote and remote.interfaces['PickerDollies']) or false
@@ -28,12 +29,19 @@ function control.Init()
 	if storage.PeriodicTicksPerScanningUpdate == nil then
 		storage.PeriodicTicksPerScanningUpdate =  math.ceil(control.scanning_update_ticks / control.periodic_update_ticks)
 	end
+	if storage.PeriodicTicksPerExtraWorkUpdate == nil then
+		storage.PeriodicTicksPerExtraWorkUpdate =  math.ceil(control.extra_work_update_ticks / control.periodic_update_ticks)
+	end
 	if storage.UpdateBudget == nil then
 		storage.UpdateBudget = settings.global["Update-Budget-Per-Second"].value
 	end
 
 	if storage.MaxEventsPerSecond == nil then
 		storage.MaxEventsPerSecond = 100
+	end
+
+	if storage.MaxExtraWorkPerSecond == nil then
+		storage.MaxExtraWorkPerSecond = 1000
 	end
 
 	storage.PeriodicEveryXTicks = control.periodic_update_ticks
@@ -88,6 +96,12 @@ function PeriodicUpdate()
         if scanning_update_tick == 0 then
             -- reuse the same per-second budget across big/scanning updates
             waterbody_scan.scanningUpdateAll(storage.CurrentUpdateBudget)
+		else
+			-- extra work update
+			local extra_work_update_tick = periodicTick % storage.PeriodicTicksPerExtraWorkUpdate
+			if extra_work_update_tick == 0 then
+				waterbody_update.extraWorkUpdate(storage.CurrentUpdateBudget)
+			end
 		end
 	end
 	storage.PeriodicTick = periodicTick + 1

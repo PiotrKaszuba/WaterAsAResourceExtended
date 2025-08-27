@@ -15,57 +15,38 @@ function waterbody_merge.merge_tables(table_result, table_other)
     end	
 end
 
-function waterbody_merge.mergeSearchData(searchData, other_searchData, overlapTileCountData)
-	utils.Queue.merge(searchData.searchQueue, other_searchData.searchQueue)
-	
-	local sum_overlap = 0
-	for k, v in pairs(overlapTileCountData) do
-		sum_overlap = sum_overlap + v
-	end
-	searchData.totalArea = searchData.totalArea + other_searchData.totalArea - sum_overlap
-	searchData.finished = utils.Queue.is_empty(searchData.searchQueue)
+function waterbody_merge.mergeSearchData(searchData, other_searchData)
+	utils.LazyTables.on_merge(searchData.lazySearchQueue, other_searchData.searchQueue, other_searchData.lazySearchQueue)
+	other_searchData.searchQueue = {}
+	other_searchData.lazySearchQueue = {}
+
+	searchData.totalArea = searchData.totalArea + other_searchData.totalArea
+	searchData.finished = waterbodies.checkIfScanningIsFinished(searchData)
 
 	searchData.ScanWeight = math.min(1.0, searchData.ScanWeight + other_searchData.ScanWeight)
-
 end
 
-function waterbody_merge.mergeGridsData(gridsData, other_gridsData, include_global_water_tiles, surface, targetWaterBodyId)
-	local overlapTileCountData = waterbodies.initWaterBodyTileCountData()
-	local surfaceName = surface.name
-	for gridKey, tileData in pairs(other_gridsData.waterGridWithData) do
-
-		-- check by the waterGrid if the tile is already in the current water body
-		if gridsData.waterGridWithData[gridKey] == nil then
-			-- this tile is not in the current water body - add it
-			gridsData.waterGridWithData[gridKey] = tileData
-		else
-			local waterBodyTileType = waterbodies.WaterTileToWaterBodyTileType[tileData.originalName] -- uses originalName to avoid issue with partially dried waterbodies
-			overlapTileCountData[waterBodyTileType] = overlapTileCountData[waterBodyTileType] + 1
-
-		end
-
-		-- if include_global_water_tiles is true -> transfer ownership of the tile to the current water body
-		if include_global_water_tiles then
-			hot_utils.addNewWaterTile(gridKey, surfaceName, targetWaterBodyId)
-		end
-	end
-
+function waterbody_merge.mergeGridsData(gridsData, other_gridsData, sourceWaterBodyId, targetWaterBodyId)
+	utils.LazyTables.on_merge(gridsData.lazyWaterGridWithData, other_gridsData.waterGridWithData, other_gridsData.lazyWaterGridWithData)
+	utils.LazyTables.on_merge(gridsData.lazyEdgeGrid, other_gridsData.edgeGrid, other_gridsData.lazyEdgeGrid)
+	utils.LazyTables.on_merge(gridsData.lazyDriedTilesGridWithData, other_gridsData.driedTilesGridWithData, other_gridsData.lazyDriedTilesGridWithData)
 	-- dry tiles won't become orphaned because they are inherited by the target water body
-	-- let's remove waterGridWithData from the other water body
+	-- let's remove data from the other water body
 	other_gridsData.waterGridWithData = {}
-
-	waterbody_merge.merge_tables(gridsData.edgeGrid, other_gridsData.edgeGrid)
-
-	return overlapTileCountData
+	other_gridsData.lazyWaterGridWithData = {}
+	other_gridsData.edgeGrid = {}
+	other_gridsData.lazyEdgeGrid = {}
+	other_gridsData.driedTilesGridWithData = {}
+	other_gridsData.lazyDriedTilesGridWithData = {}
 end
 
 function waterbody_merge.mergeShapeData(shapeData, other_shapeData)
 	waterbodies.updateGeometry(shapeData, other_shapeData)
 end
 
-function waterbody_merge.mergeWaterBodyTileCountData(tileCountData, other_tileCountData, overlapTileCountData)
+function waterbody_merge.mergeWaterBodyTileCountData(tileCountData, other_tileCountData)
 	for k, v in pairs(tileCountData) do
-		tileCountData[k] = v + (other_tileCountData[k] or 0) - (overlapTileCountData[k] or 0)
+		tileCountData[k] = v + (other_tileCountData[k] or 0)
 	end
 end
 
@@ -145,7 +126,7 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 		waterBody1, waterBody2 = waterBody2, waterBody1
 	end
 
--- waterBody2 is merged into waterBody1
+	-- waterBody2 is merged into waterBody1
 
     -- Decide name to keep based on merge_priority first
     local name_to_keep = waterBody1.waterBodyName
@@ -153,14 +134,14 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
         name_to_keep = waterBody2.waterBodyName
     end
 
-    local overlapTileCountData = waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, true, waterBody1.surface, waterBody1.waterBodyId)
-	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData, overlapTileCountData)
-	waterbody_merge.mergeSearchData(waterBody1.searchData, waterBody2.searchData, overlapTileCountData)
+    waterbody_merge.mergeGridsData(waterBody1.gridsData, waterBody2.gridsData, waterBody1.waterBodyId, waterBody2.waterBodyId)
+	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountData, waterBody2.waterBodyTileCountData)
+	waterbody_merge.mergeSearchData(waterBody1.searchData, waterBody2.searchData)
 	waterbody_merge.mergeWaterBodyStateData(waterBody1.waterBodyStateData, waterBody2.waterBodyStateData, waterBody1.waterBodyId)
 
 	waterbody_merge.mergeShapeData(waterBody1.waterBodyShapeData, waterBody2.waterBodyShapeData)
 	
-	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty, {})
+	waterbody_merge.mergeWaterBodyTileCountData(waterBody1.waterBodyTileCountPercentagePenalty, waterBody2.waterBodyTileCountPercentagePenalty)
 
     -- there is no merge for WaterAreaData - it will be re-calculated totally based on other merged data
 	
@@ -175,11 +156,32 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	waterbodies.signalPerForce(waterBody1, waterbody_merge.signalWaterBodyMergedToPlayer, waterBody2)
 
     local removedId = waterBody2.waterBodyId
+	local keepId = waterBody1.waterBodyId
+	local removeRef = storage.WaterBodyRef[removedId]
+	local keepRef = storage.WaterBodyRef[keepId]
+	removeRef[1] = keepId  -- flip loser ref to winner id - instantly give ownership of WaterTiles to the winner
+	-- record backlink, in case we need to change ownership of WaterTiles before all refs are updated
+	keepRef[2][removedId] = removeRef
+	-- propagate any refs that pointed to the loser to now point to the winner - these are the refs that pointed to the loser
+	for id, ref in pairs(removeRef[2]) do
+		ref[1] = keepId  -- these are the refs that pointed to the loser - take them with the loser
+		keepRef[2][id] = ref  -- these are the backlinks loser had - take them with the loser
+	end
+	removeRef[2] = {}  -- loser has no backlinks anymore
+	
+	-- sum up tile counts and remove loser from the table as it hits '0'
+	local waterBodyToNumTiles = storage.WaterBodyToNumTiles
+	waterBodyToNumTiles[keepId] = (waterBodyToNumTiles[keepId] or 0) + (waterBodyToNumTiles[removedId] or 0)
+	waterBodyToNumTiles[removedId] = nil
+
+	
     waterbodies.removeWaterBody(waterBody2)
     if removedId then
         split_families.on_merged(waterBody1.waterBodyId, removedId, waterBody1.waterBodyId)
     end
 
+	table.insert(storage.RecycledWaterBodyIds, removedId)
+	
 	return waterBody1.waterBodyId
 end
 
@@ -216,7 +218,8 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
 	targetWaterBody.waterBodyStateData.ToCalculate = true
 	targetWaterBody.waterBodyStateData.ToUpdate = true
 	-- also remove the tile from edge grid
-	targetWaterBody.gridsData.edgeGrid[hot_utils.GridKey(triggerPosition)] = nil
+	local gridsData = targetWaterBody.gridsData
+	utils.LazyTables.remove(hot_utils.GridKey(triggerPosition), gridsData.edgeGrid, gridsData.lazyEdgeGrid)
 
 	return targetWaterBody.waterBodyId
 end

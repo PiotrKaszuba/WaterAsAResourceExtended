@@ -10,10 +10,31 @@ function waterbodies.initWaterBodiesAndTiles()
 		storage.RecycledWaterBodyIds = {} -- array of waterBodyIds
 		storage.ValidWaterBodies = {} -- waterBodyId -> waterBody (reference)
 
-        storage.WaterTiles = {} -- surfaceName -> gridKey -> waterBodyId
-		storage.WaterBodyToNumTiles = {} -- waterBodyId -> numTiles
+        storage.WaterTiles = {} -- surfaceName -> gridKey -> WaterBodyRef 
+		storage.WaterBodyToNumTiles = {} -- erBodyId -> numTiles
+
+		-- waterBodyId -> shared ref table with numeric id at [1]
+		-- and a table at [2] (WaterBodyId -> WaterBodyRef) that shows which waterbody Ids are pointing to this waterbody
+		-- until they are removed..
+		-- pointer changes of this waterbody should be reflected in all IDS 
+		-- [10] = {
+		-- 		[1] = 10,
+		--		[2] = {
+		-- 			[9] = {[1] = 10, [2] = {}} -- that's a whole ref of 9 
+		--			}
+		--	}
+		-- that means that waterbody 9 is pointing to waterbody 10 (merged 9 into 10)
+		-- the state of 9 sho be: [9] = {[1] = 10, [2] = {}}
+		-- generally if [1] points to ather waterbody then [2] will be empty
+		-- and [2] of the waterbody that is pointed to will have the pointing waterbody as key in [2]
+		-- and its whole ref as value
+		-- refs of waterbodies pointing at others should be removed from this table most likely
+		-- as they are included within [2] of waterbodies they point to
+		-- -1 is a special case for water bodies that are not assigned to any water body
+		storage.WaterBodyRef = {[-1] = {[1] = -1, [2] = {}}}
 
 		storage.OrphanedDryTilesOriginalName = {} -- surfaceName -> gridKey -> originalName
+		storage.lazyOrphanedDryTilesOriginalName = {} -- surfaceName -> array of tables -> gridKey -> originalName
 	end
 end
 
@@ -24,17 +45,24 @@ end
 -- these functions use surfaceName instead of surface
 function waterbodies.initSurface(surfaceName)
     if storage.WaterTiles[surfaceName] == nil then
-        storage.WaterTiles[surfaceName] = {} -- gridKey -> waterBodyId
+        storage.WaterTiles[surfaceName] = {} -- gridKey -> WaterBodyRef
     end
 	if storage.OrphanedDryTilesOriginalName[surfaceName] == nil then
 		storage.OrphanedDryTilesOriginalName[surfaceName] = {} -- gridKey -> originalName
+	end
+	if storage.lazyOrphanedDryTilesOriginalName[surfaceName] == nil then
+		storage.lazyOrphanedDryTilesOriginalName[surfaceName] = {} -- array of tables -> gridKey -> originalName
 	end
 end
 
 function waterbodies.getWaterTile(gridKey, surface)
 	local surfaceName = surface.name
     waterbodies.initSurface(surfaceName)
-    return storage.WaterTiles[surfaceName][gridKey]
+    local waterBodyRef = storage.WaterTiles[surfaceName][gridKey]
+	if waterBodyRef == nil then
+		return nil
+	end
+	return waterBodyRef[1]
 end
 
 
@@ -82,6 +110,45 @@ function waterbodies.getNextFreeWaterBodyId()
     return waterBodyId
 end
 
+function waterbodies.addOldRefsFromGridWithData(lazyArray, surfaceName, oldRefsSeen)
+	for _, lazyTable in ipairs(lazyArray) do
+		local _, tileData = next(lazyTable)
+		if tileData then
+			local position = tileData.position
+			local gridKey = hot_utils.GridKey(position)
+			local waterBodyRef = storage.WaterTiles[surfaceName][gridKey]
+			if waterBodyRef then
+				oldRefsSeen[waterBodyRef] = true
+			end
+		end
+	end
+end
+
+function waterbodies.replaceWithNewRef(gridKey, newRef, surfaceName)
+	storage.WaterTiles[surfaceName][gridKey] = newRef
+end
+
+function waterbodies.removeOldRefs(waterBody, surfaceName)
+	surfaceName = surfaceName or waterBody.surface.name
+	local gridsData = waterBody.gridsData
+	local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
+	local lazyDriedTilesGridWithData = gridsData.lazyDriedTilesGridWithData
+	local waterBodyRef = storage.WaterBodyRef[waterBody.waterBodyId]
+	local oldRefs = waterBodyRef[2]
+	local oldRefsSeen = {}
+
+    waterbodies.addOldRefsFromGridWithData(lazyWaterGridWithData, surfaceName, oldRefsSeen)
+    waterbodies.addOldRefsFromGridWithData(lazyDriedTilesGridWithData, surfaceName, oldRefsSeen)
+	-- remove old refs that are not seen (preserve id->ref mapping)
+    local new_oldRefs = {}
+	for id, oldRef in pairs(oldRefs) do
+		if oldRefsSeen[oldRef] then
+			new_oldRefs[id] = oldRef
+		end
+	end
+	waterBodyRef[2] = new_oldRefs
+end
+
 function waterbodies.addNewWaterBodyAndSetId(waterBody)
     local waterBodyId = waterbodies.getNextFreeWaterBodyId()
     storage.WaterBodies[waterBodyId] = waterBody
@@ -89,6 +156,7 @@ function waterbodies.addNewWaterBodyAndSetId(waterBody)
 	if waterBody.valid then
 		storage.ValidWaterBodies[waterBodyId] = waterBody
 	end
+	storage.WaterBodyRef[waterBodyId] = {[1] = waterBodyId, [2] = {}}
     return waterBodyId
 end
 
@@ -106,20 +174,25 @@ function waterbodies.checkWaterBodyExists(waterBodyId)
     return storage.WaterBodies[waterBodyId] ~= nil
 end
 
-
-function waterbodies.getWaterAreaArray(waterBody)
-    local waterArea = {}
-    for _, tileData in pairs(waterBody.gridsData.waterGridWithData) do
-        waterArea[#waterArea + 1] = tileData
-    end
-    return waterArea
-end
-
-
 function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
 	-- handle dry tile removal
-	local currentTile = waterBody.gridsData.waterGridWithData[gridKey]
-    if utils.DryWaterTiles[currentTile.name] then
+	local gridData = waterBody.gridsData
+	local currentWaterTile = utils.LazyTables.get(gridKey, gridData.waterGridWithData, gridData.lazyWaterGridWithData)
+	local currentDryTile = nil
+	if currentWaterTile == nil then
+		currentDryTile = utils.LazyTables.get(gridKey, gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
+	end
+	if currentWaterTile == nil and currentDryTile == nil then
+			utils.profile_hits("waterbodies.removeTileFromWaterGrid", "Tile not found in water or dry grid")
+			game.print("Warning: Tile not found in water or dry grid")
+			return
+	end
+	if currentWaterTile ~= nil and currentDryTile ~= nil then
+		utils.profile_hits("waterbodies.removeTileFromWaterGrid", "Tile found in both water and dry grid")
+		game.print("Warning: Tile found in both water and dry grid")
+	end
+	
+    if currentDryTile ~= nil then
         local state = waterBody.waterBodyStateData
         if state.DriedTiles > 0 then
             state.DriedTiles = state.DriedTiles - 1
@@ -127,14 +200,31 @@ function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
             utils.profile_hits("waterbodies.removeTileFromWaterGrid", string.format("DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
             game.print(string.format("Warning: DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
         end
+		utils.LazyTables.remove(gridKey, gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
     end
-	-- remove from grid
-    waterBody.gridsData.waterGridWithData[gridKey] = nil
+	if currentWaterTile ~= nil then
+		-- remove from grid
+		utils.LazyTables.remove(gridKey, gridData.waterGridWithData, gridData.lazyWaterGridWithData)
+	end
+end
+
+function waterbodies.checkIfScanningIsFinished(search_data)
+	local lazy_search_queue = search_data.lazySearchQueue
+	if lazy_search_queue and #lazy_search_queue > 0 then
+		for i = 1, #lazy_search_queue do
+			local lazy_table = lazy_search_queue[i]
+			if lazy_table and not utils.Queue.is_empty(lazy_table) then
+				return false
+			end
+		end
+	end
+	return utils.Queue.is_empty(search_data.searchQueue)
 end
 
 function waterbodies.InitSearchData()
 	return {
 		searchQueue = utils.Queue.new(),
+		lazySearchQueue = {},
 		totalArea = 0,
 		finished = false,
 		-- relative amount of scanning that will be done on the waterbody in the scanning loop
@@ -146,8 +236,15 @@ end
 
 function waterbodies.initGridsData()
 	return {
+		-- this holds only water tiles
 		waterGridWithData = {}, -- table with position, name, originalName for tiles, also used as indicator table, position key
+		lazyWaterGridWithData = {},
+		-- this holds only dry tiles
+		driedTilesGridWithData = {}, -- table with position, name, originalName for tiles, also used as indicator table, position key
+		lazyDriedTilesGridWithData = {},
+
 		edgeGrid = {}, -- indicator table, position key
+		lazyEdgeGrid = {},
 	}
 end
 
@@ -636,7 +733,10 @@ function waterbodies.signalPerForce(water_body, signal_func, additional_args)
 	end
 end
 
+
+
 -- requires waterGridWithData + gridKey to be present in scope
+-- can be used with driedTilesGridWithData
 function waterbodies.addTileToWaterGrid(waterGridWithData, gridKey, tileName, position, originalName)
     waterGridWithData[gridKey] = {
         name = tileName,
@@ -663,62 +763,27 @@ function waterbodies.destroyMapMarkers(waterBodyStateData)
 	end
 end
 
-function waterbodies.getWaterBodyWaterOrDryTilesArray(waterBody, findDryTiles)
-	-- if findDryTiles is true, it will return dry tiles
-	-- otherwise it will return water tiles
-    local candidateTiles = {}
-    local gridData = waterBody.gridsData.waterGridWithData
-
-    if findDryTiles then
-        for _, tileData in pairs(gridData) do
-            if utils.DryWaterTiles[tileData.name] then
-                candidateTiles[#candidateTiles + 1] = tileData
-            end
-        end
-    else
-        for _, tileData in pairs(gridData) do
-            if utils.IsWaterTile(tileData.name) then
-                candidateTiles[#candidateTiles + 1] = tileData
-            end
-        end
-    end
-    return candidateTiles
-end
-
 function waterbodies.removeWaterBody(waterBody)
 	waterBody.valid = false
 	
+	local waterBodyId = waterBody.waterBodyId
+
 	waterbodies.destroyMapMarkers(waterBody.waterBodyStateData)
-	
+
 	-- dry tiles become orphaned - we need to remember their original name
-	if waterBody.waterBodyStateData.DriedTiles > 0 then
-		local dried_tiles = waterbodies.getWaterBodyWaterOrDryTilesArray(waterBody, true)
-		local surfaceName = waterBody.surface.name
-		local gridKey
-		for _, tileData in ipairs(dried_tiles) do
-			gridKey = hot_utils.GridKey(tileData.position)
-			storage.OrphanedDryTilesOriginalName[surfaceName][gridKey] = tileData.originalName
-		end
+	local gridData = waterBody.gridsData
+	if next(gridData.driedTilesGridWithData) ~= nil then
+		utils.LazyTables.on_merge(storage.lazyOrphanedDryTilesOriginalName[waterBody.surface.name], gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
+		gridData.driedTilesGridWithData = {}
+		gridData.lazyDriedTilesGridWithData = {}
 	end
 	
-	-- Clean up tile assignments to this water body
-    -- waterbodies.cleanupWaterBodyTiles(waterBody)
-
 	 -- Remove most data from water body (garbage collection)
-	 storage.WaterBodies[waterBody.waterBodyId] = waterbodies.initCleanedWaterBody(waterBody)
-	 storage.ValidWaterBodies[waterBody.waterBodyId] = nil
+	 storage.WaterBodies[waterBodyId] = waterbodies.initCleanedWaterBody(waterBody)
+	 storage.ValidWaterBodies[waterBodyId] = nil
+	 storage.WaterBodyRef[waterBodyId] = nil
 end
 
-function waterbodies.cleanupWaterBodyTiles(waterBody)
-    local surfaceName = waterBody.surface.name
-    
-    -- Remove tile assignments for this water body
-    for gridKey, _ in pairs(waterBody.gridsData.waterGridWithData) do
-        if hot_utils.getWaterTile(gridKey, surfaceName) == waterBody.waterBodyId then
-            hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
-        end
-    end
-end
 
 function waterbodies.calculateTotalWaterUsed(waterbody)
 	local total_water_used = waterbody.waterBodyStateData.WaterUsed + waterbody.waterBodyStateData.WaterUsedPenalty - waterbody.waterBodyStateData.WaterUsedPenaltyRestored

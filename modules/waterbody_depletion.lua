@@ -20,8 +20,8 @@ function waterbody_depletion.restoreAllVisuals(waterBody)
     local state = waterBody.waterBodyStateData
     if not state or state.DriedTiles == 0 then return end
 
-    local dryTiles = waterbodies.getWaterBodyWaterOrDryTilesArray(waterBody, true)
-    if #dryTiles == 0 then
+    local dryTiles = waterBody.gridsData.driedTilesGridWithData
+    if next(dryTiles) == nil then
         state.DriedTiles = 0
         return
     end
@@ -53,9 +53,15 @@ function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percent
     if tilesToProcessCount == 0 then return end
 
     local isDepleting = tilesToProcessCount > 0
-    local candidateTiles = waterbodies.getWaterBodyWaterOrDryTilesArray(waterBody, not isDepleting)
+    local candidateTiles = nil
 
-    if #candidateTiles == 0 then return end
+    if isDepleting then
+        candidateTiles = waterBody.gridsData.waterGridWithData
+    else
+        candidateTiles = waterBody.gridsData.driedTilesGridWithData
+    end
+
+    if next(candidateTiles) == nil then return end
 
     local focusPoint = waterbodies.calculateDepletionFocusPoint(waterBody)
     waterbody_depletion.sortTilesByDistance(candidateTiles, focusPoint, not isDepleting) -- Sort ascending for restoring, descending for depleting

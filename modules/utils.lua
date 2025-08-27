@@ -130,6 +130,7 @@ function utils.GetMaxKey(table)
 			maxKey = key
 		end
 	end
+	return maxKey
 end
 
 function utils.comma_value(n) -- credit http://richard.warburton.it
@@ -303,6 +304,120 @@ function utils.profile_hits(caller_name, case_name)
 		storage.profiling_hits[caller_name] = {}
 	end
 	storage.profiling_hits[caller_name][case_name] = (storage.profiling_hits[caller_name][case_name] or 0) + 1
+end
+
+utils.LazyTables = {}
+
+function utils.LazyTables.get(key, main_table, lazy_tables_array)
+	local value = main_table[key]
+	if value ~= nil	 then
+		return value
+	end
+	local arr = lazy_tables_array or {}
+	for i = 1, #arr do
+		local lazy_table = arr[i]
+		if lazy_table then
+			value = lazy_table[key]
+			if value ~= nil then
+				return value
+			end
+		end
+	end
+
+	return nil
+end
+
+function utils.LazyTables.remove(key, main_table, lazy_tables_array)
+	main_table[key] = nil
+	local arr = lazy_tables_array or {}
+	for i = 1, #arr do
+		local lazy_table = arr[i]
+		if lazy_table then
+			lazy_table[key] = nil
+		end
+	end
+end
+
+function utils.LazyTables.moveLazyQueue(main_queue, lazy_queue, max_values_to_move, extra_data, callback)
+	local moved = 0
+	local k = utils.Queue.dequeue(lazy_queue)
+	while moved < max_values_to_move and k ~= nil do
+		utils.Queue.enqueue(main_queue, k)
+		if callback then
+			-- for queues there is no separate key; pass value as both key and value
+			callback(k, k, extra_data)
+		end
+		moved = moved + 1
+		k = utils.Queue.dequeue(lazy_queue)
+	end
+	return moved, utils.Queue.is_empty(lazy_queue)
+end
+
+function utils.LazyTables.moveLazyTable(main_table, lazy_table, max_values_to_move, extra_data, callback)
+	local moved = 0
+	local k, v = next(lazy_table)
+	while moved < max_values_to_move and k ~= nil do
+		local next_k, next_v = next(lazy_table, k) -- prefetch next key before deleting current
+		main_table[k] = v
+		lazy_table[k] = nil
+		if callback then
+			callback(k, v, extra_data)
+		end
+		moved = moved + 1
+		k, v = next_k, next_v
+	end
+	local tableEmpty = next(lazy_table) == nil
+	return moved, tableEmpty
+end
+
+function utils.LazyTables.wasAnyTableEmptied(extra_data_array)
+	for _, extra_data in ipairs(extra_data_array) do
+		if extra_data.tableEmpty then
+			return true
+		end
+	end
+	return false
+end
+
+function utils.LazyTables.moveLazyTables(main_table, lazy_tables_array, max_values_to_move, max_per_table, is_queue, callback)
+	if not lazy_tables_array or max_values_to_move <= 0 then return 0, {} end
+	local moved = 0
+	local i = 1
+	local j = 1
+	local extra_data_array = {}
+	local function_to_move = is_queue and utils.LazyTables.moveLazyQueue or utils.LazyTables.moveLazyTable
+	while moved < max_values_to_move and i <= #lazy_tables_array do
+		local currentTable = lazy_tables_array[i]
+		if currentTable then
+			extra_data_array[j] = {tableEmpty = false}
+			local max_to_move = math.min(max_per_table, max_values_to_move - moved)
+			local tableMoved, tableEmpty = function_to_move(main_table, currentTable, max_to_move, extra_data_array[j], callback)
+			moved = moved + tableMoved
+			if tableEmpty then
+				-- remove and do not increment i; next table shifts into position i
+				table.remove(lazy_tables_array, i)
+				extra_data_array[j].tableEmpty = true
+			else
+				i = i + 1
+			end
+			j = j + 1
+		else
+			-- compact holes
+			table.remove(lazy_tables_array, i)
+		end
+		
+	end
+	return moved, extra_data_array
+end
+
+function utils.LazyTables.on_merge(lazy_tables_array, other_main_table, other_lazy_tables_array)
+	table.insert(lazy_tables_array, other_main_table)
+	for i = 1, #other_lazy_tables_array do
+		local lazy_table = other_lazy_tables_array[i]
+		if lazy_table then
+			table.insert(lazy_tables_array, lazy_table)
+		end
+	end
 end
 
 

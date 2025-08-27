@@ -117,7 +117,7 @@ function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
             -- if something else than dry tile is placed on dry tile:
             -- we can for sure remove it from OrphanedDryTilesOriginalName
             local gridKey = hot_utils.GridKey(position)
-            storage.OrphanedDryTilesOriginalName[surfaceName][gridKey] = nil
+            utils.LazyTables.remove(gridKey, storage.OrphanedDryTilesOriginalName[surfaceName], storage.lazyOrphanedDryTilesOriginalName[surfaceName]) 
         end
 
         if new_name == "landfill" and ((old_name and utils.IsWaterTile(old_name)) or (not old_name)) then
@@ -152,13 +152,14 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
         local waterBodyId = adjacentWaterBodies[1]
         local waterBody = waterbodies.getWaterBody(waterBodyId)
         
-        if waterBody then
+        if waterBody and waterBody.valid then
             utils.Queue.enqueue(waterBody.searchData.searchQueue, position)
             waterBody.searchData.finished = false
             waterBody.waterBodyStateData.ToCalculate = true
             waterBody.waterBodyStateData.ToUpdate = true
 			-- also remove the tile from edge grid
-			waterBody.gridsData.edgeGrid[hot_utils.GridKey(position)] = nil
+            local gridsData = waterBody.gridsData
+            utils.LazyTables.remove(hot_utils.GridKey(position), gridsData.edgeGrid, gridsData.lazyEdgeGrid)
         end
 
     elseif #adjacentWaterBodies > 1 then
