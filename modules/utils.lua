@@ -162,7 +162,7 @@ utils.Queue = {}
 -- API remains compatible: new(), enqueue(), dequeue(), is_empty(), merge()
 -- Default: unbounded (capacity grows as needed). If max_capacity is provided,
 -- the queue is bounded and new items are dropped when full (enqueue returns false).
-function utils.Queue.new(initial_capacity, max_capacity, growth_factor)
+function utils.Queue.new(initial_capacity, max_capacity, growth_factor, deduplicate)
     local cap = initial_capacity or 1024
     if cap < 1 then cap = 1 end
     return {
@@ -174,6 +174,7 @@ function utils.Queue.new(initial_capacity, max_capacity, growth_factor)
         max_capacity = max_capacity, -- nil => unbounded
         growth_factor = growth_factor or 2.0,
         dropped = 0,
+        inQueue = deduplicate and {} or nil,
     }
 end
 
@@ -198,6 +199,29 @@ local function rb_grow(q)
     q.head = 1
     q.tail = q.size + 1
     return true
+end
+
+function utils.Queue.deduplicate_enqueue(queue, value, at_front, deduplicate_hash_function)
+	local set = queue.inQueue
+	if not set then
+		return utils.Queue.enqueue(queue, value, at_front)
+	end
+	local hash = deduplicate_hash_function and deduplicate_hash_function(value) or value
+	if set[hash] then return false end
+	local added  = utils.Queue.enqueue(queue, value, at_front)
+	if added then set[hash] = true end
+	return added
+end
+
+function utils.Queue.deduplicate_dequeue(queue, dequeue_back, deduplicate_hash_function)
+	local value = dequeue_back and utils.Queue.dequeue_back(queue) or utils.Queue.dequeue(queue)
+	if value then
+		local set = queue.inQueue
+		if not set then return value end
+		local hash = deduplicate_hash_function and deduplicate_hash_function(value) or value
+		set[hash] = nil
+	end
+	return value
 end
 
 function utils.Queue.enqueue(queue, value, at_front)
@@ -258,6 +282,20 @@ function utils.Queue.dequeue(queue)
     queue.size = queue.size - 1
     return value
 end
+
+function utils.Queue.dequeue_back(queue)
+	if queue.size == 0 then return nil end
+	local tail = queue.tail
+	-- step to the last valid element (tail points to next write)
+	if tail == 1 then tail = queue.capacity else tail = tail - 1 end
+  
+	local buf = queue.buffer
+	local v = buf[tail]
+	buf[tail] = nil
+	queue.tail = tail
+	queue.size = queue.size - 1
+	return v
+  end
 
 function utils.Queue.is_empty(queue)
     return queue.size == 0
