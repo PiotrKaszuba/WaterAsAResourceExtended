@@ -213,15 +213,43 @@ function utils.Queue.deduplicate_enqueue(queue, value, at_front, deduplicate_has
 	return added
 end
 
-function utils.Queue.deduplicate_dequeue(queue, dequeue_back, deduplicate_hash_function)
+-- in case lazy_queues_array is provided:
+-- lazy queues have to have the same deduplicate_hash_function as the main queue
+-- deduplication is only applied per queue basis, inQueue is not shared between queues
+-- deduplication removes items from the actual queue it was drawn from 
+function utils.Queue.deduplicate_dequeue(queue, dequeue_back, deduplicate_hash_function, lazy_queues_array)
 	local value = dequeue_back and utils.Queue.dequeue_back(queue) or utils.Queue.dequeue(queue)
-	if value then
+	if value ~= nil then
 		local set = queue.inQueue
 		if not set then return value end
 		local hash = deduplicate_hash_function and deduplicate_hash_function(value) or value
 		set[hash] = nil
+	elseif lazy_queues_array then
+		for i = 1, #lazy_queues_array do
+			local lazy_queue = lazy_queues_array[i]
+			if lazy_queue then
+				value = utils.Queue.deduplicate_dequeue(lazy_queue, dequeue_back, deduplicate_hash_function, nil)
+				if value ~= nil then return value end
+			end
+		end
+		return nil
 	end
 	return value
+end
+
+function utils.Queue.dequeue_with_lazy_arrays(queue, lazy_queues_array)
+	local value = utils.Queue.dequeue(queue)
+	if value ~= nil or lazy_queues_array == nil then
+		return value
+	end
+	for i = 1, #lazy_queues_array do
+		local lazy_queue = lazy_queues_array[i]
+		if lazy_queue then
+			value = utils.Queue.dequeue(lazy_queue)
+			if value ~= nil then return value end
+		end
+	end
+	return nil
 end
 
 function utils.Queue.enqueue(queue, value, at_front)
