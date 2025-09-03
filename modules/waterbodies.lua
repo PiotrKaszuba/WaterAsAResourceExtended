@@ -245,6 +245,39 @@ function waterbodies.initGridsData()
 
 		edgeGrid = {}, -- indicator table, position key
 		lazyEdgeGrid = {},
+
+
+		-- driedStack and binsets may not have up-to-date tiles - need to check whether
+		-- tiles are still in the waterbody while processing
+		-- ..GridWithData tables and edgeGrid are sources of truth
+		-- implemented as a queue with deduplication - used as a stack
+		-- due to that it only has to store gridKeys of tiles
+		-- for most efficiency - should use:
+		-- deduplicate_enqueue(driedStack, gridKey)
+		-- deduplicate_dequeue(driedStack, true, nil, lazyDriedStack)
+		-- should be added to when adding or creating a dry tile
+		-- shouldn't be added in work loop when adding dried tiles due to merge
+		-- rather it assumes the driedStack in lazyDriedStack will have that dry tile and it comes from that merge aswell
+		driedStack = utils.Queue.new(nil, nil, nil, true), -- ordered array of dried tiles
+		lazyDriedStack = {},
+
+		-- array containing ring-bins of water tiles to be dried
+		-- ring-bins increase in distance from the waterbody center
+		oldBinset = {},
+		-- new binset is the binset that is currently building
+		newBinset = {},
+
+		-- queue of tiles that are pending to be added to binset - with deduplication
+		-- doesn't use lazy tables
+		-- because tiles have to validated before use (is still in waterbody?) - it can store just gridKeys
+		-- should use:
+		-- deduplicate_enqueue(pendingTiles, gridKey)
+		-- deduplicate_dequeue(pendingTiles)
+		-- should be added to when adding or restoring a water tile (from dry)
+		-- and in a work loop when adding water tiles due to merge
+		pendingTiles = utils.Queue.new(nil, nil, nil, true),
+		
+
 	}
 end
 

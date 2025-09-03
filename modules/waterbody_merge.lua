@@ -30,6 +30,13 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, sourceWaterB
 	utils.LazyTables.on_merge(gridsData.lazyWaterGridWithData, other_gridsData.waterGridWithData, other_gridsData.lazyWaterGridWithData)
 	utils.LazyTables.on_merge(gridsData.lazyEdgeGrid, other_gridsData.edgeGrid, other_gridsData.lazyEdgeGrid)
 	utils.LazyTables.on_merge(gridsData.lazyDriedTilesGridWithData, other_gridsData.driedTilesGridWithData, other_gridsData.lazyDriedTilesGridWithData)
+	
+	utils.LazyTables.on_merge(gridsData.lazyDriedStack, other_gridsData.driedStack, other_gridsData.lazyDriedStack)
+	
+	-- oldBinset, newBinset, pendingTiles stay the same - no need to merge them
+	-- pendingTiles will be in callbacks of grids ..WithData lazy tables merging
+	-- binsets will be slowly built up by the ongoing work loops
+	
 	-- dry tiles won't become orphaned because they are inherited by the target water body
 	-- let's remove data from the other water body
 	other_gridsData.waterGridWithData = {}
@@ -38,6 +45,12 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, sourceWaterB
 	other_gridsData.lazyEdgeGrid = {}
 	other_gridsData.driedTilesGridWithData = {}
 	other_gridsData.lazyDriedTilesGridWithData = {}
+	other_gridsData.driedStack = {}
+	other_gridsData.lazyDriedStack = {}
+	other_gridsData.oldBinset = {}
+	other_gridsData.newBinset = {}
+	other_gridsData.pendingTiles = {}
+
 end
 
 function waterbody_merge.mergeShapeData(shapeData, other_shapeData)

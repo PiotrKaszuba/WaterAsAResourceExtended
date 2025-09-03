@@ -220,6 +220,8 @@ function waterbody_scan.processWaterTile(
 		searchQueue,
 		edgeGrid,
 		lazyEdgeGrid,
+		driedStack,
+		pendingTiles,
 
 		GridKey,
 		waterBodyTileCountData,
@@ -241,6 +243,7 @@ function waterbody_scan.processWaterTile(
 		GetTile,
 		IsWaterOrDryTile,
 		enqueue,
+		deduplicate_enqueue,
 
 		gridKey,
 		tile_waterBodyId
@@ -258,6 +261,8 @@ function waterbody_scan.processWaterTile(
 		searchQueue = water_body.searchData.searchQueue
 		edgeGrid = gridsData.edgeGrid
 		lazyEdgeGrid = gridsData.lazyEdgeGrid
+		driedStack = gridsData.driedStack
+		pendingTiles = gridsData.pendingTiles
 
 		waterBodyTileCountData = water_body.waterBodyTileCountData
 		waterBodyTileCountPercentagePenalty = water_body.waterBodyTileCountPercentagePenalty
@@ -279,7 +284,7 @@ function waterbody_scan.processWaterTile(
 		GetTile = function(pos) return surface.get_tile(pos) end
 		IsWaterOrDryTile = utils.IsWaterOrDryTile
 		enqueue = utils.Queue.enqueue
-		
+		deduplicate_enqueue = utils.Queue.deduplicate_enqueue
 		gridKey = GridKey(position)
 		tile_waterBodyId = getWaterTile(gridKey, surfaceName)
 	end
@@ -347,8 +352,10 @@ function waterbody_scan.processWaterTile(
 					addTileToWaterGrid(driedTilesGridWithData, gridKey, tile_name, position, original_tile_name)
 					dried_tiles_increase = 1
 					utils.LazyTables.remove(gridKey, OrphanedDryTilesOriginalName[surfaceName], lazyOrphanedDryTilesOriginalName[surfaceName])
+					deduplicate_enqueue(driedStack, gridKey)
 				else
 					addTileToWaterGrid(waterGridWithData, gridKey, tile_name, position, original_tile_name)
+					deduplicate_enqueue(pendingTiles, gridKey)
 				end
 			end
 		end
@@ -422,8 +429,9 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 
 	-- function
 	local is_empty = utils.Queue.is_empty
-	local dequeue = utils.Queue.dequeue
+	local dequeue_with_lazy_arrays = utils.Queue.dequeue_with_lazy_arrays
 	local enqueue = utils.Queue.enqueue
+	local deduplicate_enqueue = utils.Queue.deduplicate_enqueue
 	local GridKey = hot_utils.GridKey
 	local getWaterTile = hot_utils.getWaterTile
 	local processWaterTile = waterbody_scan.processWaterTile
@@ -443,6 +451,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local EdgePattern = waterbody_scan.EdgePattern
 	local IsWaterOrDryTile = utils.IsWaterOrDryTile
 	local fixPositionToLeftTopCorner = utils.fixPositionToLeftTopCorner
+	local lazy_tables_get = utils.LazyTables.get
 
 	-- local variables
 	local search_position, tile, gridKey, tile_waterBodyId, already_searched, added_tile, waterbody_changed, total_area_increase, dried_tiles_increase = nil, nil, nil, nil, false, false, false, 0, 0
@@ -455,10 +464,13 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
 	local driedTilesGridWithData = gridsData.driedTilesGridWithData
 	local lazyDriedTilesGridWithData = gridsData.lazyDriedTilesGridWithData
+	local driedStack = gridsData.driedStack
+	local pendingTiles = gridsData.pendingTiles
 	local searchData = water_body.searchData
 	local totalArea = searchData.totalArea
 	
 	local search_queue = searchData.searchQueue
+	local lazy_search_queue = searchData.lazySearchQueue
 	local state = water_body.waterBodyStateData
 	local dried_tiles = state.DriedTiles
 	local waterBodyTileCountData = water_body.waterBodyTileCountData
@@ -473,7 +485,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 
 	while not is_empty(search_queue) and search_amount > 0 do
 		search_amount = search_amount - 1
-		search_position = dequeue(search_queue)
+		search_position = dequeue_with_lazy_arrays(search_queue, lazy_search_queue)
 		-- check if position is left-top corner
 		if not checkIfPositionIsLeftTopCorner(search_position) then
 			utils.profile_hits("waterbody_scan.ScanWaterArea", "checkIfPositionIsLeftTopCorner")
@@ -508,21 +520,21 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 
 		tile_waterBodyId = getWaterTile(gridKey, surfaceName)
 		-- already searched means that the tile is part of this waterbody or its edge
-		already_searched = tile_waterBodyId == waterbody_id or utils.LazyTables.get(gridKey, edgeGrid, lazyEdgeGrid) ~= nil
+		already_searched = tile_waterBodyId == waterbody_id or lazy_tables_get(gridKey, edgeGrid, lazyEdgeGrid) ~= nil
         
 		if not already_searched then
             if totalArea <= max_water_body_size then
                 water_body, added_tile, total_area_increase, dried_tiles_increase, waterbody_changed = processWaterTile(
 					water_body, search_position, tile, tile_name, surface, surfaceName, true,
 					waterbody_id, gridsData, waterGridWithData, lazyWaterGridWithData, driedTilesGridWithData, lazyDriedTilesGridWithData,
-					search_queue, edgeGrid, lazyEdgeGrid,
+					search_queue, edgeGrid, lazyEdgeGrid, driedStack, pendingTiles,
 					
 					GridKey, waterBodyTileCountData, waterBodyTileCountPercentagePenalty,
 					IsDryTile, IsWaterTile, getWaterTile, addNewWaterTile, mergeWaterBody,
 					ValidWaterBodies, OrphanedDryTilesOriginalName, lazyOrphanedDryTilesOriginalName, WaterTileToWaterBodyTileType,
 					getWaterTilePercentageWaterUsed,
 					getWaterBody, addTileToWaterGrid, EdgePattern,
-					GetTile, IsWaterOrDryTile, enqueue,
+					GetTile, IsWaterOrDryTile, enqueue, deduplicate_enqueue,
 
 					gridKey, tile_waterBodyId
 					)
@@ -535,9 +547,12 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 					lazyWaterGridWithData = gridsData.lazyWaterGridWithData
 					driedTilesGridWithData = gridsData.driedTilesGridWithData
 					lazyDriedTilesGridWithData = gridsData.lazyDriedTilesGridWithData
+					driedStack = gridsData.driedStack
+					pendingTiles = gridsData.pendingTiles
 					searchData = water_body.searchData
 					totalArea = searchData.totalArea
 					search_queue = searchData.searchQueue
+					lazy_search_queue = searchData.lazySearchQueue
 					state = water_body.waterBodyStateData
 					dried_tiles = state.DriedTiles
 					waterBodyTileCountData = water_body.waterBodyTileCountData

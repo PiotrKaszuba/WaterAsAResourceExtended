@@ -301,33 +301,27 @@ end
 
 function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxExtraWork, update_budget_per_move)
     local work_done = 0
-    -- start with search queue
-    local searchData = waterBody.searchData
-    local lazySearchQueue = searchData.lazySearchQueue
+    
     local moved, extra_data_array
-    if #lazySearchQueue > 0 then
-        -- move lazy search queue to search queue
-        moved, extra_data_array = utils.LazyTables.moveLazyTables(searchData.searchQueue, lazySearchQueue, maxExtraWork, maxExtraWork, true, nil)
-        work_done = work_done + moved
-        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for search queue
-        if work_done >= maxExtraWork then
-            return
-        end
-    end
+    local budget = updateBudget.budget
+    
 
     local gridsData = waterBody.gridsData
+    local pendingTiles = gridsData.pendingTiles
+    local cost_of_adding_pending_tile = 1
 
-    local lazyEdgeGrid = gridsData.lazyEdgeGrid
-
-    if #lazyEdgeGrid > 0 then
-        -- move lazy edge grid to edge grid
-        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.edgeGrid, lazyEdgeGrid, maxExtraWork, maxExtraWork, false, nil)
+    if #pendingTiles > 0 then
+        -- move pending tiles to new binset (no lazy tables here)
+        local new_binset = gridsData.newBinset
+        -- moved = moveFromPendingTilesToBinsets(pendingTiles, new_binset, maxExtraWork, cost_of_adding_pending_tile, updateBudget, ) 
         work_done = work_done + moved
-        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move)
-        if work_done >= maxExtraWork then
+        budget = budget - (moved * update_budget_per_move * cost_of_adding_pending_tile)
+        updateBudget.budget = budget
+        if work_done >= maxExtraWork or budget <= 0 then
             return
         end
     end
+
     local surfaceName = waterBody.surface.name
     local waterBodyRef = storage.WaterBodyRef[waterBody.waterBodyId]
 
@@ -340,27 +334,76 @@ function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxE
         -- move lazy dried tiles grid to dried tiles grid
         moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedTilesGridWithData, lazyDriedTilesGridWithData, maxExtraWork, maxExtraWork, false, callback)
         work_done = work_done + moved
-        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for callback
+        budget = budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for callback
+        updateBudget.budget = budget
         if utils.LazyTables.wasAnyTableEmptied(extra_data_array) then
             waterbodies.removeOldRefs(waterBody, surfaceName)
         end
         
-        if work_done >= maxExtraWork then
+        if work_done >= maxExtraWork or budget <= 0 then
             return
         end
     end
 
+    -- callback for water tiles includes pendingTiles
+    -- dried tiles will instead be joined on the driedStack
+    local function callback(gridKey, tileData)
+        waterbodies.replaceWithNewRef(gridKey, waterBodyRef, surfaceName)
+        utils.Queue.deduplicate_enqueue(pendingTiles, gridKey)
+    end
+    
     local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
     if #lazyWaterGridWithData > 0 then
         -- move lazy water grid to water grid
         moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.waterGridWithData, lazyWaterGridWithData, maxExtraWork, maxExtraWork, false, callback)
         work_done = work_done + moved
-        updateBudget.budget = updateBudget.budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for callback
+        budget = budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for callback
+        updateBudget.budget = budget
         if utils.LazyTables.wasAnyTableEmptied(extra_data_array) then
             waterbodies.removeOldRefs(waterBody, surfaceName)
         end
 
-        if work_done >= maxExtraWork then
+        if work_done >= maxExtraWork or budget <= 0 then
+            return
+        end
+    end
+
+    local lazyDriedStack = gridsData.lazyDriedStack
+
+    if #lazyDriedStack > 0 then
+        -- move lazy dried stack to dried stack
+        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedStack, lazyDriedStack, maxExtraWork, maxExtraWork, false, nil)
+        work_done = work_done + moved
+        budget = budget - (moved * update_budget_per_move)
+        updateBudget.budget = budget
+        
+        if work_done >= maxExtraWork or budget <= 0 then
+            return
+        end
+    end
+
+    local lazyEdgeGrid = gridsData.lazyEdgeGrid
+
+    if #lazyEdgeGrid > 0 then
+        -- move lazy edge grid to edge grid
+        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.edgeGrid, lazyEdgeGrid, maxExtraWork, maxExtraWork, false, nil)
+        work_done = work_done + moved
+        budget = budget - (moved * update_budget_per_move)
+        updateBudget.budget = budget
+        if work_done >= maxExtraWork or budget <= 0 then
+            return
+        end
+    end
+    local searchData = waterBody.searchData
+    local lazySearchQueue = searchData.lazySearchQueue
+
+    if #lazySearchQueue > 0 then
+        -- move lazy search queue to search queue
+        moved, extra_data_array = utils.LazyTables.moveLazyTables(searchData.searchQueue, lazySearchQueue, maxExtraWork, maxExtraWork, true, nil)
+        work_done = work_done + moved
+        budget = budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for search queue
+        updateBudget.budget = budget
+        if work_done >= maxExtraWork or budget <= 0 then
             return
         end
     end
