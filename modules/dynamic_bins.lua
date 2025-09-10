@@ -43,8 +43,26 @@ function dynamic_bins.init_bin(
 	max_ring,
 	items,
 	sorted,
-	pop_idx
+	pop_idx,
+	apply_bin_range_extension,
+	bin_range_extension_flat,
+	bin_range_extension_ratio,
+	ring_width_tiles,
+	prev_bin_max_ring,
+	next_bin_min_ring
 )
+	if apply_bin_range_extension then
+		local ring_width_ratio = (ring_width_tiles or 2.0) / 2.0
+		local adjusted_bin_range_extension_ratio = (bin_range_extension_ratio or 0.0) * ring_width_ratio
+		local adjusted_bin_range_extension_flat = (bin_range_extension_flat or 0.0) * ring_width_ratio
+		local adjusted_min_ring = math.ceil(min_ring * (1 - adjusted_bin_range_extension_ratio) - adjusted_bin_range_extension_flat)
+		local adjusted_max_ring = math.floor(max_ring * (1 + adjusted_bin_range_extension_ratio) + adjusted_bin_range_extension_flat)
+		
+		prev_bin_max_ring = prev_bin_max_ring or 0
+		next_bin_min_ring = next_bin_min_ring or math.huge
+		min_ring = math.max(prev_bin_max_ring, adjusted_min_ring)
+		max_ring = math.min(next_bin_min_ring, adjusted_max_ring)
+	end
 	return {
 		-- ranges of bins should be disjoint and ordered
 		min_ring = min_ring or nil,  -- minimum ring index contained in the bin
@@ -63,7 +81,9 @@ function dynamic_bins.new(
 	approx_stride,
 	local_probe_window,
 	batch_sort_threshold,
-	coalesce_ring_ratio
+	coalesce_ring_ratio,
+	bin_range_extension_ratio,
+	bin_range_extension_flat
 	)
 	local w = ring_width_tiles or dynamic_bins.get_default_ring_width_tiles()
 	return {
@@ -85,7 +105,9 @@ function dynamic_bins.new(
 		local_probe_window = local_probe_window or dynamic_bins.get_default_local_probe_window(),  -- max steps to walk around hinted index before bsearch
 		batch_sort_threshold = batch_sort_threshold or dynamic_bins.get_default_batch_sort_threshold(),  -- batch_push: sort if >= threshold
 		coalesce_ring_ratio = coalesce_ring_ratio or dynamic_bins.get_default_coalesce_ring_ratio(),  -- coalesce adjacent bins if left.max_ring * (1 + coalesce_ring_ratio) >= right.min_ring
-
+		bin_range_extension_ratio = bin_range_extension_ratio or dynamic_bins.get_default_bin_range_extension_ratio(),  -- extend initial bin range by this ratio up to neighboring bins
+		bin_range_extension_flat = bin_range_extension_flat or dynamic_bins.get_default_bin_range_extension_flat(),  -- extend initial bin range by this flat amount up to neighboring bins
+		
 		-- hints
 		hint = {}, -- approx_key -> bin index
 		last_hint_idx = nil, -- last hinted bin index
@@ -109,6 +131,10 @@ function dynamic_bins.get_default_local_probe_window() return 8 end    -- max st
 function dynamic_bins.get_default_batch_sort_threshold() return 64 end -- batch_push: sort if >= threshold
 
 function dynamic_bins.get_default_coalesce_ring_ratio() return 0.5 end -- coalesce adjacent bins if left.max_ring * (1 + coalesce_ring_ratio) >= right.min_ring
+
+function dynamic_bins.get_default_bin_range_extension_ratio() return 0.03 end -- extend initial bin range by this ratio up to neighboring bins
+
+function dynamic_bins.get_default_bin_range_extension_flat() return 2.0 end -- extend initial bin range by this flat amount up to neighboring bins
 
 -- ---------- Helpers ----------
 local function ring_index_from_xy(center_x, center_y, w2, x, y)
@@ -332,7 +358,20 @@ function dynamic_bins.compute_ring_index(dynamicBins, x, y)
 	return ring_index_from_xy(dynamicBins.center_x, dynamicBins.center_y, dynamicBins.ring_width_squared, x, y)
 end
 
-function dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_max_ring, item_data, ring_index, cap, approx_stride)
+function dynamic_bins._push_item(
+	dynamicBins,
+	bins,
+	num_bins,
+	head_bin,
+	head_bin_max_ring,
+	item_data,
+	ring_index,
+	cap,
+	approx_stride,
+	bin_range_extension_flat,
+	bin_range_extension_ratio,
+	ring_width_tiles
+)
 	local item = dynamic_bins.init_item(item_data, ring_index)
 	
 	-- Backfill only after the head bin has been sorted (i.e., once popping started).
@@ -346,7 +385,24 @@ function dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin
 		if inRange then
 			bin = bins[bin_index]
 		else
-			bin = dynamic_bins.init_bin(ring_index, ring_index, {}, false, 1)
+			local prev_bin = bin_index > 1 and bins[bin_index - 1] or nil
+			local next_bin = bin_index <= num_bins and bins[bin_index] or nil
+			local prev_bin_max_ring = prev_bin and prev_bin.max_ring or nil
+			local next_bin_min_ring = next_bin and next_bin.min_ring or nil
+			bin = dynamic_bins.init_bin(
+				ring_index,
+				ring_index,
+				{},
+				false,
+				1,
+
+			 	true,
+				bin_range_extension_flat,
+				bin_range_extension_ratio,
+				ring_width_tiles,
+				prev_bin_max_ring,
+				next_bin_min_ring
+			 )
 			num_bins = insert_bin(dynamicBins, bins, num_bins, bin_index, bin)
 
 		end
@@ -381,8 +437,11 @@ function dynamic_bins.push(dynamicBins, item_data, x, y)
 	local head_bin_max_ring = head_bin and head_bin.max_ring or nil
 	local cap = dynamicBins.cap
 	local approx_stride = dynamicBins.approx_stride
+	local bin_range_extension_flat = dynamicBins.bin_range_extension_flat
+	local bin_range_extension_ratio = dynamicBins.bin_range_extension_ratio
+	local ring_width_tiles = dynamicBins.ring_width_tiles
 	
-	num_bins = dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_max_ring, item_data, ring_index, cap, approx_stride)
+	num_bins = dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_max_ring, item_data, ring_index, cap, approx_stride, bin_range_extension_flat, bin_range_extension_ratio, ring_width_tiles)
 	return ring_index
 end
 
@@ -418,6 +477,9 @@ function dynamic_bins.batch_push(dynamicBins, items)
 	local num_bins = dynamicBins.num_bins
 	local cap = dynamicBins.cap
 	local approx_stride = dynamicBins.approx_stride
+	local bin_range_extension_flat = dynamicBins.bin_range_extension_flat
+	local bin_range_extension_ratio = dynamicBins.bin_range_extension_ratio
+	local ring_width_tiles = dynamicBins.ring_width_tiles
 	local head_bin = nil
 	local head_bin_max_ring = nil
 	local front = dynamicBins.front
@@ -429,7 +491,7 @@ function dynamic_bins.batch_push(dynamicBins, items)
 		head_bin = front and bins[front] or nil
 		head_bin_max_ring = head_bin and head_bin.max_ring or nil
 		-- push item
-		num_bins = dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_max_ring, item_data, ring_index, cap, approx_stride)
+		num_bins = dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_max_ring, item_data, ring_index, cap, approx_stride, bin_range_extension_flat, bin_range_extension_ratio, ring_width_tiles)
 		inserted = inserted + 1
 	end
 	return inserted
