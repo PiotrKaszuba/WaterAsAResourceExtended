@@ -236,7 +236,20 @@ local function split_bin(dynamicBins, bins, num_bins, start_bin_index)
 		if n <= cap then goto continue end
 
 		-- Sort once; halves inherit sortedness & popIdx semantics
-		table.sort(items, function(a, b) return a.ring_index < b.ring_index end)
+		local keys, idxs = {}, {}
+		for i = 1, n do
+			keys[i] = items[i].ring_index
+			idxs[i] = i
+		end
+		local function cmp(i, j) return keys[i] < keys[j] end
+		table.sort(idxs, cmp)
+		local out = {}
+		for i = 1, n do
+			out[i] = items[idxs[i]]
+		end
+		for i = 1, n do
+			items[i] = out[i]
+		end
 		bin.sorted = true
 		bin.pop_idx = bin.pop_idx or 1
 
@@ -380,15 +393,24 @@ function dynamic_bins.batch_push(dynamicBins, items)
 	if num_items == 0 then return 0 end
 
 	local tmp = {}
+	local keys, idxs = {}, {}
 	for i = 1, num_items do
 		local item = items[i]
 		local item_data, x, y = item[1], item[2], item[3]
 		local ring_index = dynamic_bins.compute_ring_index(dynamicBins, x, y)
 		tmp[i] = dynamic_bins.init_item(item_data, ring_index)
+		keys[i] = ring_index
+		idxs[i] = i
 	end
 	local batch_sort_threshold = dynamicBins.batch_sort_threshold
 	if num_items >= batch_sort_threshold then
-		table.sort(tmp, function(a, b) return a.ring_index < b.ring_index end)
+		local function cmp(i, j) return keys[i] < keys[j] end
+		table.sort(idxs, cmp)
+		local out = {}
+		for i = 1, num_items do
+			out[i] = tmp[idxs[i]]
+		end
+		tmp = out
 	end
 
 	local inserted = 0
@@ -453,7 +475,20 @@ function dynamic_bins.batch_pop(dynamicBins, k)
 		local items = bin.items
 		local num_items = #items
 		if not bin.sorted then
-			table.sort(items, function(a, b) return a.ring_index < b.ring_index end)
+			local keys, idxs = {}, {}
+			for i = 1, num_items do
+				keys[i] = items[i].ring_index
+				idxs[i] = i
+			end
+			local function cmp(i, j) return keys[i] < keys[j] end
+			table.sort(idxs, cmp)
+			local out = {}
+			for i = 1, num_items do
+				out[i] = items[idxs[i]]
+			end
+			for i = 1, num_items do
+				items[i] = out[i]
+			end
 			bin.sorted = true
 			bin.pop_idx = 1
 		end
