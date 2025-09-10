@@ -115,17 +115,17 @@ function utils.GetTile(position, surface)
 	return surface.get_tile(position)
 end
 
-function utils.CheckSubstring(string, substring)
-	return string.find(string, substring, 1, true) ~= nil
+function utils.CheckSubstring(str, substring)
+	return string.find(str, substring, 1, true) ~= nil
 end
 
-function utils.RemovePrefix(string, prefix)
-	return string.sub(string, #prefix + 1)
+function utils.RemovePrefix(str, prefix)
+	return string.sub(str, #prefix + 1)
 end
 
-function utils.GetMaxKey(table)
+function utils.GetMaxKey(t)
 	local maxKey = 0
-	for key, _ in pairs(table) do
+	for key, _ in pairs(t) do
 		if key > maxKey then
 			maxKey = key
 		end
