@@ -3,6 +3,7 @@ require("modules.waterbody_scan")
 require("modules.waterbody_depletion")
 require("modules.entities")
 require("modules.utils")
+require("modules.dynamic_bins")
 
 waterbody_update = {}
 
@@ -310,12 +311,11 @@ function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxE
     local pendingTiles = gridsData.pendingTiles
     local cost_of_adding_pending_tile = 1
 
-    if #pendingTiles > 0 then
+    if not utils.Queue.is_empty(pendingTiles) then
         -- move pending tiles to new binset (no lazy tables here)
-        local new_binset = gridsData.newBinset
-        -- moved = moveFromPendingTilesToBinsets(pendingTiles, new_binset, maxExtraWork, cost_of_adding_pending_tile, updateBudget, ) 
-        work_done = work_done + moved
-        budget = budget - (moved * update_budget_per_move * cost_of_adding_pending_tile)
+        local moved_pending = waterbody_update.moveFromPendingTilesToNewBinset(waterBody, maxExtraWork - work_done)
+        work_done = work_done + moved_pending
+        budget = budget - (moved_pending * update_budget_per_move * cost_of_adding_pending_tile)
         updateBudget.budget = budget
         if work_done >= maxExtraWork or budget <= 0 then
             return
@@ -460,4 +460,52 @@ function waterbody_update.extraWorkUpdate(updateBudget)
             break
         end
     end
+end
+
+-- Move tiles from pendingTiles queue into the gridsData.newBinset dynamic binset.
+-- Validates each tile still belongs to this water body and is in the water grid.
+-- Returns number of tiles moved (used to deduct update budget outside).
+function waterbody_update.moveFromPendingTilesToNewBinset(waterBody, max_to_move)
+    if max_to_move <= 0 then return 0 end
+
+    local gridsData = waterBody.gridsData
+    local pendingTiles = gridsData.pendingTiles
+    if utils.Queue.is_empty(pendingTiles) then return 0 end
+
+    -- Ensure binset exists and is centered at current centroid
+    local centroid = waterbodies.getCentroid(waterBody)
+    local new_binset = gridsData.newBinset
+    if not (new_binset and new_binset.ring_width_tiles) then
+        gridsData.newBinset = dynamic_bins.new(centroid.x, centroid.y)
+        new_binset = gridsData.newBinset
+    else
+        -- Keep center in sync; no re-bucketing happens for existing items
+        dynamic_bins.set_center(new_binset, centroid.x, centroid.y)
+    end
+
+    local surfaceName = waterBody.surface.name
+    local moved = 0
+
+    -- Fast references for validation/lookups
+    local waterGridWithData = gridsData.waterGridWithData
+    local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
+
+    while moved < max_to_move do
+        local gridKey = utils.Queue.deduplicate_dequeue(pendingTiles)
+        if gridKey == nil then break end
+
+        -- Validate the tile still belongs to this waterbody and is currently water
+        if hot_utils.getWaterTile(gridKey, surfaceName) == waterBody.waterBodyId then
+            local tileData = utils.LazyTables.get(gridKey, waterGridWithData, lazyWaterGridWithData)
+            if tileData ~= nil then
+                local pos = tileData.position
+                dynamic_bins.push(new_binset, gridKey, pos.x, pos.y)
+                moved = moved + 1
+            end
+            -- If tileData is missing, it might have dried or moved; drop it silently
+        end
+        -- If tile no longer belongs to this water body, drop it silently
+    end
+
+    return moved
 end
