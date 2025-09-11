@@ -3,6 +3,7 @@ require("modules.waterbody_scan")
 require("modules.waterbody_depletion")
 require("modules.entities")
 require("modules.utils")
+require("modules.dynamic_bins")
 
 waterbody_update = {}
 
@@ -144,6 +145,20 @@ function waterbody_update.calculateEffectiveRegenAmount(waterBody)
 end
 
 
+
+-- Ensure dynamic binset for this water body exists and is centered at current centroid
+function waterbody_update.ensureNewBinset(waterBody)
+    local gridsData = waterBody.gridsData
+    local binset = gridsData.newBinset
+    local centroid = waterbodies.getCentroid(waterBody)
+    if not binset or binset.bins == nil then
+        gridsData.newBinset = dynamic_bins.new(centroid.x, centroid.y)
+        return gridsData.newBinset
+    end
+    -- Keep center fresh; no re-bucketing occurs
+    dynamic_bins.set_center(binset, centroid.x, centroid.y)
+    return binset
+end
 
 function waterbody_update.waterBodyRestored(waterBody)
     local state = waterBody.waterBodyStateData
@@ -310,12 +325,27 @@ function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxE
     local pendingTiles = gridsData.pendingTiles
     local cost_of_adding_pending_tile = 1
 
-    if #pendingTiles > 0 then
+    if not utils.Queue.is_empty(pendingTiles) then
         -- move pending tiles to new binset (no lazy tables here)
-        local new_binset = gridsData.newBinset
-        -- moved = moveFromPendingTilesToBinsets(pendingTiles, new_binset, maxExtraWork, cost_of_adding_pending_tile, updateBudget, ) 
-        work_done = work_done + moved
-        budget = budget - (moved * update_budget_per_move * cost_of_adding_pending_tile)
+        local new_binset = waterbody_update.ensureNewBinset(waterBody)
+        local moved_local = 0
+        local max_moves_by_work = math.max(0, maxExtraWork - work_done)
+        local max_moves_by_budget = math.floor((budget or 0) / (update_budget_per_move * cost_of_adding_pending_tile))
+        local max_moves = math.min(max_moves_by_work, math.max(0, max_moves_by_budget))
+        while moved_local < max_moves do
+            local gridKey = utils.Queue.deduplicate_dequeue(pendingTiles, false, nil, nil)
+            if gridKey == nil then break end
+            -- validate tile is still in this waterbody's water grid
+            local tileData = utils.LazyTables.get(gridKey, gridsData.waterGridWithData, gridsData.lazyWaterGridWithData)
+            if tileData ~= nil then
+                local pos = tileData.position
+                -- push tile into dynamic bins by distance from centroid
+                dynamic_bins.push(new_binset, tileData, pos.x, pos.y)
+                moved_local = moved_local + 1
+            end
+        end
+        work_done = work_done + moved_local
+        budget = budget - (moved_local * update_budget_per_move * cost_of_adding_pending_tile)
         updateBudget.budget = budget
         if work_done >= maxExtraWork or budget <= 0 then
             return
