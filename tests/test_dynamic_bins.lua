@@ -1,7 +1,8 @@
 if pcall(require, "lldebugger") then
   require("lldebugger").start()
 end
-
+-- TODO: add tests for backfill_consume
+-- TODO: add tests with push and batch_push that pass ring_index instead of x and y
 require("modules/dynamic_bins")
 -- ==========================================
 -- DynamicBins test suite (print-based)
