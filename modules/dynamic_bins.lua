@@ -17,7 +17,7 @@
 --   dynamic_bins.compute_ring_index(dynamicBins, x, y) -> integer ring_index
 --   dynamic_bins.push(dynamicBins, item_data, x?, y?, ring_index?) -> ring_index; either both x and y or ring_index must be provided
 --   dynamic_bins.batch_push(dynamicBins, items)           -- items array of: {['1'] = {['1']=item_data,['2']=x,['3']=y}, ... } or {['1'] = {['1']=item_data, ['2'] = ring_index}, ... }
---   dynamic_bins.batch_pop(dynamicBins, k) -> item_datas{}, ring_indices{}, num_popped
+--   dynamic_bins.batch_pop(dynamicBins, k, only_backfill?) -> item_datas{}, ring_indices{}, num_popped
 --   dynamic_bins.size(dynamicBins) -> total items across bins + backfill
 --   dynamic_bins.front_info(dynamicBins) -> front_min_ring, front_max_ring | nil, nil
 --   dynamic_bins.set_center(dynamicBins, center_x, center_y)          -- does not re-bucket existing items
@@ -513,7 +513,7 @@ end
 -- (prioritize backfill, then frontier)
 -- Popping is monotone by ring within the current head bin: we sort that bin once on first use and pop
 -- from a moving pointer (ascending order).
-function dynamic_bins.batch_pop(dynamicBins, k)
+function dynamic_bins.batch_pop(dynamicBins, k, only_backfill)
 	local item_datas, ring_indices = {}, {}
 	if k <= 0 then return item_datas, ring_indices end
 	local out = 0
@@ -532,7 +532,11 @@ function dynamic_bins.batch_pop(dynamicBins, k)
 			break
 		end
 	end
-	if out == k then return item_datas, ring_indices, out end
+
+	if out == k or only_backfill then
+		dynamicBins.total = dynamicBins.total - out
+		return item_datas, ring_indices, out
+	end
 
 	local bins = dynamicBins.bins
 	local num_bins = dynamicBins.num_bins
@@ -623,15 +627,11 @@ function dynamic_bins.backfill_consume(dynamicBins, max_items, ignore_front)
 		return 0
 	end
 
-	local consumed = 0
+	local item_datas, ring_indices, num_popped = dynamic_bins.batch_pop(dynamicBins, backfill_size, true)
+
 	local consumed_items = {} -- array of {['1'] = item_data, ['2'] = ring_index}
-	while consumed < max_items and backfill_size > 0 do
-		local item = backfill[backfill_size]
-		local item_data, ring_index = item.item_data, item.ring_index
-		consumed_items[consumed + 1] = {['1'] = item_data, ['2'] = ring_index}
-		backfill[backfill_size] = nil
-		backfill_size = backfill_size - 1
-		consumed = consumed + 1
+	for i = 1, num_popped do
+		consumed_items[i] = {['1'] = item_datas[i], ['2'] = ring_indices[i]}
 	end
 
 	-- add consumed items to bins
@@ -642,5 +642,5 @@ function dynamic_bins.backfill_consume(dynamicBins, max_items, ignore_front)
 		dynamicBins.front = old_front
 	end
 
-	return consumed
+	return num_popped
 end
