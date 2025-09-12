@@ -1,5 +1,6 @@
 require("modules.utils")
 require("modules.hot_utils")
+require("modules.dynamic_bins")
 
 waterbodies = {}
 
@@ -261,11 +262,17 @@ function waterbodies.initGridsData()
 		driedStack = utils.Queue.new(nil, nil, nil, true), -- ordered array of dried tiles
 		lazyDriedStack = {},
 
-		-- array containing ring-bins of water tiles to be dried
-		-- ring-bins increase in distance from the waterbody center
-		oldBinset = {},
+		
+		-- contains dynamic_bins with ring-bins of water tiles to be dried
 		-- new binset is the binset that is currently building
-		newBinset = {},
+		-- ring-bins increase in distance from the waterbody center
+		newBinset = nil,
+		-- array of previous dynamic_bins that are not emptied yet (i.e. due to the centroid change)
+		-- it is not inherited from the 'loser' in merge process - instead, merge process likely triggers centroid change
+		-- oldBinsets can be used when new one (i.e. after significant centroid change) is computing
+		-- oldBinsets are popped from and pushed to newBinset when newBinset is computed
+		oldBinsets = {},
+		
 
 		-- queue of tiles that are pending to be added to binset - with deduplication
 		-- doesn't use lazy tables
@@ -372,6 +379,47 @@ end
 function waterbodies.updateGeometryOnRemove(shape_data, batchSumX, batchSumY, batchTileCount)
 	-- we don't handle updates of MinX, MaxX, MinY, MaxY for removal
 	waterbodies.updateGeometry(shape_data, nil, nil, nil, nil, nil, batchSumX, batchSumY, batchTileCount)
+end
+
+-- TODO: better name and use settings instead of hardcoded value
+function waterbodies.getCentroidChangeRateThreshold()
+    return 0.025
+end
+
+function waterbodies.didCentroidChangeSignificantly(waterBody, old_center_x, old_center_y)
+	local centroid = waterbodies.getCentroid(waterBody)
+	local change_rate_threshold = waterbodies.getCentroidChangeRateThreshold()
+
+	local dx = centroid.x - old_center_x
+	local dy = centroid.y - old_center_y
+	local distance = math.sqrt(dx*dx + dy*dy)
+	-- use hypotenuse as a reference distance
+	local change_rate = distance / waterBody.waterBodyShapeData.Hyp
+
+	return change_rate > change_rate_threshold
+end
+
+function waterbodies.ensureAndUpdateBinset(waterBody)
+    local centroid = waterbodies.getCentroid(waterBody)
+
+	local gridsData = waterBody.gridsData
+	local newBinset = gridsData.newBinset
+
+	if newBinset == nil then
+		newBinset = dynamic_bins.new(centroid.x, centroid.y)
+		gridsData.newBinset = newBinset
+	else
+		local old_center_x, old_center_y = newBinset.initial_center_x, newBinset.initial_center_y
+		local significant_change = waterbodies.didCentroidChangeSignificantly(waterBody, old_center_x, old_center_y)
+		if significant_change then
+			local oldBinsets = gridsData.oldBinsets
+			table.insert(oldBinsets, 1, newBinset) -- insert at the beginning
+			newBinset = dynamic_bins.new(centroid.x, centroid.y)
+			gridsData.newBinset = newBinset
+		else
+			dynamic_bins.set_center(newBinset, centroid.x, centroid.y)
+		end
+	end
 end
 
 function waterbodies.getCentroid(waterBody)

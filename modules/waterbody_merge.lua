@@ -33,7 +33,7 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, sourceWaterB
 	
 	utils.LazyTables.on_merge(gridsData.lazyDriedStack, other_gridsData.driedStack, other_gridsData.lazyDriedStack)
 	
-	-- oldBinset, newBinset, pendingTiles stay the same - no need to merge them
+	-- oldBinsets, newBinset, pendingTiles stay the same - no need to merge them
 	-- pendingTiles will be in callbacks of grids ..WithData lazy tables merging
 	-- binsets will be slowly built up by the ongoing work loops
 	
@@ -47,7 +47,7 @@ function waterbody_merge.mergeGridsData(gridsData, other_gridsData, sourceWaterB
 	other_gridsData.lazyDriedTilesGridWithData = {}
 	other_gridsData.driedStack = {}
 	other_gridsData.lazyDriedStack = {}
-	other_gridsData.oldBinset = {}
+	other_gridsData.oldBinsets = {}
 	other_gridsData.newBinset = {}
 	other_gridsData.pendingTiles = {}
 
