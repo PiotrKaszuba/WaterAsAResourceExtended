@@ -1,8 +1,6 @@
 if pcall(require, "lldebugger") then
   require("lldebugger").start()
 end
--- TODO: add tests for backfill_consume
--- TODO: add tests with push and batch_push that pass ring_index instead of x and y
 require("modules/dynamic_bins")
 -- ==========================================
 -- DynamicBins test suite (print-based)
@@ -34,10 +32,16 @@ end
 
 -- --------- Helpers for inspecting structures ---------
 
+-- Bins keep already-popped slots until the front advances; subtract them when counting.
 local function sum_items_in_bins(D)
     local s = 0
     for i = 1, #D.bins do
-        s = s + #D.bins[i].items
+        local b = D.bins[i]
+        local num_items = #b.items
+        if b.pop_idx and b.pop_idx > 1 then
+            num_items = num_items - (b.pop_idx - 1)
+        end
+        s = s + num_items
     end
     return s
 end
@@ -230,6 +234,47 @@ local function test_batch_pop_k_with_backfill()
     ok(rings[3] ~= nil, "batch_pop_k: third from frontier bins")
 end
 
+local function test_backfill_consume()
+    local D = new_dynamic(0, 0, 2.0, 8)
+    for x = 0, 2 do dynamic_bins.push(D, "p" .. x, x, 0) end
+    local _, _ = pop_one(D) -- activate frontier
+    dynamic_bins.push(D, "lag1", 0, 0)
+    dynamic_bins.push(D, "lag2", 0, 0)
+    assert_eq(#D.backfill, 2, "backfill_consume: created backfill")
+
+    local consumed = dynamic_bins.backfill_consume(D, 10)
+    assert_eq(consumed, 0, "backfill_consume: no consume with active front")
+    assert_eq(#D.backfill, 2, "backfill_consume: unchanged backfill when front active")
+
+    local before = sum_items_in_bins(D)
+    consumed = dynamic_bins.backfill_consume(D, 10, true)
+    assert_eq(consumed, 2, "backfill_consume: consumed with ignore_front")
+    assert_eq(#D.backfill, 0, "backfill_consume: backfill cleared")
+    assert_eq(sum_items_in_bins(D), before + 2, "backfill_consume: items moved to bins")
+    validate_invariants(D, "backfill_consume: invariants after consume")
+end
+
+local function test_ring_index_push_api()
+    local D = new_dynamic(0, 0, 2.0, 8)
+    assert_eq(dynamic_bins.push(D, "a", nil, nil, 3), 3, "push ring_index returns ring")
+    dynamic_bins.push(D, "b", nil, nil, 1)
+
+    local items = {
+        { "c", 2 },
+        { "d", 4 },
+        { "e", 0 },
+    }
+    local inserted = dynamic_bins.batch_push(D, items)
+    assert_eq(inserted, #items, "batch_push ring_index: inserted count")
+    validate_invariants(D, "ring_index push: invariants")
+
+    local ids, rings = drain_all(D)
+    ok(#ids == #items + 2, "ring_index push: drained all")
+    ok(rings_non_decreasing(rings), "ring_index push: rings non-decreasing")
+    assert_eq(rings[1], 0, "ring_index push: first ring")
+    assert_eq(rings[#rings], 4, "ring_index push: last ring")
+end
+
 local function test_set_center_no_rebucket()
     local D = new_dynamic(0, 0, 2.0, 8)
     for x = 0, 6 do dynamic_bins.push(D, "e" .. x, x, 0) end
@@ -291,6 +336,8 @@ local function run_all_tests()
         test_split_on_cap_and_ranges,
         test_batch_push_sorted_effect,
         test_batch_pop_k_with_backfill,
+        test_backfill_consume,
+        test_ring_index_push_api,
         test_set_center_no_rebucket,
         test_front_info_progress,
         test_randomized_smoke,
