@@ -621,8 +621,9 @@ waterbodies.WaterBodyTypesToName = {
 	[6] = "Ocean"
 }
 
-waterbodies.WaterBodyTypeRegenScaling = 0.4
-waterbodies.WaterBodyTypeToRegenBonusValue = {} 
+-- TODO: add startup setting for this, instead of hardcoded value
+waterbodies.WaterBodyTypeRegenScaling = 1.5
+waterbodies.WaterBodyTypeToRegenBonusValue = {}
 
 -- 1.0 regen is for Lake
 for waterBodyTypeInd, _ in pairs(waterbodies.WaterBodyTypesToName) do
