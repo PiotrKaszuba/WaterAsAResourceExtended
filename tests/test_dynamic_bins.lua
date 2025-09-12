@@ -111,13 +111,15 @@ end
 
 -- --------- New instance factory ---------
 
-local function new_dynamic(cx, cy, w, cap, stride, window)
+local function new_dynamic(cx, cy, w, cap, stride, window, deduplicate)
     return dynamic_bins.new(
         cx or 0, cy or 0,
         w or 2.0,
         cap or 16, -- small cap to force splits in tests
         stride or 8,
-        window or 6
+        window or 6,
+        nil, nil, nil, nil,
+        deduplicate
     )
 end
 
@@ -275,6 +277,31 @@ local function test_ring_index_push_api()
     assert_eq(rings[#rings], 4, "ring_index push: last ring")
 end
 
+local function test_deduplication()
+    local D = new_dynamic(0, 0, 2.0, 8, nil, nil, true)
+    local function hash(v) return v end
+
+    dynamic_bins.push(D, "a", 0, 0, nil, hash)
+    dynamic_bins.push(D, "a", 0, 0, nil, hash)
+    assert_eq(dynamic_bins.size(D), 1, "dedup: push skips duplicates")
+
+    local items = {
+        {"a", 0, 0},
+        {"b", 1, 0},
+        {"b", 1, 0},
+    }
+    local inserted = dynamic_bins.batch_push(D, items, hash)
+    assert_eq(inserted, 1, "dedup: batch_push inserts uniques")
+    assert_eq(dynamic_bins.size(D), 2, "dedup: size after batch_push")
+
+    local _, _, out = dynamic_bins.batch_pop(D, 2, false, hash)
+    assert_eq(out, 2, "dedup: batch_pop returns items")
+    assert_eq(dynamic_bins.size(D), 0, "dedup: size after pops")
+
+    dynamic_bins.push(D, "a", 0, 0, nil, hash)
+    assert_eq(dynamic_bins.size(D), 1, "dedup: reinsert after pop")
+end
+
 local function test_set_center_no_rebucket()
     local D = new_dynamic(0, 0, 2.0, 8)
     for x = 0, 6 do dynamic_bins.push(D, "e" .. x, x, 0) end
@@ -338,6 +365,7 @@ local function run_all_tests()
         test_batch_pop_k_with_backfill,
         test_backfill_consume,
         test_ring_index_push_api,
+        test_deduplication,
         test_set_center_no_rebucket,
         test_front_info_progress,
         test_randomized_smoke,
