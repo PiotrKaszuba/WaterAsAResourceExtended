@@ -21,7 +21,10 @@
 --   dynamic_bins.size(dynamicBins) -> total items across bins + backfill
 --   dynamic_bins.front_info(dynamicBins) -> front_min_ring, front_max_ring | nil, nil
 --   dynamic_bins.set_center(dynamicBins, center_x, center_y)          -- does not re-bucket existing items
---
+--	 TODO: backfill consumption and addition to bins (if front is not active)
+--   dynamic_bins.backfill_consume(dynamicBins, max_items) -> num_consumed
+--	 TODO: add deduplication option such as in utils.Queue
+
 -- ==========================================
 
 dynamic_bins = {}
@@ -90,6 +93,8 @@ function dynamic_bins.new(
 		-- geometry
 		center_x = center_x,
 		center_y = center_y,
+		initial_center_x = center_x,
+		initial_center_y = center_y,
 		ring_width_tiles = w,
 		ring_width_squared = w * w,
 
