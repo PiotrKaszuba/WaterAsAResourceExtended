@@ -16,7 +16,7 @@
 --   local dynamicBins = dynamic_bins.new(center_x, center_y, ring_width_tiles?, cap?, approx_stride?, local_probe_window?)
 --   dynamic_bins.compute_ring_index(dynamicBins, x, y) -> integer ring_index
 --   dynamic_bins.push(dynamicBins, item_data, x?, y?, ring_index?) -> ring_index; either both x and y or ring_index must be provided
---   dynamic_bins.batch_push(dynamicBins, items)           -- items array of: {['1'] = {['1']=item_data,['2']=x,['3']=y}, ... } or {['1'] = {['1']=item_data, ['2'] = ring_index}, ... }
+--   dynamic_bins.batch_push(dynamicBins, items)           -- items array of: {{item_data, x, y}, ... } or {{item_data, ring_index}, ... }
 --   dynamic_bins.batch_pop(dynamicBins, k, only_backfill?) -> item_datas{}, ring_indices{}, num_popped
 --   dynamic_bins.size(dynamicBins) -> total items across bins + backfill
 --   dynamic_bins.front_info(dynamicBins) -> front_min_ring, front_max_ring | nil, nil
@@ -453,8 +453,8 @@ function dynamic_bins.push(dynamicBins, item_data, x, y, ring_index)
 end
 
 -- Batch push: arbitrary K tiles. Pre-sorts by ring for large batches.
--- items array of: {['1'] = {['1']=item_data,['2']=x,['3']=y}, ... } 
--- or {['1'] = {['1']=item_data, ['2'] = ring_index}, ... }
+-- items array of: {{item_data, x, y}, ... }
+-- or {{item_data, ring_index}, ... }
 function dynamic_bins.batch_push(dynamicBins, items)
 	local num_items = #items
 	if num_items == 0 then return 0 end
@@ -628,10 +628,10 @@ function dynamic_bins.backfill_consume(dynamicBins, max_items, ignore_front)
 
 	local item_datas, ring_indices, num_popped = dynamic_bins.batch_pop(dynamicBins, backfill_size, true)
 
-	local consumed_items = {} -- array of {['1'] = item_data, ['2'] = ring_index}
-	for i = 1, num_popped do
-		consumed_items[i] = {['1'] = item_datas[i], ['2'] = ring_indices[i]}
-	end
+       local consumed_items = {} -- array of { item_data, ring_index }
+       for i = 1, num_popped do
+               consumed_items[i] = { item_datas[i], ring_indices[i] }
+       end
 
 	-- add consumed items to bins
 	dynamic_bins.batch_push(dynamicBins, consumed_items)
