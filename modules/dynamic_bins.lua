@@ -15,8 +15,8 @@
 -- API:
 --   local dynamicBins = dynamic_bins.new(center_x, center_y, ring_width_tiles?, cap?, approx_stride?, local_probe_window?)
 --   dynamic_bins.compute_ring_index(dynamicBins, x, y) -> integer ring_index
---   dynamic_bins.push(dynamicBins, item_data, x, y) -> ring_index
---   dynamic_bins.batch_push(dynamicBins, items)           -- items array of: {['1'] = {['1']=item_data,['2']=x,['3']=y}, ... }
+--   dynamic_bins.push(dynamicBins, item_data, x?, y?, ring_index?) -> ring_index; either both x and y or ring_index must be provided
+--   dynamic_bins.batch_push(dynamicBins, items)           -- items array of: {['1'] = {['1']=item_data,['2']=x,['3']=y}, ... } or {['1'] = {['1']=item_data, ['2'] = ring_index}, ... }
 --   dynamic_bins.batch_pop(dynamicBins, k) -> item_datas{}, ring_indices{}, num_popped
 --   dynamic_bins.size(dynamicBins) -> total items across bins + backfill
 --   dynamic_bins.front_info(dynamicBins) -> front_min_ring, front_max_ring | nil, nil
@@ -432,8 +432,11 @@ function dynamic_bins._push_item(
 end
 
 -- Push single item_data
-function dynamic_bins.push(dynamicBins, item_data, x, y)
-	local ring_index = dynamic_bins.compute_ring_index(dynamicBins, x, y)
+-- either both x and y or ring_index must be provided
+function dynamic_bins.push(dynamicBins, item_data, x, y, ring_index)
+	if x and y then
+		ring_index = dynamic_bins.compute_ring_index(dynamicBins, x, y)
+	end
 	-- Backfill if behind/at frontier
 	local bins = dynamicBins.bins
 	local num_bins = dynamicBins.num_bins
@@ -451,7 +454,8 @@ function dynamic_bins.push(dynamicBins, item_data, x, y)
 end
 
 -- Batch push: arbitrary K tiles. Pre-sorts by ring for large batches.
--- items array of: {['1'] = {['1']=item_data,['2']=x,['3']=y}, ... }
+-- items array of: {['1'] = {['1']=item_data,['2']=x,['3']=y}, ... } 
+-- or {['1'] = {['1']=item_data, ['2'] = ring_index}, ... }
 function dynamic_bins.batch_push(dynamicBins, items)
 	local num_items = #items
 	if num_items == 0 then return 0 end
@@ -460,8 +464,12 @@ function dynamic_bins.batch_push(dynamicBins, items)
 	local keys, idxs = {}, {}
 	for i = 1, num_items do
 		local item = items[i]
-		local item_data, x, y = item[1], item[2], item[3]
-		local ring_index = dynamic_bins.compute_ring_index(dynamicBins, x, y)
+		local item_data, ring_index = item[1], item[2] 
+		local is_xy = #item == 3
+		if not is_xy then
+			local x, y = ring_index, item[3]
+			ring_index = dynamic_bins.compute_ring_index(dynamicBins, x, y)
+		end
 		tmp[i] = dynamic_bins.init_item(item_data, ring_index)
 		keys[i] = ring_index
 		idxs[i] = i
