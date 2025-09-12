@@ -298,114 +298,232 @@ function waterbody_update.updateWaterBodies(updateBudget)
     end
 end
 
-
-
-function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxExtraWork, update_budget_per_move)
-    local work_done = 0
+-- Move tiles into the newBinset dynamic binset.
+-- From: pendingTiles queue, old binsets, backfill of newBinset if front is not active
+-- Validates each tile still belongs to this water body as water.
+-- Returns number of tiles moved (used to deduct update budget outside).
+function waterbody_update.binsetMaintenance(waterBody, gridsData, max_to_move)
+    waterbodies.ensureAndUpdateBinset(waterBody)
     
-    local moved, extra_data_array
-    local budget = updateBudget.budget
-    
-
-    local gridsData = waterBody.gridsData
+    local oldBinsets = gridsData.oldBinsets
+    local newBinset = gridsData.newBinset
     local pendingTiles = gridsData.pendingTiles
-    local cost_of_adding_pending_tile = 1
+    
+    if max_to_move <= 0 then return 0 end
 
-    if not utils.Queue.is_empty(pendingTiles) then
-        -- move pending tiles to new binset (no lazy tables here)
-        local moved_pending = waterbody_update.moveFromPendingTilesToNewBinset(waterBody, maxExtraWork - work_done)
-        work_done = work_done + moved_pending
-        budget = budget - (moved_pending * update_budget_per_move * cost_of_adding_pending_tile)
-        updateBudget.budget = budget
-        if work_done >= maxExtraWork or budget <= 0 then
-            return
+    local moved = 0
+
+    -- Fast references for validation/lookups
+    local scanningFinished = waterBody.searchData.finished
+    local waterGridWithData = gridsData.waterGridWithData
+    local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
+    local deduplicate_dequeue = utils.Queue.deduplicate_dequeue
+    local lazy_tables_get = utils.LazyTables.get
+    local dynamic_bins_push = dynamic_bins.push
+    local dynamic_bins_backfill_consume = dynamic_bins.backfill_consume
+    local dynamic_bins_batch_pop = dynamic_bins.batch_pop
+
+    local pending_tiles_size = pendingTiles.size
+
+    if #oldBinsets == 0 and newBinset.total <= 0 and pending_tiles_size == 0 then
+        -- theoretically there is no water tiles (under these conditions) 
+        -- check against the truth if that's the case
+        -- and if there is some water tiles - re-prime pending tiles
+        -- only look at waterGridWithData
+        -- and specifically not at lazyWaterGridWithData
+        -- because it will use callbacks on-copy to add to pending tiles
+        local gridKey
+
+        local deduplicate_enqueue = utils.Queue.deduplicate_enqueue
+
+        while moved < max_to_move do
+            gridKey, _ = next(waterGridWithData, gridKey)
+            if gridKey == nil then
+                -- no more tiles - break
+                break
+            end
+            deduplicate_enqueue(pendingTiles, gridKey)
+            moved = moved + 1
         end
     end
+
+    -- consume old binsets
+    if scanningFinished and #oldBinsets > 0 then
+        -- copy 50% of max_to_move from old binsets
+        -- it won't go through (deduplication in) pending tiles
+        local amount_copy = math.ceil(max_to_move * 0.5)
+
+        local oldBinset = oldBinsets[1]
+        while moved < amount_copy and #oldBinsets > 0 do
+            if oldBinset.total <= 0 then
+                -- binset is empty - remove it and try next one
+                table.remove(oldBinsets, 1)
+                oldBinset = oldBinsets[1]
+                if oldBinset == nil then
+                    -- no more old binsets - break
+                    break
+                end
+            end
+            local item_datas, ring_indices, num_popped = dynamic_bins_batch_pop(oldBinset, amount_copy)
+            moved = moved + num_popped
+            amount_copy = amount_copy - num_popped
+            for i = 1, num_popped do
+                local gridKey = item_datas[i]
+                local tileData = lazy_tables_get(gridKey, waterGridWithData, lazyWaterGridWithData)
+                if tileData ~= nil then
+                    local pos = tileData.position
+                    dynamic_bins_push(newBinset, gridKey, pos.x, pos.y)
+                end
+            end
+        end
+    end
+
+    pending_tiles_size = pendingTiles.size
+    -- consume pending tiles
+    while moved < max_to_move and pending_tiles_size > 0 do
+        local gridKey = deduplicate_dequeue(pendingTiles)
+        if gridKey == nil then break end
+        pending_tiles_size = pending_tiles_size - 1
+
+        -- Validate the tile still belongs to this waterbody as water
+        local tileData = lazy_tables_get(gridKey, waterGridWithData, lazyWaterGridWithData)
+        moved = moved + 1
+        if tileData ~= nil then
+            local pos = tileData.position
+            dynamic_bins_push(newBinset, gridKey, pos.x, pos.y)
+        end
+        -- If tileData is missing, it might have dried or moved; drop it silently
+    end
+
+    if moved < max_to_move then
+        -- attempt to fix backfill on the current binset
+        moved = moved + dynamic_bins_backfill_consume(newBinset, max_to_move - moved, false)
+    end
+
+    return moved
+end
+
+function waterbody_update.get_work_amount(updateBudget, work_left, cost_per_work_unit, budget_per_work_unit)
+    local work_amount = math.min(work_left, updateBudget.budget / budget_per_work_unit) / cost_per_work_unit
+    return work_amount
+end
+
+function waterbody_update.update_work_amount(updateBudget, work_left, cost_per_work_unit, budget_per_work_unit, work_done)
+    local value_of_work_done = work_done * cost_per_work_unit
+    local budget = updateBudget.budget - value_of_work_done * budget_per_work_unit
+    updateBudget.budget = budget
+    work_left = work_left - work_done
+    local finished = work_left <= 0 or budget <= 0
+    return work_left, finished
+end
+
+function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxExtraWork, update_budget_per_move)
+    local work_left = maxExtraWork
+    local work_amount, finished, work_done = 0, false, 0
+    
+    local gridsData = waterBody.gridsData
+
+    -- multiple conditions: pending tiles, old binsets & search finished, backfill consumption - handled inside call
+    local cost_of_adding_pending_tile = 1
+    work_amount = waterbody_update.get_work_amount(updateBudget, work_left, cost_of_adding_pending_tile, update_budget_per_move)
+    
+    -- move pending tiles to new binset (no lazy tables here)
+    work_done = waterbody_update.binsetMaintenance(waterBody, gridsData, work_amount)
+    
+    work_left, finished = waterbody_update.update_work_amount(updateBudget, work_left, cost_of_adding_pending_tile, update_budget_per_move, work_done)
+    if finished then return end
+    
 
     local surfaceName = waterBody.surface.name
     local waterBodyRef = storage.WaterBodyRef[waterBody.waterBodyId]
 
-    local function callback(gridKey, tileData)
+    local function callback_dry(gridKey, tileData)
         waterbodies.replaceWithNewRef(gridKey, waterBodyRef, surfaceName)
     end
 
+    local extra_data_array
     local lazyDriedTilesGridWithData = gridsData.lazyDriedTilesGridWithData
+    
     if #lazyDriedTilesGridWithData > 0 then
+        local cost_of_dried_lazy_to_grid = 2
+        work_amount = waterbody_update.get_work_amount(updateBudget, work_left, cost_of_dried_lazy_to_grid, update_budget_per_move)
+        
         -- move lazy dried tiles grid to dried tiles grid
-        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedTilesGridWithData, lazyDriedTilesGridWithData, maxExtraWork, maxExtraWork, false, callback)
-        work_done = work_done + moved
-        budget = budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for callback
-        updateBudget.budget = budget
+        work_done, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedTilesGridWithData, lazyDriedTilesGridWithData, work_amount, work_amount, false, callback_dry)
+        
         if utils.LazyTables.wasAnyTableEmptied(extra_data_array) then
             waterbodies.removeOldRefs(waterBody, surfaceName)
         end
-        
-        if work_done >= maxExtraWork or budget <= 0 then
-            return
-        end
+
+        work_left, finished = waterbody_update.update_work_amount(updateBudget, work_left, cost_of_dried_lazy_to_grid, update_budget_per_move, work_done)
+
+        if finished then return end
     end
 
+    local pendingTiles = gridsData.pendingTiles
     -- callback for water tiles includes pendingTiles
     -- dried tiles will instead be joined on the driedStack
-    local function callback(gridKey, tileData)
+    local function callback_water(gridKey, tileData)
         waterbodies.replaceWithNewRef(gridKey, waterBodyRef, surfaceName)
         utils.Queue.deduplicate_enqueue(pendingTiles, gridKey)
     end
     
     local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
     if #lazyWaterGridWithData > 0 then
+        local cost_of_water_lazy_to_grid = 2.5
+        work_amount = waterbody_update.get_work_amount(updateBudget, work_left, cost_of_water_lazy_to_grid, update_budget_per_move)
+        
         -- move lazy water grid to water grid
-        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.waterGridWithData, lazyWaterGridWithData, maxExtraWork, maxExtraWork, false, callback)
-        work_done = work_done + moved
-        budget = budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for callback
-        updateBudget.budget = budget
+        work_done, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.waterGridWithData, lazyWaterGridWithData, work_amount, work_amount, false, callback_water)
+
         if utils.LazyTables.wasAnyTableEmptied(extra_data_array) then
             waterbodies.removeOldRefs(waterBody, surfaceName)
         end
 
-        if work_done >= maxExtraWork or budget <= 0 then
-            return
-        end
+        work_left, finished = waterbody_update.update_work_amount(updateBudget, work_left, cost_of_water_lazy_to_grid, update_budget_per_move, work_done)
+        
+        if finished then return end
     end
 
     local lazyDriedStack = gridsData.lazyDriedStack
 
     if #lazyDriedStack > 0 then
+        local cost_of_dried_stack_to_grid = 1.5
+        work_amount = waterbody_update.get_work_amount(updateBudget, work_left, cost_of_dried_stack_to_grid, update_budget_per_move)
+
         -- move lazy dried stack to dried stack
-        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedStack, lazyDriedStack, maxExtraWork, maxExtraWork, false, nil)
-        work_done = work_done + moved
-        budget = budget - (moved * update_budget_per_move)
-        updateBudget.budget = budget
+        work_done, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedStack, lazyDriedStack, work_amount, work_amount, false, nil)
         
-        if work_done >= maxExtraWork or budget <= 0 then
-            return
-        end
+        work_left, finished = waterbody_update.update_work_amount(updateBudget, work_left, cost_of_dried_stack_to_grid, update_budget_per_move, work_done)
+        
+        if finished then return end
     end
 
     local lazyEdgeGrid = gridsData.lazyEdgeGrid
 
     if #lazyEdgeGrid > 0 then
+        local cost_of_edge_grid_to_grid = 1.0
+        work_amount = waterbody_update.get_work_amount(updateBudget, work_left, cost_of_edge_grid_to_grid, update_budget_per_move)
         -- move lazy edge grid to edge grid
-        moved, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.edgeGrid, lazyEdgeGrid, maxExtraWork, maxExtraWork, false, nil)
-        work_done = work_done + moved
-        budget = budget - (moved * update_budget_per_move)
-        updateBudget.budget = budget
-        if work_done >= maxExtraWork or budget <= 0 then
-            return
-        end
+        work_done, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.edgeGrid, lazyEdgeGrid, work_amount, work_amount, false, nil)
+        
+        work_left, finished = waterbody_update.update_work_amount(updateBudget, work_left, cost_of_edge_grid_to_grid, update_budget_per_move, work_done)
+        
+        if finished then return end
     end
+
     local searchData = waterBody.searchData
     local lazySearchQueue = searchData.lazySearchQueue
 
     if #lazySearchQueue > 0 then
+        local cost_of_search_queue_to_search_queue = 1.33
+        work_amount = waterbody_update.get_work_amount(updateBudget, work_left, cost_of_search_queue_to_search_queue, update_budget_per_move)
         -- move lazy search queue to search queue
-        moved, extra_data_array = utils.LazyTables.moveLazyTables(searchData.searchQueue, lazySearchQueue, maxExtraWork, maxExtraWork, true, nil)
-        work_done = work_done + moved
-        budget = budget - (moved * update_budget_per_move * 2) -- 2 is a penalty for search queue
-        updateBudget.budget = budget
-        if work_done >= maxExtraWork or budget <= 0 then
-            return
-        end
+        work_done, extra_data_array = utils.LazyTables.moveLazyTables(searchData.searchQueue, lazySearchQueue, work_amount, work_amount, true, nil)
+        
+        work_left, finished = waterbody_update.update_work_amount(updateBudget, work_left, cost_of_search_queue_to_search_queue, update_budget_per_move, work_done)
+        
+        if finished then return end
     end
 
 end
@@ -460,52 +578,4 @@ function waterbody_update.extraWorkUpdate(updateBudget)
             break
         end
     end
-end
-
--- Move tiles from pendingTiles queue into the gridsData.newBinset dynamic binset.
--- Validates each tile still belongs to this water body and is in the water grid.
--- Returns number of tiles moved (used to deduct update budget outside).
-function waterbody_update.moveFromPendingTilesToNewBinset(waterBody, max_to_move)
-    if max_to_move <= 0 then return 0 end
-
-    local gridsData = waterBody.gridsData
-    local pendingTiles = gridsData.pendingTiles
-    if utils.Queue.is_empty(pendingTiles) then return 0 end
-
-    -- Ensure binset exists and is centered at current centroid
-    local centroid = waterbodies.getCentroid(waterBody)
-    local new_binset = gridsData.newBinset
-    if not (new_binset and new_binset.ring_width_tiles) then
-        gridsData.newBinset = dynamic_bins.new(centroid.x, centroid.y)
-        new_binset = gridsData.newBinset
-    else
-        -- Keep center in sync; no re-bucketing happens for existing items
-        dynamic_bins.set_center(new_binset, centroid.x, centroid.y)
-    end
-
-    local surfaceName = waterBody.surface.name
-    local moved = 0
-
-    -- Fast references for validation/lookups
-    local waterGridWithData = gridsData.waterGridWithData
-    local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
-
-    while moved < max_to_move do
-        local gridKey = utils.Queue.deduplicate_dequeue(pendingTiles)
-        if gridKey == nil then break end
-
-        -- Validate the tile still belongs to this waterbody and is currently water
-        if hot_utils.getWaterTile(gridKey, surfaceName) == waterBody.waterBodyId then
-            local tileData = utils.LazyTables.get(gridKey, waterGridWithData, lazyWaterGridWithData)
-            if tileData ~= nil then
-                local pos = tileData.position
-                dynamic_bins.push(new_binset, gridKey, pos.x, pos.y)
-                moved = moved + 1
-            end
-            -- If tileData is missing, it might have dried or moved; drop it silently
-        end
-        -- If tile no longer belongs to this water body, drop it silently
-    end
-
-    return moved
 end
