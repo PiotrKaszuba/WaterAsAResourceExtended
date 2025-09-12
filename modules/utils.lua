@@ -486,6 +486,38 @@ function utils.LazyTables.on_merge(lazy_tables_array, other_main_table, other_la
 	end
 end
 
+function utils.LazyTables.next(main_table, lazy_tables_array, k, t)
+	if t == nil then t = 0 end
+	local v
+
+	-- iterate main table first
+	if t == 0 then
+		k, v = next(main_table, k)
+		-- if item found then return
+		if k ~= nil then
+			return k, v, 0
+		end
+		-- if empty move to next lazy table
+		t = t + 1
+		k = nil
+		
+	end
+	local arr = lazy_tables_array or {}
+	while t <= #arr do
+		local tab = arr[t]
+		if tab then
+			k, v = next(tab, k)
+			if k ~= nil then
+				return k, v, t
+			end
+		end
+		-- current lazy table exhausted or nil -> move to next
+		t = t + 1
+		k = nil
+	end
+	-- all tables exhausted
+	return nil, nil, nil
+end
 
 utils.MapMarker = {}
 
