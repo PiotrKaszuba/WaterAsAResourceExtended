@@ -463,10 +463,9 @@ function dynamic_bins.batch_push(dynamicBins, items)
 	local keys, idxs = {}, {}
 	for i = 1, num_items do
 		local item = items[i]
-		local item_data, ring_index = item[1], item[2] 
-		local is_xy = #item == 3
-		if not is_xy then
-			local x, y = ring_index, item[3]
+		local item_data, ring_index = item[1], item[2]
+		if #item == 3 then  -- x and y provided instead of ring_index
+			local x, y = ring_index, item[3]  -- x is under ring_index variable
 			ring_index = dynamic_bins.compute_ring_index(dynamicBins, x, y)
 		end
 		tmp[i] = dynamic_bins.init_item(item_data, ring_index)
