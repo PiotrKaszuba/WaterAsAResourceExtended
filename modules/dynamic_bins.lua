@@ -21,8 +21,7 @@
 --   dynamic_bins.size(dynamicBins) -> total items across bins + backfill
 --   dynamic_bins.front_info(dynamicBins) -> front_min_ring, front_max_ring | nil, nil
 --   dynamic_bins.set_center(dynamicBins, center_x, center_y)          -- does not re-bucket existing items
---	 TODO: backfill consumption and addition to bins (if front is not active)
---   dynamic_bins.backfill_consume(dynamicBins, max_items) -> num_consumed
+--   dynamic_bins.backfill_consume(dynamicBins, max_items, ignore_front?) -> num_consumed
 --	 TODO: add deduplication option such as in utils.Queue
 
 -- ==========================================
@@ -603,4 +602,45 @@ function dynamic_bins.front_info(dynamicBins)
 	local head = front and dynamicBins.bins[front] or dynamicBins.bins[1]
 	if not head then return nil, nil end
 	return head.min_ring, head.max_ring
+end
+
+function dynamic_bins.backfill_consume(dynamicBins, max_items, ignore_front)
+	-- tries to push backfill to bins
+	-- uses ring_index push API instead of x and y
+	-- so it doesn't recompute ring_index - if centroid changed on this dynamic bins instance
+	-- it won't update ring_index from when item was pushed to backfill
+
+	local backfill = dynamicBins.backfill
+	local backfill_size = #backfill
+	if backfill_size == 0 then return 0 end
+
+	local old_front = dynamicBins.front
+	-- ignore front sets current front to nil and later restores it
+	if ignore_front then
+		dynamicBins.front = nil
+	elseif old_front ~= nil then
+		-- if not ignoring front and front is active - don't consume backfill
+		return 0
+	end
+
+	local consumed = 0
+	local consumed_items = {} -- array of {['1'] = item_data, ['2'] = ring_index}
+	while consumed < max_items and backfill_size > 0 do
+		local item = backfill[backfill_size]
+		local item_data, ring_index = item.item_data, item.ring_index
+		consumed_items[consumed + 1] = {['1'] = item_data, ['2'] = ring_index}
+		backfill[backfill_size] = nil
+		backfill_size = backfill_size - 1
+		consumed = consumed + 1
+	end
+
+	-- add consumed items to bins
+	dynamic_bins.batch_push(dynamicBins, consumed_items)
+
+	-- restore front
+	if ignore_front then
+		dynamicBins.front = old_front
+	end
+
+	return consumed
 end
