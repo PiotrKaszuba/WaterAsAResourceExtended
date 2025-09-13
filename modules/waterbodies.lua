@@ -388,6 +388,7 @@ end
 
 function waterbodies.didCentroidChangeSignificantly(waterBody, old_center_x, old_center_y)
 	local centroid = waterbodies.getCentroid(waterBody)
+	if centroid == nil then return false end
 	local change_rate_threshold = waterbodies.getCentroidChangeRateThreshold()
 
 	local dx = centroid.x - old_center_x
@@ -401,6 +402,7 @@ end
 
 function waterbodies.ensureAndUpdateBinset(waterBody)
     local centroid = waterbodies.getCentroid(waterBody)
+	if centroid == nil then return false end
 
 	local gridsData = waterBody.gridsData
 	local newBinset = gridsData.newBinset
@@ -420,6 +422,7 @@ function waterbodies.ensureAndUpdateBinset(waterBody)
 			dynamic_bins.set_center(newBinset, centroid.x, centroid.y)
 		end
 	end
+	return true
 end
 
 function waterbodies.getCentroid(waterBody)
@@ -432,9 +435,9 @@ function waterbodies.getCentroid(waterBody)
 		end
 		if tile_count == 0 then
 			utils.profile_hits("waterbodies.getCentroid", "tile_count == 0")
-			game.print("Error: Tile count is 0 in getCentroid")
+			game.print("Warning: Tile count is 0 in getCentroid")
 		end
-        return { x = 0, y = 0 }
+        return nil
     end
     return { x = shape.SumX / tile_count, y = shape.SumY / tile_count }
 end

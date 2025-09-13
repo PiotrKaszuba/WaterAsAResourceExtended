@@ -36,6 +36,7 @@ function waterbody_update.createMapMarker(waterBody)
     for force_name, player_force in pairs(waterBody.waterBodyStateData.Forces) do
         local marker = waterBody.waterBodyStateData.MapMarkers[force_name]
         local position = waterbodies.getCentroid(waterBody)
+        if position == nil then return end
         
         if not marker or not utils.MapMarker.valid(marker) then
             marker = utils.MapMarker.new(player_force.force, surface, position, text, icon)
@@ -303,7 +304,8 @@ end
 -- Validates each tile still belongs to this water body as water.
 -- Returns number of tiles moved (used to deduct update budget outside).
 function waterbody_update.binsetMaintenance(waterBody, gridsData, max_to_move)
-    waterbodies.ensureAndUpdateBinset(waterBody)
+    local success = waterbodies.ensureAndUpdateBinset(waterBody)
+    if not success then return 0 end
     
     local oldBinsets = gridsData.oldBinsets
     local newBinset = gridsData.newBinset

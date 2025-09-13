@@ -82,6 +82,7 @@ end
 local function compute_score(fam, waterBody)
     local size = waterBody.waterAreaData.TotalArea
     local centroid = waterbodies.getCentroid(waterBody)
+    if centroid == nil then return -math.huge end
     local pc = fam.parentCentroid
     local diag = fam.parentDiag
     local dist = math.sqrt((centroid.x - pc.x)^2 + (centroid.y - pc.y)^2)

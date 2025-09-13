@@ -189,7 +189,13 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		local new_water_body_ids_and_positions = {}
 		-- choose primary successor among seeds
 		local parent_centroid = waterbodies.getCentroid(waterBody)
-		local parent_centroid_x, parent_centroid_y = parent_centroid.x, parent_centroid.y
+		local parent_centroid_x, parent_centroid_y = nil, nil
+		if parent_centroid == nil then
+			utils.profile_hits("waterbody_split.checkIfWaterBodyGotSplit", "Parent centroid is nil")
+			game.print("Error: Parent centroid is nil in checkIfWaterBodyGotSplit")
+		else
+			parent_centroid_x, parent_centroid_y = parent_centroid.x, parent_centroid.y
+		end
 		local parent_diag = math.max(waterBody.waterBodyShapeData.Hyp or 1, 1)
 		local best_idx, best_score = 1, -math.huge
 		local parent_area = waterBody.waterAreaData.TotalArea
@@ -201,8 +207,12 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 	
 			if count and centroid then
 				size_score = math.sqrt(count / parent_area)  -- to match the scaling of centroid_score
-				dx, dy = centroid.x - parent_centroid_x, centroid.y - parent_centroid_y
-				centroid_score = 1 - math.min(1, math.sqrt(dx*dx + dy*dy) / parent_diag)
+				if parent_centroid ~= nil then
+					dx, dy = centroid.x - parent_centroid_x, centroid.y - parent_centroid_y
+					centroid_score = 1 - math.min(1, math.sqrt(dx*dx + dy*dy) / parent_diag)
+				else
+					centroid_score = 0
+				end
 				w_size, w_centroid = any_hit_cap and 0.3 or 0.7, any_hit_cap and 0.7 or 0.3
 				score = w_size * size_score + w_centroid * centroid_score
 				if score > best_score then
