@@ -224,6 +224,7 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     
     -- 7. Check if water body becomes empty
     if waterbodies.isWaterBodyEmpty(waterBody) then
+        waterbodies.signalPerForce(waterBody, waterbodies.signalEmptyToPlayer)
         entities.disablePumpsAndRemoveWaterBody(waterBody)
     end
 end

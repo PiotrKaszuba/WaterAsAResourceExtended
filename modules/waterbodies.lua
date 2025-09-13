@@ -596,6 +596,10 @@ function waterbodies.InitWaterBody(
 	}
 end
 
+function waterbodies.signalEmptyToPlayer(waterBody)
+    return string.format("%s has no water tiles and is removed.", waterbodies.getFullNameForWaterBody(waterBody))
+end
+
 function waterbodies.isWaterBodyEmpty(waterBody)
     for _, count in pairs(waterBody.waterBodyTileCountData) do
         if count > 0 then

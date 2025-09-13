@@ -241,8 +241,8 @@ end
 
 function waterbody_update.signalOrphanedToPlayer(waterBody)
     local is_depleted = waterBody.waterBodyStateData.Depleted
-    local depleted_msg = is_depleted and " depleted and " or ""
-    return string.format("%s has been %s orphaned and is removed.", waterbodies.getFullNameForWaterBody(waterBody), depleted_msg)
+    local depleted_msg = is_depleted and " depleted and " or " "
+    return string.format("%s has been%sorphaned and is removed.", waterbodies.getFullNameForWaterBody(waterBody), depleted_msg)
 end
 
 function waterbody_update.getRemoveDepletedOrphaned()
@@ -250,6 +250,14 @@ function waterbody_update.getRemoveDepletedOrphaned()
 end
 
 function waterbody_update.waterBodyCleanup(waterBody)
+    local to_remove = false
+    local searchData = waterBody.searchData
+    local finished = searchData.finished
+    if waterbodies.isWaterBodyEmpty(waterBody) and finished then
+        waterbodies.signalPerForce(waterBody, waterbodies.signalEmptyToPlayer)
+        to_remove = true
+    end
+
     local isOrphaned = waterbodies.isWaterBodyOrphaned(waterBody)
 
     local state = waterBody.waterBodyStateData
@@ -259,14 +267,18 @@ function waterbody_update.waterBodyCleanup(waterBody)
         -- remove only unnamed waterbody types and after bigUpdates higher than their area
         -- also remove orphaned depleted waterbodies
         -- remove only if search is finished to account that we might not have the total area right yet
-        if (((waterbodies.WaterBodyTypeToNamesCollection[waterBody.waterAreaData.WaterBodyType] == nil) and state.OrphanedSecondsCount > waterBody.waterAreaData.TotalArea)
-            or (waterbody_update.getRemoveDepletedOrphaned() and state.Depleted)) and waterBody.searchData.finished then
+        local waterAreaData = waterBody.waterAreaData
+        if (((waterbodies.WaterBodyTypeToNamesCollection[waterAreaData.WaterBodyType] == nil) and state.OrphanedSecondsCount > waterAreaData.TotalArea)
+            or (waterbody_update.getRemoveDepletedOrphaned() and state.Depleted)) and finished then
             
             waterbodies.signalPerForce(waterBody, waterbody_update.signalOrphanedToPlayer)
-            waterbodies.removeWaterBody(waterBody)
+            to_remove = true
         end
     else
         state.OrphanedSecondsCount = 0
+    end
+    if to_remove then
+        entities.disablePumpsAndRemoveWaterBody(waterBody)
     end
 end
 
