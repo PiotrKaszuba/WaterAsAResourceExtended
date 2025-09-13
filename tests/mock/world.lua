@@ -25,7 +25,12 @@ local function new_surface(name, default_tile)
     end
 
     function surface.set_tiles(arg1, arg2)
-        local tile_array = arg2 or arg1
+        local tile_array
+        if type(arg1) == "table" and arg1[1] and arg1[1].position then
+            tile_array = arg1
+        else
+            tile_array = arg2
+        end
         for _, t in ipairs(tile_array) do
             surface.tiles[grid_key(t.position)] = t.name
         end
@@ -36,6 +41,40 @@ local function new_surface(name, default_tile)
     end
 
     function surface.request_to_generate_chunks(_) end
+
+    function surface.get_connected_tiles(start_pos, tiles, _, bbox)
+        local allowed = {}
+        for _, name in pairs(tiles or {}) do
+            allowed[name] = true
+        end
+        local start_name = surface.get_tile(start_pos).name
+        if not allowed[start_name] then return {} end
+
+        local result = {}
+        local queue = {start_pos}
+        local visited = {[grid_key(start_pos)] = true}
+        local function inside_bbox(pos)
+            if not bbox then return true end
+            return pos.x >= bbox.left_top.x and pos.x < bbox.right_bottom.x and
+                   pos.y >= bbox.left_top.y and pos.y < bbox.right_bottom.y
+        end
+        local dirs = {{1,0}, {-1,0}, {0,1}, {0,-1}}
+        local qi = 1
+        while queue[qi] do
+            local pos = queue[qi]
+            qi = qi + 1
+            result[#result+1] = {x = pos.x, y = pos.y}
+            for _, d in ipairs(dirs) do
+                local np = {x = pos.x + d[1], y = pos.y + d[2]}
+                local key = grid_key(np)
+                if not visited[key] and inside_bbox(np) and allowed[surface.get_tile(np).name] then
+                    visited[key] = true
+                    queue[#queue+1] = np
+                end
+            end
+        end
+        return result
+    end
 
     return surface
 end
@@ -75,6 +114,34 @@ function World:set_water_rectangle(surface, rect)
     surface:set_tiles(tiles)
 end
 
+function World:waterfill(surface, position, variant)
+    local name = "waterfill-placer"
+    if variant == "deep" then name = "waterfill-placer-deep" end
+    self:build_entity({
+        name = name,
+        position = position,
+        surface = surface,
+    })
+end
+
+function World:landfill_rectangle(surface, top_left, width, height)
+    local tiles = {}
+    for dx = 0, width - 1 do
+        for dy = 0, height - 1 do
+            local pos = {x = top_left.x + dx, y = top_left.y + dy}
+            local old_name = surface.get_tile(pos).name
+            tiles[#tiles+1] = {name = "grass-1", position = pos, old_tile = {name = old_name}}
+        end
+    end
+    surface:set_tiles(tiles)
+    mock.raise_event(defines.events.on_player_built_tile, {
+        player_index = 1,
+        surface_index = surface.index,
+        tile = {name = "landfill"},
+        tiles = tiles,
+    })
+end
+
 function World:build_entity(spec)
     local surface = spec.surface
     local entity = {
@@ -99,6 +166,12 @@ function World:build_entity(spec)
     surface.entities[entity.unit_number] = entity
     mock.raise_event(defines.events.on_built_entity, {entity = entity})
     return entity
+end
+
+function World:mine_entity(entity)
+    if not entity.valid then return end
+    mock.raise_event(defines.events.on_player_mined_entity, {entity = entity, player_index = 1})
+    entity.destroy()
 end
 
 return {
