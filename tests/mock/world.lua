@@ -42,7 +42,7 @@ local function new_surface(name, default_tile)
 
     function surface.request_to_generate_chunks(_) end
 
-    function surface.get_connected_tiles(start_pos, tiles, _, bbox)
+    function surface.get_connected_tiles(start_pos, tiles, include_diagonal, bbox)
         local allowed = {}
         for _, name in pairs(tiles or {}) do
             allowed[name] = true
@@ -59,6 +59,12 @@ local function new_surface(name, default_tile)
                    pos.y >= bbox.left_top.y and pos.y < bbox.right_bottom.y
         end
         local dirs = {{1,0}, {-1,0}, {0,1}, {0,-1}}
+        if include_diagonal then
+            dirs[#dirs+1] = {1,1}
+            dirs[#dirs+1] = {1,-1}
+            dirs[#dirs+1] = {-1,1}
+            dirs[#dirs+1] = {-1,-1}
+        end
         local qi = 1
         while queue[qi] do
             local pos = queue[qi]
