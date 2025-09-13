@@ -6,8 +6,11 @@ local function printf(fmt, ...)
     print(string.format(fmt, ...))
 end
 
-function M.start()
+function M.start(msg)
     passed, failed = 0, 0
+    if msg then
+        print(msg)
+    end
 end
 
 function M.ok(cond, name)

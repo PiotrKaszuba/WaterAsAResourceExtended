@@ -12,15 +12,15 @@ local function run_test(args)
     local expected_area = args.expected_area or 1
     local expected_water_amount = args.expected_water_amount or 50
     local update_budget_setting = args.update_budget_setting or 200
-    -- TODO setup settings changing update_budget_setting
     local additional_info = args.additional_info or nil
     local msg = string.format("Landfill brush test: %s x 1, update budget: %s", brush_size, update_budget_setting)
     if additional_info then
         msg = msg .. "\n" .. additional_info
     end
-    -- TODO allow start function toaccept and print msg
-    t.start()
+    t.start(msg)
     local world, surface = test_env.create_world()
+    settings.global["Update-Budget-Per-Second"].value = update_budget_setting
+    storage.UpdateBudget = update_budget_setting
     -- initial water line of three tiles
     world:set_water_rectangle(surface, {x1 = 0, y1 = 0, x2 = 2, y2 = 0})
 
