@@ -1,5 +1,6 @@
 local test_env = require("tests.helpers.test_env")
 local t = require("tests.helpers.test_assert")
+local run_mock_test = require("tests.helpers.mock_test")
 
 local function run_test()
     t.start()
@@ -26,5 +27,5 @@ local function run_test()
     t.finish("Pump scan tests complete")
 end
 
-run_test()
+run_mock_test(run_test)
 

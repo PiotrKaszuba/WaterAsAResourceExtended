@@ -5,14 +5,21 @@ for file in io.popen("ls tests"):lines() do
     end
 end
 
+local function sep(char)
+    print(string.rep(char, 30))
+end
+
 local failures = 0
 for _, test in ipairs(tests) do
+    sep("=")
     print("Running " .. test)
+    sep("-")
     local ok, err = pcall(dofile, "tests/" .. test)
     if not ok then
         failures = failures + 1
         print("[ERROR] " .. err)
     end
+    sep("=")
     collectgarbage()
 end
 

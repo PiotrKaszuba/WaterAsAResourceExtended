@@ -30,7 +30,8 @@ function M.eq(a, b, name)
 end
 
 function M.finish(label)
-    printf("\n%s: %d passed, %d failed.", label, passed, failed)
+    print(string.rep("-", 30))
+    printf("%s: %d passed, %d failed.", label, passed, failed)
     if failed == 0 then
         print("All good ✅")
     else
