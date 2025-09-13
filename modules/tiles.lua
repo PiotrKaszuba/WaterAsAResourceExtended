@@ -48,7 +48,7 @@ function tiles.placerWater(placed)
 		position = {x=pos.x, y=pos.y},
         old_tile = {name = old_tile_name}
 	}
-   
+    -- 5th argument is false to prevent script_raised_set_tiles event
     surface.set_tiles(tileArray, true, true, true, false)
     tiles.handleTileEventsInternal(
         tileArray,
