@@ -442,42 +442,6 @@ function waterbodies.getCentroid(waterBody)
     return { x = shape.SumX / tile_count, y = shape.SumY / tile_count }
 end
 
-function waterbodies.getPumpCentroid(waterBody)
-	local pumpCount = 0
-	local totalX, totalY = 0, 0
-    for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
-		local position = pump_data.input_position
-        totalX = totalX + position.x
-        totalY = totalY + position.y
-        pumpCount = pumpCount + 1
-    end
-
-    if pumpCount == 0 then
-        return nil
-    end
-
-    local pumpCenterX = totalX / pumpCount
-    local pumpCenterY = totalY / pumpCount
-	return { x = pumpCenterX, y = pumpCenterY }
-end
-
-function waterbodies.calculateDepletionFocusPoint(waterBody)
-    local centroid = waterbodies.getCentroid(waterBody)
-	local pumpCentroid = waterbodies.getPumpCentroid(waterBody)
-	if pumpCentroid == nil then
-		return centroid
-	end
-	local centerX, centerY = centroid.x, centroid.y
-	local vectorX = centerX - pumpCentroid.x
-	local vectorY = centerY - pumpCentroid.y
-
-    -- The focus point is "opposite" the pump center relative to the water body center
-    local focusPoint = { x = centerX + vectorX, y = centerY + vectorY }
-    -- fix position to left-top corner - needed because average position is not fixed
-    focusPoint = utils.fixPositionToLeftTopCorner(focusPoint)
-    return focusPoint
-end
-
 function waterbodies.initShapeData()
     return {
 		-- min/max positions are limit values ever seen on the waterbody

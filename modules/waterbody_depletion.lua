@@ -1,5 +1,4 @@
 require("modules.waterbodies")
-require("modules.entities")
 require("modules.utils")
 
 waterbody_depletion = {}
@@ -63,7 +62,7 @@ function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percent
 
     if next(candidateTiles) == nil then return end
 
-    local focusPoint = waterbodies.calculateDepletionFocusPoint(waterBody)
+    local focusPoint = waterbodies.getCentroid(waterBody)
     waterbody_depletion.sortTilesByDistance(candidateTiles, focusPoint, not isDepleting) -- Sort ascending for restoring, descending for depleting
 
     local tilesToChange = {}

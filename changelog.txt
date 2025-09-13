@@ -13,7 +13,7 @@ Date: 2025.8.01
     - Fixed: no longer depletes water globally or from all waterbodies on a surface - now, due to Lua API updates - its able to properly track per pump water usage
     - New features - waterbody merging and splitting
     - Includes waterfill mod that allows placing shallow water next existing water
-    - Reworked the visual waterbody depletion algorithm - now based on pump locations.
+    - Reworked the visual waterbody depletion algorithm - now based on waterbody centroid.
 ---------------------------------------------------------------------------------------------------
 Version: 1.1.0
 Date: 19. 08. 2024
