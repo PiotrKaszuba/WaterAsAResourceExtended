@@ -1,6 +1,7 @@
 if pcall(require, "lldebugger") then
   require("lldebugger").start()
 end
+
 require("modules/dynamic_bins")
 -- ==========================================
 -- DynamicBins test suite (print-based)

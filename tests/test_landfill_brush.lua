@@ -1,3 +1,7 @@
+if pcall(require, "lldebugger") then
+    require("lldebugger").start()
+end
+
 local test_env = require("tests.helpers.test_env")
 local t = require("tests.helpers.test_assert")
 local run_mock_test = require("tests.helpers.mock_test")
