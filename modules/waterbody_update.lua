@@ -549,7 +549,17 @@ end
 function waterbody_update.prepareUpdateConditionFunc(waterBody)
     local gridsData = waterBody.gridsData
     -- if any of lazy arrays is not empty, we need to update it
-    if #gridsData.lazyWaterGridWithData > 0 or #gridsData.lazyDriedTilesGridWithData > 0 or #gridsData.lazyEdgeGrid > 0 or #waterBody.searchData.lazySearchQueue > 0 then
+    if #gridsData.lazyWaterGridWithData > 0 or #gridsData.lazyDriedTilesGridWithData > 0 or #gridsData.lazyEdgeGrid > 0 or #waterBody.searchData.lazySearchQueue > 0 or #gridsData.lazyDriedStack > 0 then
+        return true
+    end
+
+    local pendingTiles = gridsData.pendingTiles
+    local oldBinsets = gridsData.oldBinsets
+    if pendingTiles.size > 0 or #oldBinsets > 0 then
+        return true
+    end
+    local newBinset = gridsData.newBinset
+    if newBinset and (newBinset.total == 0 or #newBinset.backfill > 0) then
         return true
     end
     return false
