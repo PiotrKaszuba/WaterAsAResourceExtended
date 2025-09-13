@@ -230,10 +230,15 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		local first_tile_pos = nil
 		local new_water_body_id = nil
 		local new_water_body = nil
+		local created_at_positions = {} -- gridKey -> waterBodyId
+		local tmp_gridKey = nil
 		for i, tile_set in ipairs(connected_tile_sets) do
 			first_tile_pos = tile_set[1]
 			new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
 			new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = first_tile_pos, waterBody = new_water_body, seed_stats = seeds_stats[i]}
+			
+			tmp_gridKey = hot_utils.GridKey(first_tile_pos)
+			created_at_positions[tmp_gridKey] = new_water_body_id
 		end
 
 		for _, pump_data in ipairs(pumps) do
@@ -241,12 +246,19 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 				local pump_input_position = pump_data.input_position
 				-- check if this is still water tile
 				if utils.validate_tile_placement(pump_input_position, surface, utils.WaterAndDryTiles) then
-					new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
-					
 					-- fix position to left-top corner - because it is center based - from entity position
 					local pump_input_top_left_corner = utils.fixPositionToLeftTopCorner(pump_input_position)
 					
-					new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner, waterBody = new_water_body, seed_stats = nil}
+					-- checking whether we already created a water body at this position from any seed position
+					tmp_gridKey = hot_utils.GridKey(pump_input_top_left_corner)
+					local new_water_body_id = created_at_positions[tmp_gridKey]
+					if new_water_body_id == nil then
+						-- if not - create a new water body at this position
+						new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
+						new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner, waterBody = new_water_body, seed_stats = nil}
+						created_at_positions[pump_input_top_left_corner] = new_water_body_id
+					end
+					
 					-- waterBody got removed - so we just need to add it to the new water body
 					entities.addPumpToWaterBody(new_water_body_id, pump_data)
 				else
