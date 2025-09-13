@@ -23,6 +23,11 @@ for _, test in ipairs(tests) do
     collectgarbage()
 end
 
+if #tests == 0 then
+    print("No tests found! (Discovery of tests does not work on Windows)")
+    os.exit(1)
+end
+
 if failures > 0 then
     print(string.format("\n%d test file(s) failed", failures))
     os.exit(1)
