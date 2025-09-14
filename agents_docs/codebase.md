@@ -1,0 +1,5 @@
+- This project is a Factorio version >= 2.0 mod
+- It uses Lua modding API
+- Runs with stock Lua 5.2 (no JIT), modified for Factorio. It was changed to be deterministic, i.e. "pairs" are deterministic. The mock testing environment mentioned in "Testing" most likely won't use modified Lua, just stock Lua 5.2.
+- Performance optimization is important. Each frame has only about 16ms to execute. This mod shouldn't use more than a few ms so there is still space for game internals to run and potentially other mods. Both, the average and max tick runtime of this mod should be kept minimal.
+- Important considerations include i.e. variable scoping for read/write access time, optimization of total amount of reads/writes, and deferring work to future ticks while keeping the internal state consistent the whole time and avoiding memory leaks for long gameplay (i.e. "lazy tables" in modules/utils.lua - and access to the union of tables + further work on rewriting "lazy tables" to the main one).

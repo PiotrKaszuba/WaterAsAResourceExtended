@@ -1,0 +1,14 @@
+- Test are located in /tests
+- /tests/run.lua runs all tests (unix-like system, ls command used)
+- 'Mock tests' are tests using a minimal simulation of a Factorio environment
+    - To use - install Lua 5.2
+    - Automated, faster and repeatable testing of the mod's code
+    - Shows performance of the mod's code (including avg/max time per tick or event) - can be used to optimize the code
+    - Should ideally cover most of the possible different scenarios at small, medium and big scale
+
+- Debugging - what to look for in tests outputs:
+    - Currently logging based on prints to standard output
+    - Look for messages beginning with "Warning" or "Error"; some tests might inform that it's ok/correct that they've raised particular amount of logs
+    - storage.profiling_hits is also used to record amount of times code hits particular place with caller name and scenario name, that is - what happened (modules/utils.lua: utils.profile_hits) - there's no need to look it up or use it commonly; only do in particularly problematic debugging scenarios
+
+- For test development, you can have a look at agents_docs/test_development.md. After preparing more tests or learning something new on that topic you can extend the "Insights and Lessons Learned" section in that doc.
