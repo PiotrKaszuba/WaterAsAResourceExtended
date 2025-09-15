@@ -72,7 +72,9 @@ function waterbodies.getSurfaceMaxWaterbodies()
 end
 
 function waterbodies.getMaxWaterBodySize()
-    return settings.global["FluidArea-MaxFluidAreaSize"].value
+    local val = settings.global["FluidArea-MaxFluidAreaSize"].value
+	if val == 0 then return math.huge end
+	return val
 end
 
 function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)

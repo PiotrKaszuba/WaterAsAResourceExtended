@@ -89,8 +89,8 @@ data:extend({
         type = "int-setting",
         name = "FluidArea-MaxFluidAreaSize",
         setting_type = "runtime-global",
-        default_value = 2000000, 
-        minimum_value = 600000,
+        default_value = 0,
+        minimum_value = 0,
         maximum_value = 9999999999
     },
     {
