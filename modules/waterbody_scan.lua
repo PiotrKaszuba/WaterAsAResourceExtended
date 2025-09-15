@@ -162,7 +162,7 @@ function waterbody_scan.EdgePattern(
         local already_searched = tileWaterBodyId == waterBodyId or utils.LazyTables.get(gridKey, edgeGrid, lazyEdgeGrid) ~= nil
         if (not already_searched) then
 			if not tile.valid then
-				tileInvalidOrOutOfMap(position, true, searchQueue, enqueue, "waterbody_scan.EdgePattern")
+				tileInvalidOrOutOfMap(surface, position, true, searchQueue, enqueue, "waterbody_scan.EdgePattern")
 				goto continue
 			end
 	
@@ -170,7 +170,7 @@ function waterbody_scan.EdgePattern(
 			local tile_name = tile.name
 	
 			if tile_name == out_of_map_tile_name then
-				tileInvalidOrOutOfMap(position, false, searchQueue, enqueue, "waterbody_scan.EdgePattern")
+				tileInvalidOrOutOfMap(surface, position, false, searchQueue, enqueue, "waterbody_scan.EdgePattern")
 				goto continue
 			end
 			
@@ -435,7 +435,7 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 end
 
 -- returns true if the tile needs to be dropped, false if if not (was re-enqueued)
-function waterbody_scan.tileInvalidOrOutOfMap(search_position, invalid, search_queue, enqueue, caller_name)
+function waterbody_scan.tileInvalidOrOutOfMap(surface, search_position, invalid, search_queue, enqueue, caller_name)
 	local case_name = invalid and "tile invalid" or "tile out of map"
 	utils.profile_hits(caller_name, case_name)
 	
@@ -539,7 +539,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		tile = GetTile(search_position)
 
 		if not tile.valid then
-			local dropped_tile = tileInvalidOrOutOfMap(search_position, true, search_queue, enqueue, "waterbody_scan.ScanWaterArea")
+			local dropped_tile = tileInvalidOrOutOfMap(surface, search_position, true, search_queue, enqueue, "waterbody_scan.ScanWaterArea")
 			if dropped_tile then goto continue end
 			break
 		end
@@ -548,7 +548,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		local tile_name = tile.name
 
 		if tile_name == out_of_map_tile_name then
-			local dropped_tile = tileInvalidOrOutOfMap(search_position, false, search_queue, enqueue, "waterbody_scan.ScanWaterArea")
+			local dropped_tile = tileInvalidOrOutOfMap(surface, search_position, false, search_queue, enqueue, "waterbody_scan.ScanWaterArea")
 			if dropped_tile then goto continue end
 			break
 		end
