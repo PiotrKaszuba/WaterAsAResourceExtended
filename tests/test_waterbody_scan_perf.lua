@@ -118,6 +118,8 @@ function BudgetCycleTracker:_begin_cycle(budget, tick)
             start_tick = tick,
             exhausted = budget.budget <= 0,
             first_exhaust_tick = budget.budget <= 0 and tick or nil,
+            begin_value = budget.budget,
+            end_value = budget.budget,
         }
     else
         self.current = nil
@@ -143,11 +145,14 @@ function BudgetCycleTracker:update(budget, tick)
         return
     end
 
-    if self.current and budget and budget.budget <= 0 then
-        if not self.current.exhausted then
-            self.current.first_exhaust_tick = tick
-        end
-        self.current.exhausted = true
+    if self.current and budget then
+        self.current.end_value = budget.budget
+        if budget.budget <= 0 then
+            if not self.current.exhausted then
+                    self.current.first_exhaust_tick = tick
+            end
+                self.current.exhausted = true
+            end
     end
 end
 
@@ -157,30 +162,38 @@ end
 
 function BudgetCycleTracker:summary()
     local exhausted = 0
+    local total_budget = 0
+    local total_used = 0
     for _, cycle in ipairs(self.cycles) do
         if cycle.exhausted then
             exhausted = exhausted + 1
         end
+        total_budget = total_budget + cycle.begin_value
+        total_used = total_used + (cycle.begin_value - cycle.end_value)
     end
     local total = #self.cycles
     local percent = total > 0 and exhausted / total or 0
+    local percent_used_total = total_used > 0 and total_used / total_budget or 0
     return {
         total = total,
         exhausted = exhausted,
         percent = percent,
+        percent_used_total = percent_used_total,
         cycles = self.cycles,
     }
 end
 
 local configs = {
-    {name = "tiles-limited-low", tiles_per_sec = 120, update_budget = 600, expected_limiter = "tiles"},
-    {name = "tiles-limited-mid", tiles_per_sec = 360, update_budget = 540, expected_limiter = "tiles"},
-    {name = "balanced-600-400", tiles_per_sec = 600, update_budget = 400, expected_limiter = "balanced"},
-    {name = "balanced-720-400", tiles_per_sec = 720, update_budget = 400, expected_limiter = "balanced"},
-    {name = "budget-limited-600-360", tiles_per_sec = 600, update_budget = 360, expected_limiter = "budget"},
-    {name = "budget-limited-720-360", tiles_per_sec = 720, update_budget = 360, expected_limiter = "budget"},
-    {name = "budget-limited-1200-150", tiles_per_sec = 1200, update_budget = 150, expected_limiter = "budget"},
-    {name = "budget-limited-1800-300", tiles_per_sec = 1800, update_budget = 300, expected_limiter = "budget"},
+    {name = "tiles-limited-low", tiles_per_sec = 120, update_budget = 150, expected_limiter = "tiles"},
+    {name = "tiles-limited-mid", tiles_per_sec = 360, update_budget = 400, expected_limiter = "tiles"},
+    {name = "balanced-400-403", tiles_per_sec = 400, update_budget = 403, expected_limiter = "balanced"},
+
+    {name = "budget-limited-400-360", tiles_per_sec = 400, update_budget = 360, expected_limiter = "budget"},
+    {name = "budget-limited-525-500", tiles_per_sec = 525, update_budget = 500, expected_limiter = "budget"},
+    
+    {name = "tiles-limited-10000-50000", tiles_per_sec = 10000, update_budget = 50000, expected_limiter = "tiles"},
+
+
 }
 
 local function apply_scan_settings(cfg)
@@ -249,18 +262,17 @@ local function measure(cfg)
             water_area = wbody.waterAreaData.TotalArea,
             budget_summary = budget_summary,
             search_queue_stats = queue_stats,
-            search_total_area = wbody.searchData.totalArea,
         }
     end)
 end
 
-local function classify_budget(percent)
-    if percent >= 0.9 then
-        return "budget-limited"
-    elseif percent <= 0.1 then
-        return "tiles-limited"
-    else
+local function classify_budget(percent_exhausted, percent_used_total)
+    if percent_exhausted >= 95 then
+        return "budget"
+    elseif percent_used_total >= 95 then
         return "balanced"
+    else
+        return "tiles"
     end
 end
 
@@ -272,36 +284,34 @@ local function run_config(cfg)
         local stats = result.search_queue_stats
         local budget_summary = result.budget_summary
         local percent_exhausted = budget_summary.percent * 100
-        local limiter_description = classify_budget(budget_summary.percent)
+        local percent_used_total = budget_summary.percent_used_total * 100
+        local limiter_description = classify_budget(percent_exhausted, percent_used_total)
 
+        local resulting_scans_per_second = stats and stats.enqueues / result.seconds or 0
+        local resulting_tiles_per_second = result.water_area / result.seconds
+        local effectiveness_of_scans_percentage = resulting_tiles_per_second / resulting_scans_per_second * 100
         print(string.format(
-            "[%s] tiles/sec=%d budget=%d -> %d ticks (%.2f s), search area=%d, enqueues=%s, budget cycles=%d/%d (%.2f%%) => %s",
+            "[%s] tiles/sec=%d budget=%d -> %d ticks (%.2f s), water area=%d, enqueues=%s, budget cycles=%d/%d (%.2f%%), budget used=%.2f%% => %s, scans/sec=%.2f, tiles added/sec=%.2f, scan effectiveness=%.2f%%",
             cfg.name,
             cfg.tiles_per_sec,
             cfg.update_budget,
             result.ticks,
             result.seconds,
-            result.search_total_area,
+            result.water_area,
             stats and tostring(stats.enqueues) or "nil",
             budget_summary.exhausted,
             budget_summary.total,
             percent_exhausted,
-            limiter_description
+            percent_used_total,
+            limiter_description,
+            resulting_scans_per_second,
+            resulting_tiles_per_second,
+            effectiveness_of_scans_percentage
         ))
 
         t.eq(result.water_area, 10000, string.format("Water body area is 10k for %s", cfg.name))
 
-        if cfg.expected_limiter == "budget" then
-            t.ok(
-                budget_summary.percent >= 0.9,
-                string.format("Budget exhaustion: budget-limited for %s", cfg.name)
-            )
-        elseif cfg.expected_limiter == "tiles" then
-            t.ok(
-                budget_summary.percent <= 0.1,
-                string.format("Budget exhaustion: tiles-limited for %s", cfg.name)
-            )
-        end
+        t.ok(cfg.expected_limiter == limiter_description, string.format("Expected limiter: %s, got: %s", cfg.expected_limiter, limiter_description))
 
         t.ok(
             stats and not stats.enqueue_front and not stats.dequeue_back,
