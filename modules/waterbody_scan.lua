@@ -318,12 +318,13 @@ function waterbody_scan.processWaterTile(
 	local total_area_increase, dried_tiles_increase, waterbody_changed = 0, 0, false
 	local is_tile_assigned_to_water_body = ValidWaterBodies[tile_waterBodyId] ~= nil
 
-	if not (is_water_tile or is_dry_tile) and is_tile_assigned_to_water_body then
-		
-		-- is this code alive?
-		utils.profile_hits("processWaterTile", "does it happen?")
-		game.print("Testing: IT DOES HAPPEN: processWaterTile got non water or dry tile that is not assigned to a water body!.")
-
+	if not (is_water_tile or is_dry_tile) then
+		-- not a water (or dry) tile - it could have been added to search queue
+		-- when a tile wasn't generated yet through EdgePattern
+		if is_tile_assigned_to_water_body then
+			utils.profile_hits("processWaterTile", "non water or dry tile that is assigned to a water body")
+			game.print("Warning: processWaterTile got non water or dry tile that is assigned to a water body!")
+		end
 		-- Non-water tile - mark as searched without adding to water body and skip
 		addNewWaterTile(gridKey, surfaceName, -1)
 		-- no tile was added to the processed water body
