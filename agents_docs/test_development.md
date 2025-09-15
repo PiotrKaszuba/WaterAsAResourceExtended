@@ -16,3 +16,5 @@
 - Multi‑tile landfill brushes remove several tiles at once, so mocks must support batch updates.
 - Save/load scenarios require robust state serialization and are difficult to validate in the current mock framework.
 - Well-scoped commits and thorough PR summaries speed up reviews and future development.
+- Instrumenting queue helpers (e.g., wrapping `utils.Queue`) inside tests makes it possible to assert scan budgets, enqueue counts, and other performance characteristics without modifying game code.
+- Recording `storage.CurrentUpdateBudget` resets and counting how often the per-cycle budget hits zero lets tests classify tile-limited, budget-limited, and balanced scenarios empirically, and validates the percentage of cycles that exhaust the budget.
