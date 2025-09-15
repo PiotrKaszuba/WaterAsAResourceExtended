@@ -444,7 +444,7 @@ function waterbody_scan.tileInvalidOrOutOfMap(surface, search_position, invalid,
 	local is_chunk_generated = surface.is_chunk_generated(chunk_position)
 
 	if not is_chunk_generated then
-		if invalid then surface.request_to_generate_chunks(chunk_position, 1) end
+		if invalid then surface.request_to_generate_chunks(search_position, 1) end
 		-- do not block waiting for the chunk to be generated, instead:
 		-- re-enqueue the position to be processed again
 		enqueue(search_queue, search_position)
