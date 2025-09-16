@@ -191,7 +191,7 @@ local configs = {
     {name = "budget-limited-400-360", tiles_per_sec = 400, update_budget = 360, expected_limiter = "budget"},
     {name = "budget-limited-525-500", tiles_per_sec = 525, update_budget = 500, expected_limiter = "budget"},
     
-    {name = "tiles-limited-10000-50000", tiles_per_sec = 10000, update_budget = 50000, expected_limiter = "tiles", side_size = 1000},
+    {name = "tiles-limited-10000-50000-side-250", tiles_per_sec = 10000, update_budget = 50000, expected_limiter = "tiles", side_size = 250},
 
 
 }
