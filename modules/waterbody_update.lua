@@ -35,14 +35,22 @@ function waterbody_update.createMapMarker(waterBody)
 
     for force_name, player_force in pairs(waterBody.waterBodyStateData.Forces) do
         local marker = waterBody.waterBodyStateData.MapMarkers[force_name]
-        local position = waterbodies.getCentroid(waterBody)
-        if position == nil then return end
+        local position = nil
+        if force_to_pump[force_name] then
+            position = force_to_pump[force_name].input_position
+            position = utils.fixPositionToLeftTopCorner(position) -- not needed, but let's use left-top as much as possible
+        end
         
-        if not marker or not utils.MapMarker.valid(marker) then
+        if position and (not marker or not utils.MapMarker.valid(marker)) then
             marker = utils.MapMarker.new(player_force.force, surface, position, text, icon)
             waterBody.waterBodyStateData.MapMarkers[force_name] = marker
         else
-            utils.MapMarker.update(marker, position, text, icon)
+            if position then
+                utils.MapMarker.update(marker, position, text, icon)
+            elseif marker then
+                utils.MapMarker.destroy(marker)
+                waterBody.waterBodyStateData.MapMarkers[force_name] = nil
+            end
         end
     end
 end
