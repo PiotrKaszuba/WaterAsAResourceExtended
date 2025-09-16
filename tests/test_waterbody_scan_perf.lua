@@ -18,9 +18,7 @@ function QueueProbe.attach(queue_utils)
         original = {
             new = queue_module.new,
             enqueue = queue_module.enqueue,
-            deduplicate_enqueue = queue_module.deduplicate_enqueue,
             dequeue_back = queue_module.dequeue_back,
-            deduplicate_dequeue = queue_module.deduplicate_dequeue,
         },
         stats_by_queue = setmetatable({}, {__mode = "k"}),
     }, QueueProbe)
@@ -37,15 +35,12 @@ function QueueProbe.attach(queue_utils)
         return queue
     end
 
-    local enqueue_modified = function(deduplicate, queue, value, at_front, deduplicate_hash_function)
+    local enqueue_modified = function(queue, value, at_front)
         local stats = probe.stats_by_queue[queue]
         local capacity_before = queue.capacity
         local result
-        if deduplicate then
-            result = probe.original.deduplicate_enqueue(queue, value, at_front, deduplicate_hash_function)
-        else
-            result = probe.original.enqueue(queue, value, at_front)
-        end
+
+        result = probe.original.enqueue(queue, value, at_front)
 
         if stats and result then
             stats.enqueues = stats.enqueues + 1
@@ -62,12 +57,8 @@ function QueueProbe.attach(queue_utils)
         return result
     end
 
-    queue_module.enqueue = function(queue, value, at_front, ...)
-        return enqueue_modified(false, queue, value, at_front, ...)
-    end
-
-    queue_module.deduplicate_enqueue = function(queue, value, at_front, deduplicate_hash_function)
-        return enqueue_modified(true, queue, value, at_front, deduplicate_hash_function)
+    queue_module.enqueue = function(queue, value, at_front)
+        return enqueue_modified(queue, value, at_front)
     end
 
     queue_module.dequeue_back = function(queue, ...)
@@ -76,14 +67,6 @@ function QueueProbe.attach(queue_utils)
             stats.dequeue_back = true
         end
         return probe.original.dequeue_back(queue, ...)
-    end
-
-    queue_module.deduplicate_dequeue = function(queue, dequeue_back, deduplicate_hash_function, lazy_queues_array)
-        local stats = probe.stats_by_queue[queue]
-        if stats and dequeue_back then
-            stats.dequeue_back = true
-        end
-        return probe.original.deduplicate_dequeue(queue, dequeue_back, deduplicate_hash_function, lazy_queues_array)
     end
 
     return probe
@@ -107,9 +90,7 @@ function QueueProbe:restore()
     local queue_module = self.queue_module
     queue_module.new = self.original.new
     queue_module.enqueue = self.original.enqueue
-    queue_module.deduplicate_enqueue = self.original.deduplicate_enqueue
     queue_module.dequeue_back = self.original.dequeue_back
-    queue_module.deduplicate_dequeue = self.original.deduplicate_dequeue
 end
 
 local function with_queue_probe(queue_utils, fn)
