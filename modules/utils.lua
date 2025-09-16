@@ -329,13 +329,6 @@ function utils.Queue.is_empty(queue)
     return queue.size == 0
 end
 
-function utils.Queue.merge(queue, other_queue)
-    while not utils.Queue.is_empty(other_queue) do
-        local val = utils.Queue.dequeue(other_queue)
-        utils.Queue.enqueue(queue, val)
-    end
-end
-
 function utils.periodic_ticks_to_seconds(num_periodic_ticks)
 	return num_periodic_ticks * storage.PeriodicEveryXTicks / 60
 end
