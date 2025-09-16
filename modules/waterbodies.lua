@@ -67,12 +67,8 @@ function waterbodies.getWaterTile(gridKey, surface)
 end
 
 
-function waterbodies.getSurfaceMaxWaterbodies()
-	return settings.startup["Surface-Max-Waterbodies"].value
-end
-
 function waterbodies.getMaxWaterBodySize()
-    local val = settings.global["FluidArea-MaxFluidAreaSize"].value
+	local val = settings.global["FluidArea-MaxFluidAreaSize"].value
 	if val == 0 then return math.huge end
 	return val
 end
@@ -383,9 +379,8 @@ function waterbodies.updateGeometryOnRemove(shape_data, batchSumX, batchSumY, ba
 	waterbodies.updateGeometry(shape_data, nil, nil, nil, nil, nil, batchSumX, batchSumY, batchTileCount)
 end
 
--- TODO: better name and use settings instead of hardcoded value
 function waterbodies.getCentroidChangeRateThreshold()
-    return 0.025
+    return settings.global["WaterBody-Centroid-Shift-Threshold"].value
 end
 
 function waterbodies.didCentroidChangeSignificantly(waterBody, old_center_x, old_center_y)
@@ -594,15 +589,22 @@ waterbodies.WaterBodyTypesToName = {
 	[6] = "Ocean"
 }
 
--- TODO: add startup setting for this, instead of hardcoded value
-waterbodies.WaterBodyTypeRegenScaling = 1.5
-waterbodies.WaterBodyTypeToRegenBonusValue = {}
+local function compute_regen_bonus_values_from_settings()
+	local scaling = settings.startup["WaterBody-Regen-Scaling"].value
+	waterbodies.WaterBodyTypeRegenScaling = scaling
+	waterbodies.WaterBodyTypeToRegenBonusValue = {}
 
--- 1.0 regen is for Lake
-for waterBodyTypeInd, _ in pairs(waterbodies.WaterBodyTypesToName) do
-	waterbodies.WaterBodyTypeToRegenBonusValue[waterBodyTypeInd] = 
-		waterbodies.WaterBodyTypeRegenScaling ^ (waterBodyTypeInd - 3)
+	-- 1.0 regen is for Lake
+	for waterBodyTypeInd, _ in pairs(waterbodies.WaterBodyTypesToName) do
+		waterbodies.WaterBodyTypeToRegenBonusValue[waterBodyTypeInd] = scaling ^ (waterBodyTypeInd - 3)
+	end
 end
+
+function waterbodies.rebuildRegenBonusValues()
+	compute_regen_bonus_values_from_settings()
+end
+
+waterbodies.rebuildRegenBonusValues()
 
 -- max area of water body, has to strictly increase
 waterbodies.WaterBodyTypeThresholdArea = {

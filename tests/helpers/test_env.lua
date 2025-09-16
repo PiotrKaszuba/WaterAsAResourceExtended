@@ -17,28 +17,37 @@ local modules_to_reset = {
 }
 
 local function load_default_settings()
-    local defaults = {
+    local global_defaults = {
         ["Alarms-Low-Level"] = true,
         ["Alarms-High-Level"] = true,
         ["Alarms-Tile-Message"] = true,
         ["FluidArea-Start-Area"] = 50,
         ["FluidArea-Additional-Tiles-Per-Second"] = 200,
+        ["FluidArea-MaxFluidAreaSize"] = 0,
+        ["FluidArea-Scanning-Loop-Period"] = 20,
         ["TileFluidAmount-Shallow"] = 50,
         ["TileFluidAmount-Deep"] = 150,
         ["FluidArea-RegenRate"] = 100,
+        ["WaterBody-Centroid-Shift-Threshold"] = 0.025,
         ["Visual-Depletion-Start-Percentage"] = 80,
         ["Pumps-Reactivation-LevelPerThousand"] = 990,
         ["FluidArea-RemoveDepletedOrphaned"] = true,
         ["Map-EnableMarkers"] = false,
-        ["FluidArea-MaxFluidAreaSize"] = 0,
         ["Update-Budget-Per-Second"] = 200,
         ["Splits-EnableFamilies"] = true,
         ["Splits-Family-Timeout-Seconds"] = 120,
         ["Splits-Reeval-Threshold"] = 0.10,
         ["Split-Max-BBox-Side"] = 32,
     }
-    for name, value in pairs(defaults) do
+    local startup_defaults = {
+        ["WaterBody-Regen-Scaling"] = 1.5,
+    }
+
+    for name, value in pairs(global_defaults) do
         settings.global[name] = {value = value}
+    end
+    for name, value in pairs(startup_defaults) do
+        settings.startup[name] = {value = value}
     end
 end
 
