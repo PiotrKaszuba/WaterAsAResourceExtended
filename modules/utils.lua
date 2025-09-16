@@ -397,22 +397,24 @@ function utils.LazyTables.remove(key, main_table, lazy_tables_array)
 	end
 end
 
-function utils.LazyTables.moveLazyQueue(main_queue, lazy_queue, max_values_to_move, extra_data, callback)
+function utils.LazyTables.moveLazyQueue(main_queue, lazy_queue, max_values_to_move, extra_data, callback, enqueue, dequeue)
 	local moved = 0
-	local k = utils.Queue.dequeue(lazy_queue)
+	enqueue = enqueue or utils.Queue.enqueue
+	dequeue = dequeue or utils.Queue.dequeue
+	local k = dequeue(lazy_queue)
 	while moved < max_values_to_move and k ~= nil do
-		utils.Queue.enqueue(main_queue, k)
+		enqueue(main_queue, k)
 		if callback then
 			-- for queues there is no separate key; pass value as both key and value
 			callback(k, k, extra_data)
 		end
 		moved = moved + 1
-		k = utils.Queue.dequeue(lazy_queue)
+		k = dequeue(lazy_queue)
 	end
 	return moved, utils.Queue.is_empty(lazy_queue)
 end
 
-function utils.LazyTables.moveLazyTable(main_table, lazy_table, max_values_to_move, extra_data, callback)
+function utils.LazyTables.moveLazyTable(main_table, lazy_table, max_values_to_move, extra_data, callback, ...)
 	local moved = 0
 	local k, v = next(lazy_table)
 	while moved < max_values_to_move and k ~= nil do
@@ -438,7 +440,7 @@ function utils.LazyTables.wasAnyTableEmptied(extra_data_array)
 	return false
 end
 
-function utils.LazyTables.moveLazyTables(main_table, lazy_tables_array, max_values_to_move, max_per_table, is_queue, callback)
+function utils.LazyTables.moveLazyTables(main_table, lazy_tables_array, max_values_to_move, max_per_table, is_queue, callback, enqueue, dequeue)
 	if not lazy_tables_array or max_values_to_move <= 0 then return 0, {} end
 	local moved = 0
 	local i = 1
@@ -450,7 +452,7 @@ function utils.LazyTables.moveLazyTables(main_table, lazy_tables_array, max_valu
 		if currentTable then
 			extra_data_array[j] = {tableEmpty = false}
 			local max_to_move = math.min(max_per_table, max_values_to_move - moved)
-			local tableMoved, tableEmpty = function_to_move(main_table, currentTable, max_to_move, extra_data_array[j], callback)
+			local tableMoved, tableEmpty = function_to_move(main_table, currentTable, max_to_move, extra_data_array[j], callback, enqueue, dequeue)
 			moved = moved + tableMoved
 			if tableEmpty then
 				-- remove and do not increment i; next table shifts into position i
