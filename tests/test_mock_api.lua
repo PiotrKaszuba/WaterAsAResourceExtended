@@ -9,6 +9,7 @@ local run_mock_test = require("tests.helpers.mock_test")
 
 -- Tests:
 -- waterbody created
+-- pump created at wrong place - with rejection (mine entity triggers)
 -- pump created
 -- wait for scan to finish
 -- destroys pump
@@ -32,6 +33,17 @@ local function run_test()
     local tiles = _G.tiles
 
     world:set_water_rectangle(surface, {x1 = 0, y1 = 0, x2 = 0, y2 = 0})
+    local pump_wrong_place = world:build_entity({
+        name = "offshore-pump",
+        type = "offshore-pump",
+        position = {x = 0, y = -2},
+        surface = surface,
+        input_position = {x = 0, y = -1},
+    })
+    test_env.run_ticks(120)
+
+    t.ok(pump_wrong_place.valid == false, "pump created at wrong place is destroyed")
+
     local pump = world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
