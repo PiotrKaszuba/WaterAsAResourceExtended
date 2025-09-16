@@ -254,7 +254,7 @@ function World:landfill_rectangle(surface, top_left, width, height)
         for dy = 0, height - 1 do
             local pos = {x = top_left.x + dx, y = top_left.y + dy}
             local old_name = surface.get_tile(pos).name
-            tiles[#tiles+1] = {name = "grass-1", position = pos, old_tile = {name = old_name}}
+            tiles[#tiles+1] = {old_tile = {name = old_name}, position = pos} -- array[OldTileAndPosition]
         end
     end
     surface:set_tiles(tiles)
