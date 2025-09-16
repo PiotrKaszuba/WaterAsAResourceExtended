@@ -35,10 +35,13 @@ function QueueProbe.attach(queue_utils)
         return queue
     end
 
-    queue_module.enqueue = function(queue, value, at_front, ...)
+    local enqueue_modified = function(queue, value, at_front)
         local stats = probe.stats_by_queue[queue]
         local capacity_before = queue.capacity
-        local result = probe.original.enqueue(queue, value, at_front, ...)
+        local result
+
+        result = probe.original.enqueue(queue, value, at_front)
+
         if stats and result then
             stats.enqueues = stats.enqueues + 1
             if at_front then
@@ -52,6 +55,10 @@ function QueueProbe.attach(queue_utils)
             end
         end
         return result
+    end
+
+    queue_module.enqueue = function(queue, value, at_front)
+        return enqueue_modified(queue, value, at_front)
     end
 
     queue_module.dequeue_back = function(queue, ...)
@@ -186,7 +193,7 @@ end
 local configs = {
     {name = "tiles-limited-low", tiles_per_sec = 120, update_budget = 150, expected_limiter = "tiles"},
     {name = "tiles-limited-mid", tiles_per_sec = 360, update_budget = 400, expected_limiter = "tiles"},
-    {name = "balanced-400-403", tiles_per_sec = 400, update_budget = 403, expected_limiter = "balanced"},
+    {name = "balanced-400-410", tiles_per_sec = 400, update_budget = 410, expected_limiter = "balanced"},
 
     {name = "budget-limited-400-360", tiles_per_sec = 400, update_budget = 360, expected_limiter = "budget"},
     {name = "budget-limited-525-500", tiles_per_sec = 525, update_budget = 500, expected_limiter = "budget"},

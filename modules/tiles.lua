@@ -153,7 +153,8 @@ function tiles.processWaterfillEvent(tileEvent, updateBudget)
         local waterBody = waterbodies.getWaterBody(waterBodyId)
         
         if waterBody and waterBody.valid then
-            utils.Queue.enqueue(waterBody.searchData.searchQueue, position)
+            local search_queue_enqueue, _ = waterbodies.getSearchQueueEnqueueAndDequeue(waterBody.searchData.searchQueue)
+            search_queue_enqueue(waterBody.searchData.searchQueue, position)
             waterBody.searchData.finished = false
             waterBody.waterBodyStateData.ToCalculate = true
             waterBody.waterBodyStateData.ToUpdate = true
