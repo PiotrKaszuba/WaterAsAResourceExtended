@@ -204,13 +204,143 @@ function World.new()
     }
     player.print = mock.make_printer("player", player.name)
     player.force = force
-    player.mine_entity = function(entity)
+    player._inventory_capacity = 1000
+    player._inventory_count = 0
+    player._inventory_contents = {}
+
+    local function stack_count(stack)
+        if type(stack) ~= "table" then return 0 end
+        return stack.count or stack.amount or stack.amount_max or 1
+    end
+
+    local function clone_inventory_contents()
+        local copy = {}
+        for item, count in pairs(player._inventory_contents) do
+            copy[item] = count
+        end
+        return copy
+    end
+
+    function player.clear_inventory()
+        player._inventory_contents = {}
+        player._inventory_count = 0
+    end
+
+    -- returns a copy of the inventory contents - cannot be reused after anything that could modify the inventory
+    function player.get_inventory_contents()
+        return clone_inventory_contents()
+    end
+
+    function player.get_item_count(name)
+        return player._inventory_contents[name] or 0
+    end
+
+    function player._can_insert(stack, at_least_amount)
+        if type(stack) ~= "table" or not stack.name then return false end
+        local count = stack_count(stack)
+        if count <= 0 then return true end
+        return player._inventory_count + at_least_amount <= player._inventory_capacity
+    end
+
+    -- true if at least a part of the given items could be inserted into this inventory.
+    function player.can_insert(stack)
+        return player._can_insert(stack, 1)
+    end
+
+    -- returns the number of items that were actually inserted
+    function player._insert(stack, ignore_capacity)
+        if type(stack) ~= "table" or not stack.name then return 0 end
+        local count = stack_count(stack)
+        if count <= 0 then return 0 end
+        local insertable = count
+        if not ignore_capacity then
+            local space = player._inventory_capacity - player._inventory_count
+            if space <= 0 then return 0 end
+            if insertable > space then insertable = space end
+        end
+        player._inventory_contents[stack.name] = (player._inventory_contents[stack.name] or 0) + insertable
+        player._inventory_count = player._inventory_count + insertable
+        return insertable
+    end
+
+    function player.insert(stack)
+        return player._insert(stack)
+    end
+
+    -- returns the number of items that were actually removed
+    function player._remove_item(name, count_to_remove)
+        if type(name) ~= "string" or count_to_remove <= 0 then return 0 end
+        local count = player._inventory_contents[name] or 0
+        if count <= 0 then return 0 end
+        if count_to_remove > count then count_to_remove = count end
+        player._inventory_contents[name] = count - count_to_remove
+        player._inventory_count = player._inventory_count - count_to_remove
+        return count_to_remove
+    end
+
+    function player.remove_item(stack)
+        if type(stack) == "string" then
+            return player._remove_item(stack, 1)
+        end
+        return player._remove_item(stack.name, stack.count)
+    end
+
+    local function normalize_mining_results(results)
+        if not results then return {} end
+        if type(results) ~= "table" or results.name or results[1] == nil then
+            results = {results}
+        end
+        local normalized = {}
+        for _, entry in ipairs(results) do
+            if type(entry) == "string" then
+                normalized[#normalized + 1] = {name = entry, count = 1}
+            elseif type(entry) == "table" then
+                local name = entry.name or entry[1]
+                if name then
+                    local count = stack_count(entry)
+                    if count <= 0 then count = 1 end
+                    normalized[#normalized + 1] = {name = name, count = count}
+                end
+            end
+        end
+        return normalized
+    end
+
+    local function get_mining_results(entity)
+        if not entity then return {} end
+        local proto = entity.prototype or {}
+        local results = entity.mine_results or entity.minable_results or proto.mine_results or proto.minable_results
+        if results then
+            return normalize_mining_results(results)
+        end
+        local single = entity.mine_result or entity.minable_result or proto.mine_result or proto.minable_result or entity.name
+        return normalize_mining_results(single)
+    end
+
+    player.mine_entity = function(entity, force)
+        -- force: Forces mining the entity even if the items can't fit in the player.
         if not (entity and entity.valid) then return false end
+
+        local results = get_mining_results(entity)
+        if not force then
+            for _, stack in ipairs(results) do
+                if stack.name and stack.count > 0 and not player._can_insert(stack, stack.count) then
+                    return false
+                end
+            end
+        end
+
+        for _, stack in ipairs(results) do
+            if stack.name and stack.count > 0 then
+                player._insert(stack, force)
+            end
+        end
+
         mock.raise_event(defines.events.on_player_mined_entity, {
             entity = entity,
             player_index = player.index,
         })
-        entity.destroy()
+        entity.destroy({raise_destroy=false})
         return true
     end
 
@@ -266,8 +396,16 @@ function World:landfill_rectangle(surface, top_left, width, height)
     })
 end
 
-function World:build_entity(spec)
+function World:build_entity(spec, player_index, require_item_name)
     local surface = spec.surface
+    local player = game.players[player_index or 1]
+    if require_item_name then
+        if player.get_item_count(require_item_name) < 1 then
+            return nil
+        end
+        player.remove_item({name = require_item_name, count = 1})
+    end
+
     local entity = {
         name = spec.name,
         position = spec.position,
@@ -279,7 +417,7 @@ function World:build_entity(spec)
         active = true,
         pumped_last_tick = 0,
         prototype = {type = spec.type or spec.name},
-        last_user = game.players[1],
+        last_user = game.players[player_index or 1],
     }
     surface.next_unit = surface.next_unit + 1
     function entity.destroy(opts)
