@@ -30,7 +30,7 @@ local function load_default_settings()
         ["Pumps-Reactivation-LevelPerThousand"] = 990,
         ["FluidArea-RemoveDepletedOrphaned"] = true,
         ["Map-EnableMarkers"] = false,
-        ["FluidArea-MaxFluidAreaSize"] = 2000000,
+        ["FluidArea-MaxFluidAreaSize"] = 0,
         ["Update-Budget-Per-Second"] = 200,
         ["Splits-EnableFamilies"] = true,
         ["Splits-Family-Timeout-Seconds"] = 120,
