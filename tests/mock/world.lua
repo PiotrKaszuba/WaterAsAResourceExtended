@@ -282,7 +282,8 @@ function World.new()
         if type(stack) == "string" then
             return player._remove_item(stack, 1)
         end
-        return player._remove_item(stack.name, stack.count)
+        local count = stack_count(stack)
+        return player._remove_item(stack.name, count)
     end
 
     local function normalize_mining_results(results)
