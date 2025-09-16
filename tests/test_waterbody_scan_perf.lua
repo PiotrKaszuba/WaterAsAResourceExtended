@@ -325,7 +325,7 @@ local function run_config(cfg)
         )
 
         t.finish(string.format("Scan performance results: %s", cfg.name))
-    end)
+    end, nil, {n_longest_ticks = 10})
 end
 
 local function run_suite(configs)

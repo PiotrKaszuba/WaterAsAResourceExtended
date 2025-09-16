@@ -58,58 +58,113 @@ local function record_tick(tick, time)
     performance.pending_event_time = 0
 end
 
-local function compute_stats(list)
+local function compute_stats(list, n_longest_ticks)
     local count, min, max, sum = #list, nil, nil, 0
+    local longest_ticks = {}  -- longest_tick is a sorted array of the longest ticks (from longest to shortest)
     for _, entry in ipairs(list) do
         local t = entry.time
         if not min or t < min then min = t end
         if not max or t > max then max = t end
         sum = sum + t
+        for i = 1, n_longest_ticks do
+            if #longest_ticks < i then
+                longest_ticks[i] = t
+                break
+            elseif t > longest_ticks[i] then
+                -- shift the longest ticks to the right
+                table.insert(longest_ticks, i, t)
+                -- remove the last element
+                table.remove(longest_ticks, #longest_ticks)
+                break
+            end
+        end
     end
     local avg = count > 0 and (sum / count) or 0
-    return {count = count, min = min or 0, max = max or 0, avg = avg}
+    return {count = count, min = min or 0, max = max or 0, avg = avg, sum = sum, longest_ticks = longest_ticks}
 end
 
-function performance.report()
-    local function color(ms)
-        local c
-        if ms <= 2 then
-            c = "\27[32m" -- green
-        elseif ms <= 10 then
-            c = "\27[33m" -- yellow
-        else
-            c = "\27[31m" -- red
+function performance.report(args)
+    local use_color = args and args.use_color or true
+    local n_longest_ticks = args and args.n_longest_ticks or 0
+    
+    local no_color_format = function(s)
+        return string.format("%.3fms", s * 1000)
+    end
+
+    local array_format = function(arr_of_s)
+        local arr_of_ms = {}
+        for _, s in ipairs(arr_of_s) do
+            arr_of_ms[#arr_of_ms + 1] = string.format("%.2f", s * 1000)
         end
-        return string.format("%s%.3fms\27[0m", c, ms)
+        return table.concat(arr_of_ms, ", ") .. " ms"
+    end
+    local color_format
+    if use_color then
+        color_format = function(s)
+            local ms = s * 1000
+            local c
+            if ms <= 2 then
+                c = "\27[32m" -- green
+            elseif ms <= 10 then
+                c = "\27[33m" -- yellow
+            else
+                c = "\27[31m" -- red
+            end
+            return string.format("%s%.3fms\27[0m", c, ms)
+        end
+    else
+        color_format = no_color_format
     end
 
     print("Performance stats:")
-    local tick_stats = compute_stats(performance.ticks)
+    local tick_stats = compute_stats(performance.ticks, n_longest_ticks)
     print(string.format(
-        " Tick: count=%d avg=%s min=%s max=%s",
+        " Tick: count=%d total=%s avg=%s min=%s max=%s",
         tick_stats.count,
-        color(tick_stats.avg*1000),
-        color(tick_stats.min*1000),
-        color(tick_stats.max*1000)
+        no_color_format(tick_stats.sum),
+        color_format(tick_stats.avg),
+        color_format(tick_stats.min),
+        color_format(tick_stats.max)
     ))
-    local real_stats = compute_stats(performance.real_ticks)
-    print(string.format(
-        " Real tick: count=%d avg=%s min=%s max=%s",
-        real_stats.count,
-        color(real_stats.avg*1000),
-        color(real_stats.min*1000),
-        color(real_stats.max*1000)
-    ))
-    for name, list in pairs(performance.events) do
-        local s = compute_stats(list)
+    if n_longest_ticks > 0 then
         print(string.format(
-            " Event %s: count=%d avg=%s min=%s max=%s",
+            " Longest (tick) ticks: %s",
+            array_format(tick_stats.longest_ticks)
+        ))
+    end
+    local real_stats = compute_stats(performance.real_ticks, n_longest_ticks)
+    print(string.format(
+        " Real tick: count=%d total=%s avg=%s min=%s max=%s",
+        real_stats.count,
+        no_color_format(real_stats.sum),
+        color_format(real_stats.avg),
+        color_format(real_stats.min),
+        color_format(real_stats.max)
+    ))
+    if n_longest_ticks > 0 then
+        print(string.format(
+            " Longest (real) ticks: %s",
+            array_format(real_stats.longest_ticks)
+        ))
+    end
+    for name, list in pairs(performance.events) do
+        local s = compute_stats(list, n_longest_ticks)
+        print(string.format(
+            " Event %s: count=%d total=%s avg=%s min=%s max=%s",
             name,
             s.count,
-            color(s.avg*1000),
-            color(s.min*1000),
-            color(s.max*1000)
+            no_color_format(s.sum),
+            color_format(s.avg),
+            color_format(s.min),
+            color_format(s.max)
         ))
+        if n_longest_ticks > 0 then
+            print(string.format(
+                " Longest %s events: %s",
+                name,
+                array_format(s.longest_ticks)
+            ))
+        end
     end
 end
 
