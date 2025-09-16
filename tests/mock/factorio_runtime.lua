@@ -210,6 +210,7 @@ function mock.reset()
         forces = {},
         players = {},
         print = mock.safe_print,
+        tick = 0,
     }
 
     defines = {
@@ -278,6 +279,7 @@ end
 
 function mock.run_tick()
     mock.tick = mock.tick + 1
+    game.tick = mock.tick
     local start = os.clock()
     for n, handler in pairs(script._on_nth_tick) do
         if mock.tick % n == 0 then

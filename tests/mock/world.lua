@@ -5,6 +5,17 @@ local function grid_key(pos)
     return pos.x * 10000000 + pos.y
 end
 
+local function remove_chart_tag(surface, tag)
+    local tags = surface.chart_tags
+    if not tags then return end
+    for i = #tags, 1, -1 do
+        if tags[i] == tag then
+            table.remove(tags, i)
+            break
+        end
+    end
+end
+
 local World = {}
 World.__index = World
 
@@ -14,6 +25,7 @@ local function new_surface(name, default_tile)
         index = nil,
         tiles = {},
         entities = {},
+        chart_tags = {},
         next_unit = 1,
         default_tile = default_tile or "grass-1",
     }
@@ -24,15 +36,64 @@ local function new_surface(name, default_tile)
         return {name = tile_name, position = {x = pos.x, y = pos.y}, valid = true}
     end
 
-    function surface.set_tiles(arg1, arg2)
-        local tile_array
-        if type(arg1) == "table" and arg1[1] and arg1[1].position then
-            tile_array = arg1
+    function surface.set_tiles(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+        local tiles_arg
+        local correct_tiles_flag
+        local remove_colliding_entities_flag
+        local remove_colliding_decoratives_flag
+        local raise_event_flag
+
+        if arg1 == surface then
+            if type(arg2) == "table" and arg2.tiles then
+                tiles_arg = arg2.tiles
+                correct_tiles_flag = arg2.correct_tiles
+                remove_colliding_entities_flag = arg2.remove_colliding_entities
+                remove_colliding_decoratives_flag = arg2.remove_colliding_decoratives
+                raise_event_flag = arg2.raise_event
+            else
+                tiles_arg = arg2
+                correct_tiles_flag = arg3
+                remove_colliding_entities_flag = arg4
+                remove_colliding_decoratives_flag = arg5
+                raise_event_flag = arg6
+            end
+        elseif type(arg1) == "table" and arg1.tiles then
+            tiles_arg = arg1.tiles
+            correct_tiles_flag = arg1.correct_tiles
+            remove_colliding_entities_flag = arg1.remove_colliding_entities
+            remove_colliding_decoratives_flag = arg1.remove_colliding_decoratives
+            raise_event_flag = arg1.raise_event
         else
-            tile_array = arg2
+            tiles_arg = arg1
+            correct_tiles_flag = arg2
+            remove_colliding_entities_flag = arg3
+            remove_colliding_decoratives_flag = arg4
+            raise_event_flag = arg5
         end
-        for _, t in ipairs(tile_array) do
-            surface.tiles[grid_key(t.position)] = t.name
+
+        tiles_arg = tiles_arg or {}
+
+        -- correct_tiles_flag, remove_colliding_entities_flag, and remove_colliding_decoratives_flag
+        -- are accepted for signature compatibility only and are not simulated by the mock world.
+        local event_tiles = raise_event_flag and {} or nil
+        for _, tile in ipairs(tiles_arg) do
+            local position = tile.position or {x = 0, y = 0}
+            local key = grid_key(position)
+            surface.tiles[key] = tile.name
+            if event_tiles then
+                event_tiles[#event_tiles + 1] = {
+                    name = tile.name,
+                    position = {x = position.x, y = position.y},
+                }
+            end
+        end
+
+        if event_tiles then
+            mock.raise_event(defines.events.script_raised_set_tiles, {
+                surface_index = surface.index,
+                tiles = event_tiles,
+                tick = mock.tick,
+            })
         end
     end
 
@@ -88,15 +149,72 @@ end
 function World.new()
     local self = setmetatable({next_surface_id = 1}, World)
     -- setup default force and player
-    local force = {name = "player", valid = true}
+    local force = {name = "player", valid = true, index = 1}
     force.print = mock.make_printer("force", force.name)
+
+    local function resolve_surface(surface_ref)
+        if type(surface_ref) == "table" and surface_ref.name then
+            return surface_ref
+        end
+        return surface_ref and game.surfaces[surface_ref] or nil
+    end
+
+    force.add_chart_tag = function(surface_ref, spec)
+        local surface = resolve_surface(surface_ref)
+        if not surface then
+            error("surface not found for add_chart_tag: " .. tostring(surface_ref))
+        end
+        local position = spec.position or {x = 0, y = 0}
+        local tag = {
+            valid = true,
+            force = force,
+            surface = surface,
+            position = {x = position.x, y = position.y},
+            text = spec.text or "",
+            icon = spec.icon,
+        }
+        surface.chart_tags[#surface.chart_tags + 1] = tag
+        function tag.destroy()
+            if not tag.valid then return end
+            tag.valid = false
+            remove_chart_tag(surface, tag)
+        end
+        return tag
+    end
+
+    force.find_chart_tags = function(surface_ref)
+        local surface = resolve_surface(surface_ref)
+        if not surface then return {} end
+        local result = {}
+        for _, tag in ipairs(surface.chart_tags) do
+            if tag.valid and tag.force == force then
+                result[#result + 1] = tag
+            end
+        end
+        return result
+    end
+
     game.forces[force.name] = force
-    game.players[1] = {
+    game.forces[force.index] = force
+
+    local player = {
         index = 1,
         name = "player",
-        print = mock.make_printer("player", "player"),
-        mine_entity = function(_, entity) entity.valid = false; return true end,
+        valid = true,
     }
+    player.print = mock.make_printer("player", player.name)
+    player.force = force
+    player.mine_entity = function(entity)
+        if not (entity and entity.valid) then return false end
+        mock.raise_event(defines.events.on_player_mined_entity, {
+            entity = entity,
+            player_index = player.index,
+        })
+        entity.destroy()
+        return true
+    end
+
+    game.players[1] = player
     self.force = force
     return self
 end
@@ -164,9 +282,13 @@ function World:build_entity(spec)
         last_user = game.players[1],
     }
     surface.next_unit = surface.next_unit + 1
-    function entity.destroy()
+    function entity.destroy(opts)
+        if not entity.valid then return end
         entity.valid = false
         surface.entities[entity.unit_number] = nil
+        if opts and opts.raise_destroy then
+            mock.raise_event(defines.events.script_raised_destroy, {entity = entity})
+        end
     end
     entity.get_fluid_source_tile = function() return spec.input_position or spec.position end
     surface.entities[entity.unit_number] = entity
