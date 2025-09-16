@@ -6,6 +6,19 @@ local test_env = require("tests.helpers.test_env")
 local t = require("tests.helpers.test_assert")
 local run_mock_test = require("tests.helpers.mock_test")
 
+
+-- Tests:
+-- waterbody created
+-- pump created
+-- wait for scan to finish
+-- destroys pump
+-- waits for map marker to be removed
+-- checks map marker for player force (before and after pump destruction)
+-- checks pump tracking (before and after pump destruction)
+-- checks force_to_pump (before and after pump destruction)
+-- checks forces on waterbody (before and after pump destruction)
+-- adds custom chart tag and checks it, destroys it and checks that it's removed
+-- script raises set_tiles and checks that tile event is enqueued
 local function run_test()
     t.start()
     local world, surface = test_env.create_world()
@@ -37,14 +50,39 @@ local function run_test()
         if marker and marker.tag then
             t.ok(marker.tag.text ~= nil, "map marker tag has text")
         end
+        -- check if stored on surface
+        t.ok(surface.chart_tags[1] == marker.tag, "map marker stored on surface")
     end
 
     local tracked_before = entities.getTrackedEntity(pump.unit_number)
     t.ok(tracked_before ~= nil, "pump tracked before scripted destroy")
 
+    local force_to_pump = entities.getFirstPumpPerForce(waterbody)
+    t.ok(force_to_pump ~= nil, "force_to_pump created")
+    t.ok(force_to_pump["player"] ~= nil and force_to_pump["player"].entity == pump, "force_to_pump has player force before destroy and it's the same pump")
+
+
+    local forces_of_wb_before = waterbody.waterBodyStateData.Forces
+    t.ok(forces_of_wb_before ~= nil and forces_of_wb_before["player"] ~= nil, "forces_of_wb has player force before destroy")
+
     pump.destroy({raise_destroy = true})
     local tracked_after = entities.getTrackedEntity(pump.unit_number)
     t.eq(tracked_after, nil, "script raised destroy removed tracked pump")
+
+    local force_to_pump_after = entities.getFirstPumpPerForce(waterbody)
+    t.ok(force_to_pump_after ~= nil and force_to_pump_after["player"] == nil, "force_to_pump has no player force after destroy")
+
+
+    local forces_of_wb_after = waterbody.waterBodyStateData.Forces
+    t.ok(forces_of_wb_after ~= nil and forces_of_wb_after["player"] == nil, "forces_of_wb has no player force after destroy")
+
+    test_env.run_ticks(120)
+
+    -- check whether map marker is still there (should be removed)
+    local marker = waterbody.waterBodyStateData.MapMarkers["player"]
+    t.ok(marker.tag.valid == false, "map marker invalid after pump destruction")
+    -- check whether it's removed from surface
+    t.ok(surface.chart_tags[1] == nil, "map marker removed from surface after pump destruction")
 
     local force = game.forces["player"]
     local tag_count = #force.find_chart_tags(surface)
