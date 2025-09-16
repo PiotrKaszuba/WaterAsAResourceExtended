@@ -210,7 +210,7 @@ function World.new()
 
     local function stack_count(stack)
         if type(stack) ~= "table" then return 0 end
-        return stack.count or stack.amount or stack.amount_max or 1
+        return stack.count or 1
     end
 
     local function clone_inventory_contents()
