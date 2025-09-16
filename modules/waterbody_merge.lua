@@ -226,7 +226,8 @@ function waterbody_merge.mergeMultipleWaterBodies(waterBodyIds, triggerPosition,
 		end
     end
 	-- assuming target waterBody shuold be valid
-    utils.Queue.enqueue(targetWaterBody.searchData.searchQueue, triggerPosition)
+	local search_queue_enqueue, _ = waterbodies.getSearchQueueEnqueueAndDequeue(targetWaterBody.searchData.searchQueue)
+    search_queue_enqueue(targetWaterBody.searchData.searchQueue, triggerPosition)
     targetWaterBody.searchData.finished = false
 	targetWaterBody.waterBodyStateData.ToCalculate = true
 	targetWaterBody.waterBodyStateData.ToUpdate = true

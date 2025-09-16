@@ -93,7 +93,7 @@ end
 --     This is convenient but does table indexing on every call.
 -- - If extra_args_passed == true:
 --     All aux arguments must be provided (pre-bound locals for: tile, waterBodyId, searchQueue, edgeGrid, lazyEdgeGrid,
---     GetTile, GridKey, getWaterTile, IsWaterOrDryTile, enqueue, addNewWaterTile).
+--     GetTile, GridKey, getWaterTile, IsWaterOrDryTile, search_queue_enqueue, addNewWaterTile).
 --     This avoids repeated table indexing in inner loops and is faster.
 -- In both modes:
 -- - searchPositionFixed == true indicates searchPosition is already the tile's left-top corner.
@@ -116,7 +116,7 @@ function waterbody_scan.EdgePattern(
 		GridKey,
 		getWaterTile,
 		IsWaterOrDryTile,
-		enqueue,
+		search_queue_enqueue,
 		addNewWaterTile,
 		tileInvalidOrOutOfMap,
 		out_of_map_tile_name
@@ -135,7 +135,7 @@ function waterbody_scan.EdgePattern(
 		GridKey = hot_utils.GridKey
 		getWaterTile = hot_utils.getWaterTile
 		IsWaterOrDryTile = utils.IsWaterOrDryTile
-		enqueue = utils.Queue.enqueue
+		search_queue_enqueue, _ = waterbodies.getSearchQueueEnqueueAndDequeue(searchQueue)
 		addNewWaterTile = hot_utils.addNewWaterTile
 		tileInvalidOrOutOfMap = waterbody_scan.tileInvalidOrOutOfMap
 		out_of_map_tile_name = "out-of-map"
@@ -162,7 +162,7 @@ function waterbody_scan.EdgePattern(
         local already_searched = tileWaterBodyId == waterBodyId or utils.LazyTables.get(gridKey, edgeGrid, lazyEdgeGrid) ~= nil
         if (not already_searched) then
 			if not tile.valid then
-				tileInvalidOrOutOfMap(surface, position, true, searchQueue, enqueue, "waterbody_scan.EdgePattern")
+				tileInvalidOrOutOfMap(surface, position, true, searchQueue, search_queue_enqueue, "waterbody_scan.EdgePattern")
 				goto continue
 			end
 	
@@ -170,13 +170,13 @@ function waterbody_scan.EdgePattern(
 			local tile_name = tile.name
 	
 			if tile_name == out_of_map_tile_name then
-				tileInvalidOrOutOfMap(surface, position, false, searchQueue, enqueue, "waterbody_scan.EdgePattern")
+				tileInvalidOrOutOfMap(surface, position, false, searchQueue, search_queue_enqueue, "waterbody_scan.EdgePattern")
 				goto continue
 			end
 			
 			local is_water_or_dry_tile = IsWaterOrDryTile(tile.name)
 			if is_water_or_dry_tile then
-				enqueue(searchQueue, position)
+				search_queue_enqueue(searchQueue, position)
 			else
 				if tileWaterBodyId == nil then
 					addNewWaterTile(gridKey, surfaceName, -1)
@@ -260,7 +260,7 @@ function waterbody_scan.processWaterTile(
 		EdgePattern,
 		GetTile,
 		IsWaterOrDryTile,
-		enqueue,
+		search_queue_enqueue,
 		deduplicate_enqueue,
 		tileInvalidOrOutOfMap,
 
@@ -303,7 +303,7 @@ function waterbody_scan.processWaterTile(
 		EdgePattern = waterbody_scan.EdgePattern
 		GetTile = function(pos) return surface.get_tile(pos) end
 		IsWaterOrDryTile = utils.IsWaterOrDryTile
-		enqueue = utils.Queue.enqueue
+		search_queue_enqueue, _ = waterbodies.getSearchQueueEnqueueAndDequeue(searchQueue)
 		deduplicate_enqueue = utils.Queue.deduplicate_enqueue
 		tileInvalidOrOutOfMap = waterbody_scan.tileInvalidOrOutOfMap
 		gridKey = GridKey(position)
@@ -387,7 +387,7 @@ function waterbody_scan.processWaterTile(
 			true, -- extra_args_passed
 			tile,
 			waterBodyId, searchQueue, edgeGrid, lazyEdgeGrid,
-			GetTile, GridKey, getWaterTile, IsWaterOrDryTile, enqueue, addNewWaterTile, tileInvalidOrOutOfMap, out_of_map_tile_name
+			GetTile, GridKey, getWaterTile, IsWaterOrDryTile, search_queue_enqueue, addNewWaterTile, tileInvalidOrOutOfMap, out_of_map_tile_name
 			
 		)
     end
@@ -422,10 +422,11 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 		return nil
 	end
 	local search_queue = water_body.searchData.searchQueue
+	local search_queue_enqueue, _ = waterbodies.getSearchQueueEnqueueAndDequeue(search_queue)
 	-- fix position to left-top corner in case it was not
 	local tile = utils.GetTile(start_position, water_body.surface)
 	start_position = tile.position
-	utils.Queue.enqueue(search_queue, start_position)
+	search_queue_enqueue(search_queue, start_position)
 	local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount, updateBudget)
     if not (water_body and water_body.valid) then
 		utils.profile_hits("waterbody_scan.beginScanWaterArea", "water_body invalid after scan")
@@ -436,7 +437,7 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 end
 
 -- returns true if the tile needs to be dropped, false if if not (was re-enqueued)
-function waterbody_scan.tileInvalidOrOutOfMap(surface, search_position, invalid, search_queue, enqueue, caller_name)
+function waterbody_scan.tileInvalidOrOutOfMap(surface, search_position, invalid, search_queue, search_queue_enqueue, caller_name)
 	local case_name = invalid and "tile invalid" or "tile out of map"
 	utils.profile_hits(caller_name, case_name)
 	
@@ -447,7 +448,7 @@ function waterbody_scan.tileInvalidOrOutOfMap(surface, search_position, invalid,
 		if invalid then surface.request_to_generate_chunks(search_position, 1) end
 		-- do not block waiting for the chunk to be generated, instead:
 		-- re-enqueue the position to be processed again
-		enqueue(search_queue, search_position)
+		search_queue_enqueue(search_queue, search_position)
 		return false
 	else
 		case_name = invalid and "tile invalid but chunk is generated" or "tile out of map but chunk is generated"
@@ -472,8 +473,6 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 
 	-- function
 	local is_empty = utils.Queue.is_empty
-	local dequeue_with_lazy_arrays = utils.Queue.dequeue_with_lazy_arrays
-	local enqueue = utils.Queue.enqueue
 	local deduplicate_enqueue = utils.Queue.deduplicate_enqueue
 	local GridKey = hot_utils.GridKey
 	local getWaterTile = hot_utils.getWaterTile
@@ -519,6 +518,8 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local dried_tiles = state.DriedTiles
 	local waterBodyTileCountData = water_body.waterBodyTileCountData
 	local waterBodyTileCountPercentagePenalty = water_body.waterBodyTileCountPercentagePenalty
+
+	local search_queue_enqueue, search_queue_dequeue = waterbodies.getSearchQueueEnqueueAndDequeue(search_queue)
 	--
 	local huge_val = math.huge
     local batchMinX, batchMaxX, batchMinY, batchMaxY, batchSumX, batchSumY, batchTileCount = huge_val, -huge_val, huge_val, -huge_val, 0, 0, 0
@@ -529,7 +530,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 
 	while not is_empty(search_queue) and search_amount > 0 do
 		search_amount = search_amount - 1
-		search_position = dequeue_with_lazy_arrays(search_queue, lazy_search_queue)
+		search_position = search_queue_dequeue(search_queue, lazy_search_queue)
 		-- check if position is left-top corner
 		if not checkIfPositionIsLeftTopCorner(search_position) then
 			utils.profile_hits("waterbody_scan.ScanWaterArea", "checkIfPositionIsLeftTopCorner")
@@ -540,7 +541,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		tile = GetTile(search_position)
 
 		if not tile.valid then
-			local dropped_tile = tileInvalidOrOutOfMap(surface, search_position, true, search_queue, enqueue, "waterbody_scan.ScanWaterArea")
+			local dropped_tile = tileInvalidOrOutOfMap(surface, search_position, true, search_queue, search_queue_enqueue, "waterbody_scan.ScanWaterArea")
 			if dropped_tile then goto continue end
 			break
 		end
@@ -549,7 +550,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 		local tile_name = tile.name
 
 		if tile_name == out_of_map_tile_name then
-			local dropped_tile = tileInvalidOrOutOfMap(surface, search_position, false, search_queue, enqueue, "waterbody_scan.ScanWaterArea")
+			local dropped_tile = tileInvalidOrOutOfMap(surface, search_position, false, search_queue, search_queue_enqueue, "waterbody_scan.ScanWaterArea")
 			if dropped_tile then goto continue end
 			break
 		end
@@ -572,7 +573,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 					ValidWaterBodies, OrphanedDryTilesOriginalName, lazyOrphanedDryTilesOriginalName, WaterTileToWaterBodyTileType,
 					getWaterTilePercentageWaterUsed,
 					getWaterBody, addTileToWaterGrid, EdgePattern,
-					GetTile, IsWaterOrDryTile, enqueue, deduplicate_enqueue, tileInvalidOrOutOfMap,
+					GetTile, IsWaterOrDryTile, search_queue_enqueue, deduplicate_enqueue, tileInvalidOrOutOfMap,
 
 					gridKey, tile_waterBodyId, out_of_map_tile_name
 					)
@@ -595,6 +596,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 					dried_tiles = state.DriedTiles
 					waterBodyTileCountData = water_body.waterBodyTileCountData
 					waterBodyTileCountPercentagePenalty = water_body.waterBodyTileCountPercentagePenalty
+					search_queue_enqueue, search_queue_dequeue = waterbodies.getSearchQueueEnqueueAndDequeue(search_queue)
 				end
 				totalArea = totalArea + total_area_increase
 				dried_tiles = dried_tiles + dried_tiles_increase
