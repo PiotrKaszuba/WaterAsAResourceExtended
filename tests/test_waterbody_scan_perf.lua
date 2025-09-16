@@ -193,7 +193,7 @@ end
 local configs = {
     {name = "tiles-limited-low", tiles_per_sec = 120, update_budget = 150, expected_limiter = "tiles"},
     {name = "tiles-limited-mid", tiles_per_sec = 360, update_budget = 400, expected_limiter = "tiles"},
-    {name = "balanced-400-403", tiles_per_sec = 400, update_budget = 403, expected_limiter = "balanced"},
+    {name = "balanced-400-410", tiles_per_sec = 400, update_budget = 410, expected_limiter = "balanced"},
 
     {name = "budget-limited-400-360", tiles_per_sec = 400, update_budget = 360, expected_limiter = "budget"},
     {name = "budget-limited-525-500", tiles_per_sec = 525, update_budget = 500, expected_limiter = "budget"},
