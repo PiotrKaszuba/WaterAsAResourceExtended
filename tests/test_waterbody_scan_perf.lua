@@ -191,7 +191,7 @@ local configs = {
     {name = "budget-limited-400-360", tiles_per_sec = 400, update_budget = 360, expected_limiter = "budget"},
     {name = "budget-limited-525-500", tiles_per_sec = 525, update_budget = 500, expected_limiter = "budget"},
     
-    {name = "tiles-limited-10000-50000", tiles_per_sec = 10000, update_budget = 50000, expected_limiter = "tiles"},
+    {name = "tiles-limited-10000-50000", tiles_per_sec = 10000, update_budget = 50000, expected_limiter = "tiles", side_size = 1000},
 
 
 }
@@ -201,8 +201,8 @@ local function apply_scan_settings(cfg)
     settings.global["Update-Budget-Per-Second"] = {value = cfg.update_budget}
 end
 
-local function seed_large_water_body(world, surface)
-    world:set_water_rectangle(surface, {x1 = 0, y1 = 0, x2 = 99, y2 = 99})
+local function seed_large_water_body(world, surface, side_size)
+    world:set_water_rectangle(surface, {x1 = 0, y1 = 0, x2 = side_size - 1, y2 = side_size - 1})
     world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
@@ -226,7 +226,8 @@ local function measure(cfg)
 
         mock.on_init()
 
-        seed_large_water_body(world, surface)
+        local side_size = cfg.side_size or 100
+        seed_large_water_body(world, surface, side_size)
 
         local ticks = 0
         local tracker = BudgetCycleTracker.new(storage.CurrentUpdateBudget, ticks)
@@ -262,6 +263,7 @@ local function measure(cfg)
             water_area = wbody.waterAreaData.TotalArea,
             budget_summary = budget_summary,
             search_queue_stats = queue_stats,
+            side_size = side_size,
         }
     end)
 end
@@ -286,6 +288,7 @@ local function run_config(cfg)
         local percent_exhausted = budget_summary.percent * 100
         local percent_used_total = budget_summary.percent_used_total * 100
         local limiter_description = classify_budget(percent_exhausted, percent_used_total)
+        local side_size = result.side_size
 
         local resulting_scans_per_second = stats and stats.enqueues / result.seconds or 0
         local resulting_tiles_per_second = result.water_area / result.seconds
@@ -309,7 +312,7 @@ local function run_config(cfg)
             effectiveness_of_scans_percentage
         ))
 
-        t.eq(result.water_area, 10000, string.format("Water body area is 10k for %s", cfg.name))
+        t.eq(result.water_area, side_size * side_size, string.format("Water body area is %d for %s", side_size * side_size, cfg.name))
 
         t.ok(cfg.expected_limiter == limiter_description, string.format("Expected limiter: %s, got: %s", cfg.expected_limiter, limiter_description))
 
