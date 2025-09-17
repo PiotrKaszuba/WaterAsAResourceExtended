@@ -339,7 +339,7 @@ function waterbody_update.binsetMaintenance(waterBody, gridsData, max_to_move)
     local scanningFinished = waterBody.searchData.finished
     local waterGridWithData = gridsData.waterGridWithData
     local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
-    local deduplicate_dequeue = utils.Queue.deduplicate_dequeue
+    local pending_tiles_enqueue, pending_tiles_dequeue = waterbodies.getDriedStackOrPendingTilesEnqueueAndDequeue(false)
     local lazy_tables_get = utils.LazyTables.get
     local dynamic_bins_push = dynamic_bins.push
     local dynamic_bins_backfill_consume = dynamic_bins.backfill_consume
@@ -356,15 +356,13 @@ function waterbody_update.binsetMaintenance(waterBody, gridsData, max_to_move)
         -- because it will use callbacks on-copy to add to pending tiles
         local gridKey
 
-        local deduplicate_enqueue = utils.Queue.deduplicate_enqueue
-
         while moved < max_to_move do
             gridKey, _ = next(waterGridWithData, gridKey)
             if gridKey == nil then
                 -- no more tiles - break
                 break
             end
-            deduplicate_enqueue(pendingTiles, gridKey)
+            pending_tiles_enqueue(pendingTiles, gridKey)
             moved = moved + 1
         end
     end
@@ -403,7 +401,7 @@ function waterbody_update.binsetMaintenance(waterBody, gridsData, max_to_move)
     pending_tiles_size = pendingTiles.size
     -- consume pending tiles
     while moved < max_to_move and pending_tiles_size > 0 do
-        local gridKey = deduplicate_dequeue(pendingTiles)
+        local gridKey = pending_tiles_dequeue(pendingTiles)
         if gridKey == nil then break end
         pending_tiles_size = pending_tiles_size - 1
 
@@ -508,13 +506,15 @@ function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxE
     end
 
     local lazyDriedStack = gridsData.lazyDriedStack
+    local enqueue, dequeue
 
     if #lazyDriedStack > 0 then
         local cost_of_dried_stack_to_grid = 1.5
         work_amount = waterbody_update.get_work_amount(updateBudget, work_left, cost_of_dried_stack_to_grid, update_budget_per_move)
 
+        enqueue, dequeue = waterbodies.getDriedStackOrPendingTilesEnqueueAndDequeue(true)
         -- move lazy dried stack to dried stack
-        work_done, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedStack, lazyDriedStack, work_amount, work_amount, false, nil)
+        work_done, extra_data_array = utils.LazyTables.moveLazyTables(gridsData.driedStack, lazyDriedStack, work_amount, work_amount, true, nil, enqueue, dequeue)
         
         work_left, finished = waterbody_update.update_work_amount(updateBudget, work_left, cost_of_dried_stack_to_grid, update_budget_per_move, work_done)
         
@@ -540,8 +540,10 @@ function waterbody_update.extraWorkUpdateWaterBody(waterBody, updateBudget, maxE
     if #lazySearchQueue > 0 then
         local cost_of_search_queue_to_search_queue = 1.33
         work_amount = waterbody_update.get_work_amount(updateBudget, work_left, cost_of_search_queue_to_search_queue, update_budget_per_move)
+        
+        enqueue, dequeue = waterbodies.getSearchQueueEnqueueAndDequeue(searchData.searchQueue)
         -- move lazy search queue to search queue
-        work_done, extra_data_array = utils.LazyTables.moveLazyTables(searchData.searchQueue, lazySearchQueue, work_amount, work_amount, true, nil)
+        work_done, extra_data_array = utils.LazyTables.moveLazyTables(searchData.searchQueue, lazySearchQueue, work_amount, work_amount, true, nil, enqueue, dequeue)
         
         work_left, finished = waterbody_update.update_work_amount(updateBudget, work_left, cost_of_search_queue_to_search_queue, update_budget_per_move, work_done)
         

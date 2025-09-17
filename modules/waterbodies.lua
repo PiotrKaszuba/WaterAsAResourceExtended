@@ -220,9 +220,48 @@ function waterbodies.checkIfScanningIsFinished(search_data)
 	return utils.Queue.is_empty(search_data.searchQueue)
 end
 
+function waterbodies.getDriedStackOrPendingTilesEnqueueAndDequeue(is_dried_stack)
+	local enqueue, dequeue = nil, nil
+	
+	local deduplicate_enqueue = utils.Queue.deduplicate_enqueue
+	local deduplicate_dequeue = utils.Queue.deduplicate_dequeue
+	enqueue = function(dried_stack_or_pending_tiles, gridKey) return deduplicate_enqueue(dried_stack_or_pending_tiles, gridKey) end
+	if is_dried_stack then
+		dequeue = function(dried_stack_or_pending_tiles, lazy_queues_array) return deduplicate_dequeue(dried_stack_or_pending_tiles, true, nil, lazy_queues_array) end
+	else
+		dequeue = function(dried_stack_or_pending_tiles) return deduplicate_dequeue(dried_stack_or_pending_tiles) end
+	end
+
+	return enqueue, dequeue
+end
+
+function waterbodies.getSearchQueueEnqueueAndDequeue(search_queue)
+	local search_queue_enqueue, search_queue_dequeue = nil, nil
+	if search_queue.inQueue then
+		local GridKey = hot_utils.GridKey
+		local deduplicate_enqueue = utils.Queue.deduplicate_enqueue
+		local deduplicate_dequeue = utils.Queue.deduplicate_dequeue
+		search_queue_enqueue = function(search_queue, position, at_front) return deduplicate_enqueue(search_queue, position, at_front, GridKey) end
+		search_queue_dequeue = function(search_queue, lazy_queues_array) return deduplicate_dequeue(search_queue, false, GridKey, lazy_queues_array) end
+	else
+		local enqueue = utils.Queue.enqueue
+		local dequeue_with_lazy_arrays = utils.Queue.dequeue_with_lazy_arrays
+		search_queue_enqueue = function(search_queue, position, at_front) return enqueue(search_queue, position, at_front) end
+		search_queue_dequeue = function(search_queue, lazy_queues_array) return dequeue_with_lazy_arrays(search_queue, lazy_queues_array) end
+	end
+	return search_queue_enqueue, search_queue_dequeue
+end
+
 function waterbodies.InitSearchData()
 	return {
-		searchQueue = utils.Queue.new(),
+		-- queue of tiles to be scanned
+		-- if deduplicate is true, should use:
+		-- deduplicate_enqueue(searchQueue, position, false, GridKey)
+		-- deduplicate_dequeue(searchQueue, false, GridKey, lazySearchQueue)
+		-- if deduplicate is false, should use:
+		-- enqueue(searchQueue, position)
+		-- dequeue_with_lazy_arrays(searchQueue, lazySearchQueue)
+		searchQueue = utils.Queue.new(nil, nil, nil, true),
 		lazySearchQueue = {},
 		totalArea = 0,
 		finished = false,

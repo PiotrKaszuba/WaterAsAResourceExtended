@@ -32,7 +32,7 @@ local function load_default_settings()
         ["Visual-Depletion-Start-Percentage"] = 80,
         ["Pumps-Reactivation-LevelPerThousand"] = 990,
         ["FluidArea-RemoveDepletedOrphaned"] = true,
-        ["Map-EnableMarkers"] = false,
+        ["Map-EnableMarkers"] = true,
         ["Update-Budget-Per-Second"] = 200,
         ["Splits-EnableFamilies"] = true,
         ["Splits-Family-Timeout-Seconds"] = 120,
