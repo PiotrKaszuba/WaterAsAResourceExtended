@@ -645,8 +645,7 @@ end
 
 
 function waterbody_scan.getScanningLoopPeriod()
-	-- return settings.global["FluidArea-Scanning-Loop-Period"].value
-	return 20
+        return settings.global["FluidArea-Scanning-Loop-Period"].value
 end
 
 function waterbody_scan.scanningLoopPeriodic(water_body)
