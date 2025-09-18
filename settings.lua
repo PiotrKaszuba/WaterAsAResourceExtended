@@ -25,17 +25,17 @@ local settings_definitions = {
         name = "FluidArea-Start-Area",
         setting_type = "runtime-global",
         default_value = 50,
-        minimum_value = 10,
-        maximum_value = 1000,
+        minimum_value = 20,
+        maximum_value = 10000,
         order = "b[scan]-a"
     },
     {
         type = "int-setting",
         name = "FluidArea-Additional-Tiles-Per-Second",
         setting_type = "runtime-global",
-        default_value = 200,
-        minimum_value = 50,
-        maximum_value = 10000,
+        default_value = 1000,
+        minimum_value = 100,
+        maximum_value = 100000,
         order = "b[scan]-b"
     },
     {
@@ -52,7 +52,7 @@ local settings_definitions = {
         name = "FluidArea-Scanning-Loop-Period",
         setting_type = "runtime-global",
         default_value = 20,
-        minimum_value = 1,
+        minimum_value = 5,
         maximum_value = 600,
         order = "b[scan]-d"
     },
@@ -60,9 +60,9 @@ local settings_definitions = {
         type = "int-setting",
         name = "Update-Budget-Per-Second",
         setting_type = "runtime-global",
-        default_value = 200,
-        minimum_value = 50,
-        maximum_value = 10000,
+        default_value = 2000,
+        minimum_value = 200,
+        maximum_value = 200000,
         order = "b[scan]-e"
     },
     {
@@ -144,9 +144,9 @@ local settings_definitions = {
         type = "int-setting",
         name = "Splits-Family-Timeout-Seconds",
         setting_type = "runtime-global",
-        default_value = 120,
+        default_value = 0,
         minimum_value = 0,
-        maximum_value = 36000,
+        maximum_value = 3600,
         order = "h[splits]-b"
     },
     {
@@ -163,7 +163,7 @@ local settings_definitions = {
         name = "Split-Max-BBox-Side",
         setting_type = "runtime-global",
         default_value = 32,
-        minimum_value = 8,
+        minimum_value = 16,
         maximum_value = 1024,
         order = "h[splits]-d"
     },
