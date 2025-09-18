@@ -131,7 +131,7 @@ local function recompute_successor(fam)
     if changed and fam.successorId ~= nil then
         -- apply threshold only if switching from an existing successor
         -- re-evaluate: require improvement over current successor's score
-        if (bestScore < currentScore * (1 + threshold)) and currentScore ~= nil then
+        if (currentScore ~= nil and bestScore < currentScore * (1 + threshold)) then
             return false, fam.successorId
         end
     end
