@@ -26,7 +26,7 @@ tiles.waterfill_placer_to_water_tile = {
 
 
 function tiles.placerWater(placed)
-    local pos_center     = placed.position
+    local pos_center = placed.position
     local surface = placed.surface
 
     local old_tile = utils.GetTile(pos_center, surface)
@@ -39,15 +39,15 @@ function tiles.placerWater(placed)
     end
 
     local replacement = tiles.waterfill_placer_to_water_tile[placed.name]
-    
     placed.destroy()
+
     local tileArray = {}
-    local i = 1
-	tileArray[i] = {
+	tileArray[1] = {
 		name = replacement,
 		position = {x=pos.x, y=pos.y},
         old_tile = {name = old_tile_name}
 	}
+
     -- 5th argument is false to prevent script_raised_set_tiles event
     surface.set_tiles(tileArray, true, true, true, false)
     tiles.handleTileEventsInternal(

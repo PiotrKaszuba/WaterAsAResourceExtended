@@ -76,10 +76,7 @@ local waterfill_placer = {
     picture = emptyPic(),
     collision_mask = {layers={object=true, floor=true}},
     collision_box = {{-0.1, -0.1}, {0.1, 0.1}},
-    -- center_collision_mask = {layers={object=true, player=true, water_tile=true}},
     flags = {"placeable-neutral", "player-creation", "filter-directions"},
-    -- fluid_box_tile_collision_test = { "ground-tile" },
-    -- adjacent_tile_collision_test = { "water-tile" },
     fluid = "water",
     fluid_box = {
         filter = "water",
@@ -92,7 +89,6 @@ local waterfill_placer = {
         },
         production_type = "none",
         volume=100,
-        
     },
     placeable_position_visualization = {
         priority = "extra-high-no-scale",
@@ -121,20 +117,4 @@ data:extend({
     waterfill_placer
 })
 
-data.raw.tile["water-shallow"].collision_mask = {
-    layers={
-        water_tile=true,
-        floor=true,
-        resource=true,
-        doodad=true,
-      }
-}
-
-data.raw.tile["water-mud"].collision_mask = {
-    layers={
-        water_tile=true,
-        floor=true,
-        resource=true,
-        doodad=true,
-      }
-}
+data.raw.tile["water-shallow"].collision_mask.layers.doodad = true
