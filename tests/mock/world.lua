@@ -5,6 +5,33 @@ local function grid_key(pos)
     return pos.x * 10000000 + pos.y
 end
 
+local function warn(message)
+    print(string.format("[mock.world] Warning: %s", message))
+end
+
+local function copy_position(x, y)
+    return {x = x, y = y}
+end
+
+local function align_tile_coordinates(x, y)
+    return math.floor(x), math.floor(y)
+end
+
+local function chunk_coords_from_map(x, y)
+    return math.floor(x / 32), math.floor(y / 32)
+end
+
+local function resolve_chunk_generation_rate(per_tick, delay, default_rate)
+    local rate = per_tick
+    if rate == nil and delay ~= nil then
+        if delay < 1 then delay = 1 end
+        rate = 1 / delay
+    end
+    if rate == nil then rate = default_rate end
+    if rate < 0 then rate = 0 end
+    return rate
+end
+
 local function remove_chart_tag(surface, tag)
     local tags = surface.chart_tags
     if not tags then return end
@@ -19,7 +46,11 @@ end
 local World = {}
 World.__index = World
 
-local function new_surface(name, default_tile)
+local function new_surface(name, default_tile, chunk_settings)
+    chunk_settings = chunk_settings or {}
+    local chunks_enabled = not not chunk_settings.enabled
+    local generation_rate = resolve_chunk_generation_rate(chunk_settings.rate, chunk_settings.delay, 0.5)
+
     local surface = {
         name = name,
         index = nil,
@@ -30,10 +61,75 @@ local function new_surface(name, default_tile)
         default_tile = default_tile or "grass-1",
     }
 
+    surface._chunks_enabled = chunks_enabled
+    if chunks_enabled then
+        surface._chunk_generation_rate = generation_rate
+        surface._chunk_generation_progress = 0
+        surface._chunk_queue = {}
+        surface._requested_chunks = {}
+        surface._generated_chunks = {}
+
+        local initial_generated = chunk_settings.initial_generated_chunks
+        if initial_generated ~= nil then
+            if type(initial_generated) ~= "table" then
+                warn("initial_generated_chunks is not an array; ignoring provided value")
+            else
+                for index, chunk_pos in ipairs(initial_generated) do
+                    if type(chunk_pos) ~= "table" or type(chunk_pos.x) ~= "number" or type(chunk_pos.y) ~= "number" then
+                        warn(string.format("initial_generated_chunks[%d] is not a chunk position table; skipping entry", index))
+                    else
+                        local cx = math.floor(chunk_pos.x)
+                        local cy = math.floor(chunk_pos.y)
+                        local key = grid_key({x = cx, y = cy})
+                        surface._generated_chunks[key] = true
+                    end
+                end
+            end
+        end
+
+        function surface._advance_chunk_generation()
+            if #surface._chunk_queue == 0 then
+                surface._chunk_generation_progress = 0
+                return
+            end
+            surface._chunk_generation_progress = surface._chunk_generation_progress + surface._chunk_generation_rate
+            local to_generate = math.floor(surface._chunk_generation_progress)
+            if to_generate <= 0 then return end
+            local generated = 0
+            for _ = 1, to_generate do
+                local key = table.remove(surface._chunk_queue, 1)
+                if not key then break end
+                surface._requested_chunks[key] = nil
+                surface._generated_chunks[key] = true
+                generated = generated + 1
+                if #surface._chunk_queue == 0 then break end
+            end
+            surface._chunk_generation_progress = surface._chunk_generation_progress - generated
+            if #surface._chunk_queue == 0 then
+                surface._chunk_generation_progress = 0
+            end
+        end
+
+        mock._register_chunk_surface(surface)
+    end
+
     function surface.get_tile(pos)
-        local key = grid_key(pos)
+        local tile_x, tile_y = align_tile_coordinates(pos.x, pos.y)
+        local position = copy_position(tile_x, tile_y)
+        if surface._chunks_enabled then
+            local chunk_x, chunk_y = chunk_coords_from_map(tile_x, tile_y)
+            local chunk_key = grid_key({x = chunk_x, y = chunk_y})
+            if not surface._generated_chunks[chunk_key] then
+                if surface._requested_chunks[chunk_key] then
+                    return {name = "out-of-map", position = position, valid = true}
+                else
+                    return {position = position, valid = false}
+                end
+            end
+        end
+        local key = grid_key(position)
         local tile_name = surface.tiles[key] or surface.default_tile
-        return {name = tile_name, position = {x = pos.x, y = pos.y}, valid = true}
+        return {name = tile_name, position = position, valid = true}
     end
 
     function surface.set_tiles(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
@@ -77,13 +173,15 @@ local function new_surface(name, default_tile)
         -- are accepted for signature compatibility only and are not simulated by the mock world.
         local event_tiles = raise_event_flag and {} or nil
         for _, tile in ipairs(tiles_arg) do
-            local position = tile.position or {x = 0, y = 0}
-            local key = grid_key(position)
+            local tile_position = tile.position
+            local aligned_x, aligned_y = align_tile_coordinates(tile_position.x, tile_position.y)
+            local aligned_position = copy_position(aligned_x, aligned_y)
+            local key = grid_key(aligned_position)
             surface.tiles[key] = tile.name
             if event_tiles then
                 event_tiles[#event_tiles + 1] = {
                     name = tile.name,
-                    position = {x = position.x, y = position.y},
+                    position = copy_position(aligned_x, aligned_y),
                 }
             end
         end
@@ -97,11 +195,43 @@ local function new_surface(name, default_tile)
         end
     end
 
-    function surface.is_chunk_generated(_)
-        return true
+    function surface.is_chunk_generated(chunk_position)
+        if not surface._chunks_enabled then return true end
+        local chunk_x = math.floor(chunk_position.x)
+        local chunk_y = math.floor(chunk_position.y)
+        local key = grid_key({x = chunk_x, y = chunk_y})
+        return surface._generated_chunks[key] or false
     end
 
-    function surface.request_to_generate_chunks(_) end
+    function surface.request_to_generate_chunks(position, radius)
+        if not surface._chunks_enabled then return end
+        local chunk_x, chunk_y = chunk_coords_from_map(position.x, position.y)
+        radius = radius or 0
+        if radius < 0 then radius = 0 end
+        radius = math.floor(radius)
+        for dx = -radius, radius do
+            for dy = -radius, radius do
+                local cx = chunk_x + dx
+                local cy = chunk_y + dy
+                local key = grid_key({x = cx, y = cy})
+                if not surface._generated_chunks[key] and not surface._requested_chunks[key] then
+                    surface._requested_chunks[key] = true
+                    surface._chunk_queue[#surface._chunk_queue + 1] = key
+                end
+            end
+        end
+    end
+
+    function surface.force_generate_chunk_requests()
+        if not surface._chunks_enabled then return end
+        for i = 1, #surface._chunk_queue do
+            local key = surface._chunk_queue[i]
+            surface._requested_chunks[key] = nil
+            surface._generated_chunks[key] = true
+        end
+        surface._chunk_queue = {}
+        surface._chunk_generation_progress = 0
+    end
 
     function surface.get_connected_tiles(start_pos, tiles, include_diagonal, bbox)
         local allowed = {}
@@ -146,8 +276,13 @@ local function new_surface(name, default_tile)
     return surface
 end
 
-function World.new()
-    local self = setmetatable({next_surface_id = 1}, World)
+function World.new(options)
+    options = options or {}
+    local self = setmetatable({
+        next_surface_id = 1,
+        _simulate_chunks = not not options.simulate_chunks,
+        _chunk_generation_rate = resolve_chunk_generation_rate(options.chunk_generation_per_tick, options.chunk_generation_delay, 0.5),
+    }, World)
     -- setup default force and player
     local force = {name = "player", valid = true, index = 1}
     force.print = mock.make_printer("force", force.name)
@@ -350,8 +485,17 @@ function World.new()
     return self
 end
 
-function World:create_surface(name)
-    local surface = new_surface(name)
+function World:create_surface(name, default_tile, options)
+    options = options or {}
+    local simulate_chunks = options.simulate_chunks
+    if simulate_chunks == nil then simulate_chunks = self._simulate_chunks end
+    local generation_rate = resolve_chunk_generation_rate(options.chunk_generation_per_tick, options.chunk_generation_delay, self._chunk_generation_rate)
+    local chunk_settings = {
+        enabled = simulate_chunks,
+        rate = generation_rate,
+        initial_generated_chunks = options.initial_generated_chunks,
+    }
+    local surface = new_surface(name, default_tile, chunk_settings)
     surface.index = self.next_surface_id
     self.next_surface_id = self.next_surface_id + 1
     game.surfaces[surface.index] = surface

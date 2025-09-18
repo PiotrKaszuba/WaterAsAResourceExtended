@@ -29,6 +29,33 @@ end
 
 local mock = {}
 
+-- chunk generation ---------------------------------------------------------
+
+local chunk_surfaces = {}
+local chunk_surfaces_lookup = {}
+
+local function reset_chunk_surfaces()
+    chunk_surfaces = {}
+    chunk_surfaces_lookup = {}
+end
+
+local function register_chunk_surface(surface)
+    if not surface or chunk_surfaces_lookup[surface] then return end
+    chunk_surfaces[#chunk_surfaces + 1] = surface
+    chunk_surfaces_lookup[surface] = true
+end
+
+local function advance_chunk_generation()
+    for i = 1, #chunk_surfaces do
+        local surface = chunk_surfaces[i]
+        if surface and surface._advance_chunk_generation then
+            surface._advance_chunk_generation()
+        end
+    end
+end
+
+mock._register_chunk_surface = register_chunk_surface
+
 -- performance tracking -----------------------------------------------------
 
 local performance = {}
@@ -190,6 +217,8 @@ function mock.reset()
     settings = {global = {}, startup = {}}
     remote = {interfaces = {}, call = function() end}
 
+    reset_chunk_surfaces()
+
     local function make_printer(kind, id)
         return function(msg)
             if msg ~= nil then
@@ -280,6 +309,7 @@ end
 function mock.run_tick()
     mock.tick = mock.tick + 1
     game.tick = mock.tick
+    advance_chunk_generation()
     local start = os.clock()
     for n, handler in pairs(script._on_nth_tick) do
         if mock.tick % n == 0 then
