@@ -10,6 +10,11 @@
 - Create separate commits for each test or mock improvement with descriptive messages.
 - Keep a running summary of changes to craft a clear, comprehensive PR description.
 
+## Preferences found in collaboration
+If you uncover additional reviewer or user preferences while iterating on tests, record them here so the next agent can follow the same guidance.
+
+- When mocks encounter malformed input data, prefer printing a clear warning that explains the issue and how the mock proceeds instead of silently fixing it or raising an assert.
+
 ## Progress
 ### Mock API parity adjustments
 - Matched the mock `LuaSurface.set_tiles` signature with Factorio through `raise_event` while documenting the unimplemented correction and collision flags.

@@ -59,10 +59,10 @@ function test_env.reset_world()
     load_default_settings()
 end
 
-function test_env.create_world()
+function test_env.create_world(world_options, surface_options)
     test_env.reset_world()
-    local world = world_mod.World.new()
-    local surface = world:create_surface("nauvis")
+    local world = world_mod.World.new(world_options)
+    local surface = world:create_surface("nauvis", nil, surface_options)
     require("control")
     mock.on_init()
     return world, surface
