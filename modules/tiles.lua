@@ -249,5 +249,10 @@ function tiles.processLandfillEvent(tileEvent, updateBudget)
         if waterBody and waterBody.valid then
 			waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, position, surface, updateBudget)
 		end
+    else
+        -- even if not assigned to a valid water body - it can still be assigned to an invalid water body
+        -- so we need to unassign it
+        local surfaceName = surface.name
+        hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
     end
 end
