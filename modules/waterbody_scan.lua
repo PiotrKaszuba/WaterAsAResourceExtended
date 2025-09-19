@@ -234,8 +234,14 @@ function waterbody_scan.EdgePattern(
 							utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! IT IS VALID!")
 							game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT IS VALID!")
 						else
-							utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! IT IS INVALID!")
-							game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT IS INVALID!")
+							-- split and parent landfill not-yet-processed tile is an explanation
+							-- check it
+							local fam = split_families.get_family_by_wb(waterBodyId)
+							local explanation_cond = fam and fam.parentIds[tileWaterBodyId] ~= nil
+							if not explanation_cond then
+								utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! IT IS INVALID! AND NOT A PARENT OF THE WATERBODY!")
+								game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT IS INVALID! AND NOT A PARENT OF THE WATERBODY!")
+							end
 						end
 					else
 						utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! NO WATERBODY REFERENCE!")
