@@ -2,17 +2,8 @@ require("modules.utils")
 
 split_families = {}
 
-
-local function get_families_enabled()
-    return settings.global["Splits-EnableFamilies"].value
-end
-
-local function get_timeout_seconds()
-    return settings.global["Splits-Family-Timeout-Seconds"].value
-end
-
-local function get_reeval_threshold()
-    return settings.global["Splits-Reeval-Threshold"].value
+local function get_max_landfills_per_update()
+    return settings.global["Split-Finalize-Max-Landfills-Per-Update"].value
 end
 
 
@@ -43,7 +34,6 @@ end
 
 function split_families.create_family(memberIds, name, parentArea, parentCentroid, parentDiag, hitCap)
     split_families.init_storage()
-    if not get_families_enabled() then return nil end
     local id = next_family_id()
     local fam = {
         id = id,
@@ -65,7 +55,7 @@ function split_families.create_family(memberIds, name, parentArea, parentCentroi
     return id
 end
 
-local function get_family_by_wb(wbId)
+function split_families.get_family_by_wb(wbId)
     local famId = storage.WbIdToFamilyId[wbId]
     if famId == nil then return nil end
     return storage.SplitFamilyById[famId]
@@ -112,8 +102,8 @@ local function update_successor(newId, fam)
     end
 end
 
-local function recompute_successor(fam)
-    local threshold = get_reeval_threshold()
+local function recompute_successor(fam, is_final)
+    local threshold = is_final and 0 or 0.10
     local bestId, bestScore = fam.successorId, -math.huge
     local currentScore = nil
     for wbId, _ in pairs(fam.members) do
@@ -153,8 +143,7 @@ end
 
 
 function split_families.on_scan_finished(wbId)
-    if not get_families_enabled() then return end
-    local fam = get_family_by_wb(wbId)
+    local fam = split_families.get_family_by_wb(wbId)
     if fam == nil then return end
     
     fam.finished[wbId] = true
@@ -162,8 +151,8 @@ function split_families.on_scan_finished(wbId)
     finalize_if_done(fam)
 end
 
-function split_families.on_removed(wbId)
-    local fam = get_family_by_wb(wbId)
+function split_families.on_removed(wbId, isParent)
+    local fam = split_families.get_family_by_wb(wbId)
     if fam == nil then return end
     fam.members[wbId] = nil
     fam.finished[wbId] = nil
@@ -213,8 +202,7 @@ end
 
 function split_families.updateSplitFamilies(updateBudget, periodic_tick)
     split_families.init_storage()
-    if not get_families_enabled() then return end
-    local timeout_seconds = get_timeout_seconds()
+    local max_landfills_per_update = get_max_landfills_per_update()
     for id, fam in pairs(storage.SplitFamilyById) do
         local periodic_ticks_elapsed = periodic_tick - (fam.createdPeriodicTick or periodic_tick)
         local seconds_elapsed = utils.periodic_ticks_to_seconds(periodic_ticks_elapsed)
