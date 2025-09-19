@@ -254,7 +254,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 			if pump_data.entity.valid and pump_data.type == "pump" and not pump_data.disabled then
 				local pump_input_position = pump_data.input_position
 				-- check if this is still water tile
-				if utils.validate_tile_placement(pump_input_position, surface, utils.WaterAndDryTiles) then
+				if entities.validatePumpPlacement(pump_data) then
 					-- fix position to left-top corner - because it is center based - from entity position
 					local pump_input_top_left_corner = utils.fixPositionToLeftTopCorner(pump_input_position)
 					
