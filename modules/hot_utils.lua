@@ -52,10 +52,10 @@ function hot_utils.getWaterTile(gridKey, surfaceName)
 	return waterBodyRef[1]
 end
 
--- same as waterbodies.checkIfTileIsNotAssignedToWaterBody() but optimized for hot paths
+-- same as waterbodies.checkIfTileIsNotAssignedToValidWaterBody but optimized for hot paths
 -- uses surfaceName instead of surface
 -- assumes ValidWaterBodies are initialized and completely trusted
-function hot_utils.checkIfTileIsNotAssignedToWaterBody(gridKey, surfaceName)
+function hot_utils.checkIfTileIsNotAssignedToValidWaterBody(gridKey, surfaceName)
     local waterBodyId = hot_utils.getWaterTile(gridKey, surfaceName)
     return storage.ValidWaterBodies[waterBodyId] == nil
 end

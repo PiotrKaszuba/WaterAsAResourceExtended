@@ -181,7 +181,7 @@ function tiles.findAdjacentWaterBodies(position, surface)
         local adj_gridKey = hot_utils.GridKey(adj_pos)
         local waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
         
-        if not waterbodies.checkIfTileIsNotAssignedToWaterBody(adj_gridKey, surface) and not seen[waterBodyId] then
+        if not waterbodies.checkIfTileIsNotAssignedToValidWaterBody(adj_gridKey, surface) and not seen[waterBodyId] then
             waterBodyIds[#waterBodyIds + 1] = waterBodyId
             seen[waterBodyId] = true
         end
@@ -238,7 +238,7 @@ function tiles.processLandfillEvent(tileEvent, updateBudget)
     local gridKey = hot_utils.GridKey(position)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
     
-    if not waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface) then
+    if not waterbodies.checkIfTileIsNotAssignedToValidWaterBody(gridKey, surface) then
         local waterBody = waterbodies.getWaterBody(waterBodyId)
 		if waterBody and waterBody.valid then
 			if updateBudget then

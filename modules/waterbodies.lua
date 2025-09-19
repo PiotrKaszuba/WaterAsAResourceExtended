@@ -84,7 +84,7 @@ function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
 	return false
 end
 
-function waterbodies.checkIfTileIsNotAssignedToWaterBody(gridKey, surface)
+function waterbodies.checkIfTileIsNotAssignedToValidWaterBody(gridKey, surface)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
     return not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
 end
