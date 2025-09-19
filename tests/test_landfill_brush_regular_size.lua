@@ -57,14 +57,6 @@ local function single_waterbody_world_setup(args)
     return world, surface, setup_msg
 end
 
-local function start_setup_test(setup_msg, test_msg)
-    if setup_msg then
-        msg = setup_msg .. "\n" .. test_msg
-    end
-    test_assert.start(msg)
-
-end
-
 local function test_waterbody_ok_and_scan_finished(world, surface, check_every_n_ticks, do_test)
     -- run ticks until waterbody is finished scanning
     local wb = storage.WaterBodies and storage.WaterBodies[1]
@@ -106,6 +98,8 @@ local function landfill_brush(args, world, surface)
     local brush_left = math.floor(waterbody_left + brush_offset_left)
     local brush_top = math.floor(waterbody_top + brush_offset_top)
 
+    test_assert.print(string.format("Landfill brush applied: brush_left: %s, brush_top: %s, brush_size: %s x %s", brush_left, brush_top, brush_size, brush_size))
+
     world:landfill_rectangle(surface, {x = brush_left, y = brush_top}, brush_size, brush_size)
 end
 
@@ -119,11 +113,12 @@ local function run_test(args)
     local waterbody_height = args.waterbody_height or default_args.waterbody_height
     local brush_area_outside_waterbody = args.brush_area_outside_waterbody or default_args.brush_area_outside_waterbody
     -- set test msg and start test
-    local test_msg = string.format("Landfill brush test: %s x %s", brush_size, brush_size)
+    local test_msg = string.format("Landfill brush test: %s x %s \n", brush_size, brush_size)
+    test_assert.start(test_msg)
 
     local world, surface, setup_msg = single_waterbody_world_setup(args)
 
-    start_setup_test(setup_msg, test_msg)
+    test_assert.print(setup_msg)
 
     test_waterbody_ok_and_scan_finished(world, surface, 1, true)
 
@@ -155,6 +150,7 @@ local tests = {
     {brush_size = 3,},
     {brush_size = 4,},
     {brush_size = 5,},
+    {brush_size = 5, brush_offset_top = -1, brush_area_outside_waterbody = 5},
     {brush_size = 20, wait_ticks = 300 },
 }
 

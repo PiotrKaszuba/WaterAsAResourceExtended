@@ -6,6 +6,10 @@ local function printf(fmt, ...)
     print(string.format(fmt, ...))
 end
 
+function M.print(msg)
+    printf("[INFO] %s", msg)
+end
+
 function M.start(msg)
     passed, failed = 0, 0
     if msg then
