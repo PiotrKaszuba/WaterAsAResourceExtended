@@ -881,10 +881,14 @@ function waterbodies.removeWaterBody(waterBody)
 		gridData.lazyDriedTilesGridWithData = {}
 	end
 	
-	 -- Remove most data from water body (garbage collection)
-	 storage.WaterBodies[waterBodyId] = waterbodies.initCleanedWaterBody(waterBody)
-	 storage.ValidWaterBodies[waterBodyId] = nil
-	 storage.WaterBodyRef[waterBodyId] = nil
+	-- remove from split families -- member mode
+	split_families.on_removed(waterBodyId)
+	
+	-- Remove most data from water body (garbage collection)
+	storage.WaterBodies[waterBodyId] = waterbodies.initCleanedWaterBody(waterBody)
+	storage.ValidWaterBodies[waterBodyId] = nil
+	storage.WaterBodyRef[waterBodyId] = nil
+
 end
 
 

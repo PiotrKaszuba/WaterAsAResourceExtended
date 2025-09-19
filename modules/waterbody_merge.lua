@@ -187,11 +187,12 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	waterBodyToNumTiles[keepId] = (waterBodyToNumTiles[keepId] or 0) + (waterBodyToNumTiles[removedId] or 0)
 	waterBodyToNumTiles[removedId] = nil
 
-	
-    waterbodies.removeWaterBody(waterBody2)
+	-- handle split families on merged
     if removedId then
         split_families.on_merged(waterBody1.waterBodyId, removedId, waterBody1.waterBodyId)
     end
+	-- remove after split families on merged because remove will also trigger on_removed
+	waterbodies.removeWaterBody(waterBody2)
 
 	table.insert(storage.RecycledWaterBodyIds, removedId)
 	
