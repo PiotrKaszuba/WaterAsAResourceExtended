@@ -73,8 +73,15 @@ function waterbodies.getMaxWaterBodySize()
 	return val
 end
 
-function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
+function waterbodies.checkIfWaterBodyIdIsOfAssignedValue(waterBodyId)
 	if waterBodyId == nil or waterBodyId == -1 then
+		return false
+	end
+	return true
+end
+
+function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
+	if not waterbodies.checkIfWaterBodyIdIsOfAssignedValue(waterBodyId) then
 		return false
 	end
 	local waterBody = waterbodies.getWaterBody(waterBodyId)
