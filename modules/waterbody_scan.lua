@@ -400,7 +400,7 @@ function waterbody_scan.continueScanWaterArea(water_body_id, scan_amount, update
 	local water_body = waterbodies.getWaterBody(water_body_id)
 	if not (water_body and water_body.valid) then
 		utils.profile_hits("waterbody_scan.continueScanWaterArea", "water_body invalid before scan")
-		-- game.print("Error: Water body invalid in continueScanWaterArea (before scan)")
+		game.print("Error: Water body invalid in continueScanWaterArea (before scan)")
 		return nil
 	end
     local finished, water_body = waterbody_scan.ScanWaterArea(water_body, scan_amount, updateBudget)
@@ -418,7 +418,7 @@ function waterbody_scan.beginScanWaterArea(water_body_id, start_position, scan_a
 	local water_body = waterbodies.getWaterBody(water_body_id)
 	if not (water_body and water_body.valid) then
 		utils.profile_hits("waterbody_scan.beginScanWaterArea", "water_body nil or invalid before scan")
-		-- game.print("Error: Water body nil or invalid in beginScanWaterArea (before scan)")
+		game.print("Error: Water body nil or invalid in beginScanWaterArea (before scan)")
 		return nil
 	end
 	local search_queue = water_body.searchData.searchQueue
