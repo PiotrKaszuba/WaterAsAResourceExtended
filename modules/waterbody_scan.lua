@@ -70,8 +70,8 @@ function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surf
 	local adjacent_waterbody_tiles, adjacent_land_tiles = waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, waterBody.waterBodyId)
     
 	-- remove from edge grid - all adjacent land tiles
+	local gridsData = waterBody.gridsData
 	for _, pos in pairs(adjacent_land_tiles) do
-		local gridsData = waterBody.gridsData
 		utils.LazyTables.remove(hot_utils.GridKey(pos), gridsData.edgeGrid, gridsData.lazyEdgeGrid)
 	end
 	local surfaceName = surface.name
