@@ -194,6 +194,9 @@ function waterbody_merge.mergeWaterBody(waterBody1, waterBody2)
 	-- remove after split families on merged because remove will also trigger on_removed
 	waterbodies.removeWaterBody(waterBody2)
 
+	-- recycling - total removal of waterbody should remove parent on split families
+	-- but merge is on valid waterbodies, and parents are invalid waterbodies that still have some WaterTiles
+	-- so no need to do that here
 	table.insert(storage.RecycledWaterBodyIds, removedId)
 	
 	return waterBody1.waterBodyId

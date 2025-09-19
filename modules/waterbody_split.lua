@@ -295,7 +295,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		end
 
 		-- create family if enabled (check is in the call)
-		split_families.create_family(memberIds, parent_data.name, parent_area, parent_centroid, parent_diag, any_hit_cap)
+		split_families.create_family(memberIds, parent_data.id, surface, parent_data.name, parent_area, parent_centroid, parent_diag, is_potential_split, adjacent_border_land_tiles)
 
 		-- this one scans only 1 tile and makes sure each waterbody 'claims' its own starting tile
 		local new_waterbodies_still_valid = {}
