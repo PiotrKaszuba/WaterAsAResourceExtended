@@ -34,7 +34,7 @@ function waterbody_split.getWaterBodyLimitedBoundingBox(shape_data, center_posit
 end
 
 function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surface, center_position, updateBudget, nth_call)
-	local current_check_size = 2
+	local current_check_size = 4
 	local rect_area_ratio = 0.0
 	local start_tile_gridKey = hot_utils.GridKey(start_tile_pos)
 	local connected_tiles = {}
