@@ -660,11 +660,17 @@ end
 
 function waterbody_scan.signalCreatedOrUpdated(water_body)
 	local state = water_body.waterBodyStateData
-	if (not state.FiredCreated) or (state.ToUpdate and settings.global["Alarms-Tile-Message"].value) then
+	local alarms_enabled = settings.global["Alarms-Tile-Message"].value
+	if (not state.FiredCreated) or (state.ToUpdate and alarms_enabled) then
 		waterbodies.signalPerForce(water_body, waterbody_scan.signalFinishedScanningToPlayer)
 		state.FiredCreated = true
-		state.ToUpdate = false
 	end
+	-- always reset value to false regardless of setting
+	-- if fired by created: no need to update
+	-- if fired by update: need to reset to false
+	-- if alarms are not enabled: reset so it doesn't fire randomly if setting is changed
+	-- if was false: nothing changes
+	state.ToUpdate = false
 end
 
 function waterbody_scan.finishedScanning(water_body)

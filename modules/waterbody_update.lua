@@ -295,6 +295,10 @@ function waterbody_update.updateWaterBody(waterBody, updateBudget)
     if state_data.ToCalculate then
         waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
     end
+    if state_data.ToUpdate and waterBody.searchData.finished then
+        waterbody_scan.signalCreatedOrUpdated(waterBody)
+    end
+
 	waterbody_update.bigUpdateWaterLevel(waterBody)
 	waterbody_update.handleDepletion(waterBody)
 	waterbody_update.createMapMarker(waterBody)
