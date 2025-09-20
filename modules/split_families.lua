@@ -282,7 +282,6 @@ local function seed_from_landfills(fam, max_landfills, updateBudget)
                     if new_water_body_id then
                         local scan_amount = waterbody_scan.getInitialScanAmount()
                         waterbody_scan.continueScanWaterArea(new_water_body_id, scan_amount, updateBudget)
-                        budget = budget - scan_amount
                     end
                     break -- just first one is enough
                 end
@@ -297,8 +296,7 @@ local function seed_from_landfills(fam, max_landfills, updateBudget)
         fam.landfills[gridKey] = nil
     end
 
-    budget = budget - landfills_done * budget_per_landfill
-    updateBudget.budget = budget
+    updateBudget.budget = updateBudget.budget - landfills_done * budget_per_landfill
 
     return landfills_done
 end

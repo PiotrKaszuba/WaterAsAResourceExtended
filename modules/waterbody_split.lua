@@ -316,7 +316,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		end
 		
 		if updateBudget then
-			updateBudget.budget = updateBudget.budget - waterbody_scan.getInitialScanAmount()
+			updateBudget.budget = updateBudget.budget - num_new_water_bodies
 		end
 
 	end
