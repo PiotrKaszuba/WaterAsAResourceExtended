@@ -85,12 +85,12 @@ end
 function entities.validatePumpPlacement(pump_data)
     -- Validate that the pump can be placed (must be on water) and its base not on dry tile
     local surface = pump_data.surface
-    local input_position_on_water = utils.validate_tile_placement(pump_data.input_position, surface, utils.WaterTiles)
-    if not input_position_on_water then
+    local input_position_on_water_or_dry = utils.validate_tile_placement(pump_data.input_position, surface, utils.WaterAndDryTiles)
+    if not input_position_on_water_or_dry then
         return false
     end
-    local base_position_not_on_dry_tile = utils.validate_tile_placement(pump_data.spritepos, surface, nil, utils.DryWaterTiles)
-    return base_position_not_on_dry_tile
+    local base_position_not_water_or_dry = utils.validate_tile_placement(pump_data.spritepos, surface, nil, utils.WaterAndDryTiles)
+    return base_position_not_water_or_dry
 end
 
 function entities.DestroyedPump(entity)

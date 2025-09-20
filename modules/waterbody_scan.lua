@@ -42,32 +42,76 @@ end
 -- not a hot path - not periodic - used in tile events (currently only in landfills)
 -- could be treated as somewhat hot if we wanted to very quickly process tile events
 -- but not a priority - looks fine as is
-function waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, water_body_id, skip_water_tiles_current_state)
+function waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, water_body_id_or_ids, expand_waterbody_owned_land_tiles_depth)
 	-- fix position to left-top corner in case it was not
 	local tile = utils.GetTile(position, surface)
 	position = tile.position
-	
-	-- if water_body_id is given then only return adjacent water tiles that are part of the water body
-	-- if skip_water_tiles_current_state is true then treat adjacent tiles that have id == water_body_id as water tiles
+
+	-- 1. if water_body_id is not nil then only return adjacent water tiles that are part of the water body
+	local water_body_id = (not (type(water_body_id_or_ids) == "table") and water_body_id_or_ids) or nil
+	-- 2. if water_body_ids is not nil then return adjacent water tiles that are part of any of the water bodies
+	local water_body_ids = (type(water_body_id_or_ids) == "table" and water_body_id_or_ids) or nil
+
+	local max_depth = math.max(expand_waterbody_owned_land_tiles_depth or 1, 0)
+	-- 2. if expand_waterbody_owned_land_tiles_depth is given and greater different than 1 (and water_body_id is given)
+	-- then for non-water (nor dry) tiles that have id == water_body_id
+	-- expand the result by adding adjacent water and land tiles for each such tile
+	-- so behaviour is recursive and will collect the non-water 'enclave' part in adjacent_land_tiles
+	-- as well as external water based edge/boundary around the land enclave
+	-- up to the extent/depth of expand_waterbody_owned_land_tiles_depth (= max_depth)
+	-- and as long as all of that is part of the waterbody
+	-- otherwise the result edge/boundary is limited by the waterbody edge/boundary
+	-- max_depth=0 means no limit as the recursion stops exactly at next_depth == 0, which will be -1 from the beginning and will only go down further
+	-- max_depth=1 means no recursion at all - only the current tile is considered (because next_depth will be 0 and no additional tiles will be added)
 	local adjacent_waterbody_tiles = {}
 	local adjacent_land_tiles = {}
-	for _, offset in pairs(utils.AdjacentOffsets) do
-		local adj_pos = {x = position.x + offset.x, y = position.y + offset.y}
-		local adj_gridKey = hot_utils.GridKey(adj_pos)
-		local adj_waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
-		local is_water_tile = utils.IsWaterOrDryTile(utils.GetTile(adj_pos, surface).name)
-		if (water_body_id == nil or adj_waterBodyId == water_body_id) and (is_water_tile or (skip_water_tiles_current_state and adj_waterBodyId == water_body_id)) then
-			adjacent_waterbody_tiles[#adjacent_waterbody_tiles + 1] = adj_pos
-		elseif not is_water_tile then
-			adjacent_land_tiles[#adjacent_land_tiles + 1] = adj_pos
+	-- land tiles that are on the boundary of the depth-limited area
+	-- a subset of adjacent_land_tiles
+	local adjacent_border_land_tiles = {}
+	local queue = {{position, max_depth}}
+	local queue_index = 1
+	local added_to_queue, visited = {}, {}
+	added_to_queue[hot_utils.GridKey(position)] = true
+
+	while queue[queue_index] do
+		local current = queue[queue_index]
+		local current_pos, current_depth = current[1], current[2]
+		local next_depth = current_depth - 1
+		queue_index = queue_index + 1
+
+		for _, offset in pairs(utils.AdjacentOffsets) do
+			local adj_pos = {x = current_pos.x + offset.x, y = current_pos.y + offset.y}
+			local adj_gridKey = hot_utils.GridKey(adj_pos)
+			if visited[adj_gridKey] then
+				goto continue
+			end
+			visited[adj_gridKey] = true
+			local adj_waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
+			local is_water_tile = utils.IsWaterOrDryTile(utils.GetTile(adj_pos, surface).name)
+			if (water_body_id == nil or adj_waterBodyId == water_body_id) 
+				and (water_body_ids == nil or water_body_ids[adj_waterBodyId] ~= nil)
+				and is_water_tile then
+					adjacent_waterbody_tiles[#adjacent_waterbody_tiles + 1] = adj_pos
+			elseif not is_water_tile then
+				adjacent_land_tiles[#adjacent_land_tiles + 1] = adj_pos
+				if adj_waterBodyId == water_body_id and not added_to_queue[adj_gridKey] then
+					if next_depth ~= 0 then
+						queue[#queue + 1] = {adj_pos, next_depth}
+						added_to_queue[adj_gridKey] = true
+					else
+						adjacent_border_land_tiles[#adjacent_border_land_tiles + 1] = adj_pos
+					end
+				end
+			end
+			::continue::
 		end
 	end
-	return adjacent_waterbody_tiles, adjacent_land_tiles
+	return adjacent_waterbody_tiles, adjacent_land_tiles, adjacent_border_land_tiles
 end
 
 -- not a hot path: same as waterbody_scan.getAdjacentWaterAndLandTiles
 function waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surface, updateBudget)
-	local adjacent_waterbody_tiles, adjacent_land_tiles = waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, waterBody.waterBodyId)
+	local adjacent_waterbody_tiles, adjacent_land_tiles, _ = waterbody_scan.getAdjacentWaterAndLandTiles(position, surface, waterBody.waterBodyId)
     
 	-- remove from edge grid - all adjacent land tiles
 	local gridsData = waterBody.gridsData
@@ -190,8 +234,14 @@ function waterbody_scan.EdgePattern(
 							utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! IT IS VALID!")
 							game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT IS VALID!")
 						else
-							utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! IT IS INVALID!")
-							game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT IS INVALID!")
+							-- split and parent landfill not-yet-processed tile is an explanation
+							-- check it
+							local fam = split_families.get_family_by_wb(waterBodyId)
+							local explanation_cond = fam and fam.parentIds[tileWaterBodyId] ~= nil
+							if not explanation_cond then
+								utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! IT IS INVALID! AND NOT A PARENT OF THE WATERBODY!")
+								game.print("Testing: EdgePattern got non water tile of ANOTHER waterbody! IT IS INVALID! AND NOT A PARENT OF THE WATERBODY!")
+							end
 						end
 					else
 						utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of ANOTHER waterbody! NO WATERBODY REFERENCE!")

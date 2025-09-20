@@ -134,31 +134,6 @@ local settings_definitions = {
         order = "g[map]-a"
     },
     {
-        type = "bool-setting",
-        name = "Splits-EnableFamilies",
-        setting_type = "runtime-global",
-        default_value = true,
-        order = "h[splits]-a"
-    },
-    {
-        type = "int-setting",
-        name = "Splits-Family-Timeout-Seconds",
-        setting_type = "runtime-global",
-        default_value = 0,
-        minimum_value = 0,
-        maximum_value = 3600,
-        order = "h[splits]-b"
-    },
-    {
-        type = "double-setting",
-        name = "Splits-Reeval-Threshold",
-        setting_type = "runtime-global",
-        default_value = 0.10,
-        minimum_value = 0.0,
-        maximum_value = 1.0,
-        order = "h[splits]-c"
-    },
-    {
         type = "int-setting",
         name = "Split-Max-BBox-Side",
         setting_type = "runtime-global",
@@ -166,6 +141,24 @@ local settings_definitions = {
         minimum_value = 16,
         maximum_value = 1024,
         order = "h[splits]-d"
+    },
+    {
+        type = "int-setting",
+        name = "Split-Max-Adjacent-Landfill-Depth-Check",
+        setting_type = "runtime-global",
+        default_value = 16,
+        minimum_value = 8,
+        maximum_value = 128,
+        order = "h[splits]-e"
+    },
+    {
+        type = "int-setting",
+        name = "Split-Finalize-Max-Landfills-Per-Update",
+        setting_type = "runtime-global",
+        default_value = 100,
+        minimum_value = 10,
+        maximum_value = 10000,
+        order = "h[splits]-f"
     },
     {
         type = "double-setting",

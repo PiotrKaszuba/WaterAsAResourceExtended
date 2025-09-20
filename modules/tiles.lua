@@ -3,6 +3,7 @@ require("modules.hot_utils")
 require("modules.waterbodies")
 require("modules.waterbody_scan")
 require("modules.waterbody_split")
+require("modules.split_families")
 require("modules.entities")
 require("modules.waterbody_merge")
 
@@ -238,21 +239,31 @@ function tiles.processLandfillEvent(tileEvent, updateBudget)
     local gridKey = hot_utils.GridKey(position)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
     
-    if not waterbodies.checkIfTileIsNotAssignedToValidWaterBody(gridKey, surface) then
+    -- check if tile is assigned (to valid or invalid) water body
+    if waterbodies.checkIfWaterBodyIdIsOfAssignedValue(waterBodyId) then
         local waterBody = waterbodies.getWaterBody(waterBodyId)
+        local budget_cost = 0
+
+        -- if valid - reduce tile from water body
 		if waterBody and waterBody.valid then
-			if updateBudget then
-				updateBudget.budget = updateBudget.budget - 2
-			end
+            budget_cost = budget_cost + 2
             tiles.reduceTileFromWaterBody(waterBody, tileEvent.tileData.originalTileName, position, surface, updateBudget)
+        
+            -- if still valid - check if water body got split
+            if waterBody and waterBody.valid then
+                budget_cost = budget_cost + 2
+                waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, position, surface, updateBudget)
+            end
+            if updateBudget then
+                updateBudget.budget = updateBudget.budget - budget_cost
+            end
+        else
+            -- if invalid - unassign it
+            local surfaceName = surface.name
+            hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
+
+            -- need to check for split family of invalid waterbody
+            split_families.attempt_assign_landfill(waterBodyId, position, gridKey)
         end
-        if waterBody and waterBody.valid then
-			waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, position, surface, updateBudget)
-		end
-    else
-        -- even if not assigned to a valid water body - it can still be assigned to an invalid water body
-        -- so we need to unassign it
-        local surfaceName = surface.name
-        hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
     end
 end

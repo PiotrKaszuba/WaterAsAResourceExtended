@@ -35,6 +35,8 @@ function hot_utils.addNewWaterTileRef(gridKey, surfaceName, waterBodyRef)
 			table.insert(storage.RecycledWaterBodyIds, previous_owner_id)
 			-- also clear the reference table
 			storage.WaterBodyRef[previous_owner_id] = nil
+			-- remove from split families -- parent mode
+			split_families.on_removed(previous_owner_id, true)
 		end
 	end
 	local write_id = waterBodyRef[1]

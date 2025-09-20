@@ -73,8 +73,15 @@ function waterbodies.getMaxWaterBodySize()
 	return val
 end
 
-function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
+function waterbodies.checkIfWaterBodyIdIsOfAssignedValue(waterBodyId)
 	if waterBodyId == nil or waterBodyId == -1 then
+		return false
+	end
+	return true
+end
+
+function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
+	if not waterbodies.checkIfWaterBodyIdIsOfAssignedValue(waterBodyId) then
 		return false
 	end
 	local waterBody = waterbodies.getWaterBody(waterBodyId)
@@ -874,10 +881,14 @@ function waterbodies.removeWaterBody(waterBody)
 		gridData.lazyDriedTilesGridWithData = {}
 	end
 	
-	 -- Remove most data from water body (garbage collection)
-	 storage.WaterBodies[waterBodyId] = waterbodies.initCleanedWaterBody(waterBody)
-	 storage.ValidWaterBodies[waterBodyId] = nil
-	 storage.WaterBodyRef[waterBodyId] = nil
+	-- remove from split families -- member mode
+	split_families.on_removed(waterBodyId)
+	
+	-- Remove most data from water body (garbage collection)
+	storage.WaterBodies[waterBodyId] = waterbodies.initCleanedWaterBody(waterBody)
+	storage.ValidWaterBodies[waterBodyId] = nil
+	storage.WaterBodyRef[waterBodyId] = nil
+
 end
 
 

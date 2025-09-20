@@ -34,10 +34,9 @@ local function load_default_settings()
         ["FluidArea-RemoveDepletedOrphaned"] = true,
         ["Map-EnableMarkers"] = true,
         ["Update-Budget-Per-Second"] = 2000,
-        ["Splits-EnableFamilies"] = true,
-        ["Splits-Family-Timeout-Seconds"] = 0,
-        ["Splits-Reeval-Threshold"] = 0.10,
         ["Split-Max-BBox-Side"] = 32,
+        ["Split-Max-Adjacent-Landfill-Depth-Check"] = 16,
+        ["Split-Finalize-Max-Landfills-Per-Update"] = 100,
     }
     local startup_defaults = {
         ["WaterBody-Regen-Scaling"] = 1.5,
