@@ -111,6 +111,13 @@ local settings_definitions = {
         order = "d[maintenance]-b"
     },
     {
+        type = "bool-setting",
+        name = "Visual-Depletion-Furthest-First",
+        setting_type = "runtime-global",
+        default_value = false,
+        order = "d[maintenance]-c"
+    },
+    {
         type = "int-setting",
         name = "Pumps-Reactivation-LevelPerThousand",
         setting_type = "runtime-global",

@@ -13,7 +13,7 @@
 --    current frontier.max_ring so they are popped first.
 --
 -- API:
---   local dynamicBins = dynamic_bins.new(center_x, center_y, ring_width_tiles?, cap?, approx_stride?, local_probe_window?, deduplicate?)
+--   local dynamicBins = dynamic_bins.new(center_x, center_y, ring_width_tiles?, cap?, approx_stride?, local_probe_window?, deduplicate?, pop_furthest_first?)
 --   dynamic_bins.compute_ring_index(dynamicBins, x, y) -> integer ring_index
 --   dynamic_bins.push(dynamicBins, item_data, x?, y?, ring_index?, deduplicate_hash_function?) -> ring_index; either both x and y or ring_index must be provided
 --   dynamic_bins.batch_push(dynamicBins, items, deduplicate_hash_function?)           -- items array of: {{item_data, x, y}, ... } or {{item_data, ring_index}, ... }
@@ -70,6 +70,7 @@ function dynamic_bins.init_bin(
 		max_ring = max_ring or nil,  -- maximum ring index contained in the bin
 		items = items or {},      -- items contained in the bin
 		sorted = sorted or false,  -- whether the items are sorted by ring index
+		sorted_once = sorted or false, -- tracks if the bin has ever been sorted
 		pop_idx = pop_idx or 1,    -- index of the next item to pop
 	}
 end
@@ -85,7 +86,8 @@ function dynamic_bins.new(
 	coalesce_ring_ratio,
 	bin_range_extension_ratio,
 	bin_range_extension_flat,
-	deduplicate
+	deduplicate,
+	pop_furthest_first
 	)
 	local w = ring_width_tiles or dynamic_bins.get_default_ring_width_tiles()
 	return {
@@ -100,7 +102,7 @@ function dynamic_bins.new(
 		-- bins
 		bins = {}, -- ordered by .max_ring, disjoint ranges [min_ring..max_ring] (allow touching boundaries)
 		num_bins = 0, -- number of bins (to avoid calling #bins)
-		front = nil, -- frontier is undefined until we actually pop from bins, it alternates between nil and fixed '1' because bins are removed when emptied (no need to be higher than 1)
+		front = nil, -- frontier is undefined until we actually pop from bins, it alternates between nil and the active edge index
 		total = 0, -- total items across bins + backfill
 
 		-- capacity & search
@@ -120,6 +122,9 @@ function dynamic_bins.new(
 		backfill = {}, -- array of {item_data, ring_index}; popped before frontier
 		-- deduplication
 		inBins = deduplicate and {} or nil,
+
+		-- orientation
+		pop_descending = not not pop_furthest_first,
 	}
 end
 
@@ -186,6 +191,25 @@ local function remove_bin_at(dynamicBins, bins, idx)
 	local num_bins = dynamicBins.num_bins - 1
 	dynamicBins.num_bins = num_bins
 	return num_bins
+end
+
+local function reset_pop_idx(bin, pop_descending)
+	if pop_descending then
+		bin.pop_idx = #bin.items
+	else
+		bin.pop_idx = 1
+	end
+end
+
+local function should_route_to_backfill(pop_descending, ring_index, head_bin_min_ring, head_bin_max_ring)
+	if ring_index == nil then return false end
+	if pop_descending then
+		if not head_bin_min_ring then return false end
+		return ring_index >= head_bin_min_ring
+	else
+		if not head_bin_max_ring then return false end
+		return ring_index <= head_bin_max_ring
+	end
 end
 -- Update (or set) hint mapping for an approx key
 local function hint_set(dynamicBins, approx_key, bin_index)
@@ -283,7 +307,7 @@ local function split_bin(dynamicBins, bins, num_bins, start_bin_index)
 			items[i] = out[i]
 		end
 		bin.sorted = true
-		bin.pop_idx = bin.pop_idx or 1
+		bin.sorted_once = true
 
 		local mid = math.floor(n / 2)
 		local leftItems = items
@@ -296,6 +320,8 @@ local function split_bin(dynamicBins, bins, num_bins, start_bin_index)
 			j = j + 1
 		end
 
+		reset_pop_idx(bin, dynamicBins.pop_descending)
+
 		local leftHi   = leftItems[mid].ring_index
 		local rightLo  = rightItems[1].ring_index
 
@@ -306,6 +332,9 @@ local function split_bin(dynamicBins, bins, num_bins, start_bin_index)
 			true,
 			1
 		)
+
+		reset_pop_idx(rightBin, dynamicBins.pop_descending)
+		rightBin.sorted_once = true
 
 		-- mutate left bin
 		bin.max_ring = leftHi
@@ -369,6 +398,7 @@ function dynamic_bins._push_item(
 	bins,
 	num_bins,
 	head_bin,
+	head_bin_min_ring,
 	head_bin_max_ring,
 	item_data,
 	ring_index,
@@ -379,10 +409,10 @@ function dynamic_bins._push_item(
 	ring_width_tiles
 )
 	local item = dynamic_bins.init_item(item_data, ring_index)
-	
+
 	-- Backfill only after the head bin has been sorted (i.e., once popping started).
 	-- Before that, allow normal insert so the head bin can absorb nearby items.
-	if head_bin and ring_index <= head_bin_max_ring and head_bin.sorted then
+	if head_bin and head_bin.sorted and should_route_to_backfill(dynamicBins.pop_descending, ring_index, head_bin_min_ring, head_bin_max_ring) then
 		local backfill = dynamicBins.backfill
 		backfill[#backfill + 1] = item
 	else
@@ -449,6 +479,7 @@ function dynamic_bins.push(dynamicBins, item_data, x, y, ring_index, deduplicate
 	local num_bins = dynamicBins.num_bins
 	local front = dynamicBins.front
 	local head_bin = front and bins[front] or nil
+	local head_bin_min_ring = head_bin and head_bin.min_ring or nil
 	local head_bin_max_ring = head_bin and head_bin.max_ring or nil
 	local cap = dynamicBins.cap
 	local approx_stride = dynamicBins.approx_stride
@@ -456,7 +487,7 @@ function dynamic_bins.push(dynamicBins, item_data, x, y, ring_index, deduplicate
 	local bin_range_extension_ratio = dynamicBins.bin_range_extension_ratio
 	local ring_width_tiles = dynamicBins.ring_width_tiles
 	
-	num_bins = dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_max_ring, item_data, ring_index, cap, approx_stride, bin_range_extension_flat, bin_range_extension_ratio, ring_width_tiles)
+	num_bins = dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_min_ring, head_bin_max_ring, item_data, ring_index, cap, approx_stride, bin_range_extension_flat, bin_range_extension_ratio, ring_width_tiles)
 	return ring_index
 end
 
@@ -515,6 +546,7 @@ function dynamic_bins.batch_push(dynamicBins, items, deduplicate_hash_function)
 	local bin_range_extension_ratio = dynamicBins.bin_range_extension_ratio
 	local ring_width_tiles = dynamicBins.ring_width_tiles
 	local head_bin = nil
+	local head_bin_min_ring = nil
 	local head_bin_max_ring = nil
 	local front = dynamicBins.front
 	for i = 1, num_items do
@@ -523,9 +555,10 @@ function dynamic_bins.batch_push(dynamicBins, items, deduplicate_hash_function)
 		local item_data, ring_index = item.item_data, item.ring_index
 		-- reload variables in case they changed
 		head_bin = front and bins[front] or nil
+		head_bin_min_ring = head_bin and head_bin.min_ring or nil
 		head_bin_max_ring = head_bin and head_bin.max_ring or nil
 		-- push item
-		num_bins = dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_max_ring, item_data, ring_index, cap, approx_stride, bin_range_extension_flat, bin_range_extension_ratio, ring_width_tiles)
+		num_bins = dynamic_bins._push_item(dynamicBins, bins, num_bins, head_bin, head_bin_min_ring, head_bin_max_ring, item_data, ring_index, cap, approx_stride, bin_range_extension_flat, bin_range_extension_ratio, ring_width_tiles)
 		inserted = inserted + 1
 	end
 	return inserted
@@ -568,14 +601,20 @@ function dynamic_bins.batch_pop(dynamicBins, k, only_backfill, deduplicate_hash_
 	local bins = dynamicBins.bins
 	local num_bins = dynamicBins.num_bins
 	local front = dynamicBins.front
-	
-	while out < k and (not front or front <= num_bins) do
+	local pop_descending = dynamicBins.pop_descending
+
+	while out < k do
+		if num_bins == 0 then break end
 		if not front then
-			-- re-init front or break if no bins
-			if num_bins == 0 then break end
-			front = 1
+			front = pop_descending and num_bins or 1
 			dynamicBins.front = front
 		end
+		if front < 1 or front > num_bins then
+			front = nil
+			dynamicBins.front = nil
+			goto continue
+		end
+
 		local bin = bins[front]
 		local items = bin.items
 		local num_items = #items
@@ -587,40 +626,54 @@ function dynamic_bins.batch_pop(dynamicBins, k, only_backfill, deduplicate_hash_
 			end
 			local function cmp(i, j) return keys[i] < keys[j] end
 			table.sort(idxs, cmp)
-			local out = {}
+			local reordered = {}
 			for i = 1, num_items do
-				out[i] = items[idxs[i]]
+				reordered[i] = items[idxs[i]]
 			end
 			for i = 1, num_items do
-				items[i] = out[i]
+				items[i] = reordered[i]
 			end
 			bin.sorted = true
-			bin.pop_idx = 1
+			bin.sorted_once = true
+			reset_pop_idx(bin, pop_descending)
 		end
+
 		local pop_idx = bin.pop_idx
-		if pop_idx <= num_items then
-			local item = items[pop_idx]
-			pop_idx = pop_idx + 1
-			bin.pop_idx = pop_idx
+		local item = nil
+		if pop_descending then
+			if pop_idx and pop_idx >= 1 then
+				item = items[pop_idx]
+				bin.pop_idx = pop_idx - 1
+			end
+		else
+			if pop_idx and pop_idx <= num_items then
+				item = items[pop_idx]
+				bin.pop_idx = pop_idx + 1
+			end
+		end
+
+		if item and item.item_data then
 			out = out + 1
 			if inBins then
 				local hash = deduplicate_hash_function and deduplicate_hash_function(item.item_data) or item.item_data
 				inBins[hash] = nil
 			end
-			if pop_idx > num_items then
-				num_bins = remove_bin_at(dynamicBins, bins, front) -- empty bin; next shifts into place front
-				-- if we removed the head, reset front to nil so the next iteration can re-init
+			local next_idx = bin.pop_idx
+			local exhausted = (not pop_descending and (not next_idx or next_idx > num_items))
+				or (pop_descending and (not next_idx or next_idx < 1))
+			if exhausted then
+				num_bins = remove_bin_at(dynamicBins, bins, front)
 				front = nil
 				dynamicBins.front = front
-
 			end
 			item_datas[out], ring_indices[out] = item.item_data, item.ring_index
 		else
-			num_bins = remove_bin_at(dynamicBins, bins, front) -- defensive cleanup
-			-- if we removed the head, reset front to nil so the next iteration can re-init
+			num_bins = remove_bin_at(dynamicBins, bins, front)
 			front = nil
 			dynamicBins.front = front
 		end
+
+		::continue::
 	end
 
 	dynamicBins.total = dynamicBins.total - out
@@ -634,7 +687,19 @@ end
 -- returns info as if the front was initialized (if front is nil use front=1)
 function dynamic_bins.front_info(dynamicBins)
 	local front = dynamicBins.front
-	local head = front and dynamicBins.bins[front] or dynamicBins.bins[1]
+	local bins = dynamicBins.bins
+	local head = nil
+	if front then
+		head = bins[front]
+	else
+		local num_bins = dynamicBins.num_bins
+		if num_bins == 0 then return nil, nil end
+		if dynamicBins.pop_descending then
+			head = bins[num_bins]
+		else
+			head = bins[1]
+		end
+	end
 	if not head then return nil, nil end
 	return head.min_ring, head.max_ring
 end
@@ -660,10 +725,10 @@ function dynamic_bins.backfill_consume(dynamicBins, max_items, ignore_front, ded
 
 	local item_datas, ring_indices, num_popped = dynamic_bins.batch_pop(dynamicBins, backfill_size, true, deduplicate_hash_function)
 
-       local consumed_items = {} -- array of { item_data, ring_index }
-       for i = 1, num_popped do
+	local consumed_items = {} -- array of { item_data, ring_index }
+	for i = 1, num_popped do
 	       consumed_items[i] = { item_datas[i], ring_indices[i] }
-       end
+	end
 
 	-- add consumed items to bins
 	dynamic_bins.batch_push(dynamicBins, consumed_items, deduplicate_hash_function)
