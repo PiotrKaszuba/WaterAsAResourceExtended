@@ -1,5 +1,5 @@
 if pcall(require, "lldebugger") then
-  require("lldebugger").start()
+	require("lldebugger").start()
 end
 
 require("modules/dynamic_bins")
@@ -8,18 +8,18 @@ require("modules/dynamic_bins")
 -- ==========================================
 
 local function printf(fmt, ...)
-    print(string.format(fmt, ...))
+	print(string.format(fmt, ...))
 end
 
 local TESTS_PASSED, TESTS_FAILED = 0, 0
 local function ok(cond, name)
-    if cond then
-        TESTS_PASSED = TESTS_PASSED + 1
-        printf("[PASS] %s", name)
-    else
-        TESTS_FAILED = TESTS_FAILED + 1
-        printf("[FAIL] %s", name)
-    end
+	if cond then
+		TESTS_PASSED = TESTS_PASSED + 1
+		printf("[PASS] %s", name)
+	else
+		TESTS_FAILED = TESTS_FAILED + 1
+		printf("[FAIL] %s", name)
+	end
 end
 
 local function assert_eq(a, b, name)
@@ -100,24 +100,24 @@ local function validate_invariants(D, name)
 end
 
 local function pop_one(D)
-    local ids, rings, out = dynamic_bins.batch_pop(D, 1)
-    if out and out >= 1 then
-        return ids[1], rings[1]
-    end
-    return nil, nil
+	local ids, rings, out = dynamic_bins.batch_pop(D, 1)
+	if out and out >= 1 then
+		return ids[1], rings[1]
+	end
+	return nil, nil
 end
 
 local function drain_all(D)
-    local ids_all, rings_all = {}, {}
-    while true do
-        local ids, rings, out = dynamic_bins.batch_pop(D, 256)
-        if not out or out == 0 then break end
-        for i = 1, out do
-            ids_all[#ids_all + 1] = ids[i]
-            rings_all[#rings_all + 1] = rings[i]
-        end
-    end
-    return ids_all, rings_all
+	local ids_all, rings_all = {}, {}
+	while true do
+		local ids, rings, out = dynamic_bins.batch_pop(D, 256)
+		if not out or out == 0 then break end
+		for i = 1, out do
+			ids_all[#ids_all + 1] = ids[i]
+			rings_all[#rings_all + 1] = rings[i]
+		end
+	end
+	return ids_all, rings_all
 end
 
 local function rings_monotone(rings, pop_desc)
@@ -165,12 +165,12 @@ local function test_new()
 end
 
 local function test_compute_ring()
-    local D = new_dynamic(0, 0, 2.0)
-    assert_eq(dynamic_bins.compute_ring_index(D, 0, 0), 0, "ring at center is 0")
-    assert_eq(dynamic_bins.compute_ring_index(D, 1, 0), 0, "(1,0) -> ring 0")
-    assert_eq(dynamic_bins.compute_ring_index(D, 2, 0), 1, "(2,0) -> ring 1")
-    assert_eq(dynamic_bins.compute_ring_index(D, 3, 0), 2, "(3,0) -> ring 2")
-    assert_eq(dynamic_bins.compute_ring_index(D, 2, 2), 2, "(2,2) -> ring floor(8/4)=2")
+	local D = new_dynamic(0, 0, 2.0)
+	assert_eq(dynamic_bins.compute_ring_index(D, 0, 0), 0, "ring at center is 0")
+	assert_eq(dynamic_bins.compute_ring_index(D, 1, 0), 0, "(1,0) -> ring 0")
+	assert_eq(dynamic_bins.compute_ring_index(D, 2, 0), 1, "(2,0) -> ring 1")
+	assert_eq(dynamic_bins.compute_ring_index(D, 3, 0), 2, "(3,0) -> ring 2")
+	assert_eq(dynamic_bins.compute_ring_index(D, 2, 2), 2, "(2,2) -> ring floor(8/4)=2")
 end
 
 local function test_push_pop_simple()
@@ -330,28 +330,28 @@ local function test_ring_index_push_api()
 end
 
 local function test_deduplication()
-    local D = new_dynamic(0, 0, 2.0, 8, nil, nil, true)
-    local function hash(v) return v end
+	local D = new_dynamic(0, 0, 2.0, 8, nil, nil, true)
+	local function hash(v) return v end
 
-    dynamic_bins.push(D, "a", 0, 0, nil, hash)
-    dynamic_bins.push(D, "a", 0, 0, nil, hash)
-    assert_eq(dynamic_bins.size(D), 1, "dedup: push skips duplicates")
+	dynamic_bins.push(D, "a", 0, 0, nil, hash)
+	dynamic_bins.push(D, "a", 0, 0, nil, hash)
+	assert_eq(dynamic_bins.size(D), 1, "dedup: push skips duplicates")
 
-    local items = {
-        {"a", 0, 0},
-        {"b", 1, 0},
-        {"b", 1, 0},
-    }
-    local inserted = dynamic_bins.batch_push(D, items, hash)
-    assert_eq(inserted, 1, "dedup: batch_push inserts uniques")
-    assert_eq(dynamic_bins.size(D), 2, "dedup: size after batch_push")
+	local items = {
+		{ "a", 0, 0 },
+		{ "b", 1, 0 },
+		{ "b", 1, 0 },
+	}
+	local inserted = dynamic_bins.batch_push(D, items, hash)
+	assert_eq(inserted, 1, "dedup: batch_push inserts uniques")
+	assert_eq(dynamic_bins.size(D), 2, "dedup: size after batch_push")
 
-    local _, _, out = dynamic_bins.batch_pop(D, 2, false, hash)
-    assert_eq(out, 2, "dedup: batch_pop returns items")
-    assert_eq(dynamic_bins.size(D), 0, "dedup: size after pops")
+	local _, _, out = dynamic_bins.batch_pop(D, 2, false, hash)
+	assert_eq(out, 2, "dedup: batch_pop returns items")
+	assert_eq(dynamic_bins.size(D), 0, "dedup: size after pops")
 
-    dynamic_bins.push(D, "a", 0, 0, nil, hash)
-    assert_eq(dynamic_bins.size(D), 1, "dedup: reinsert after pop")
+	dynamic_bins.push(D, "a", 0, 0, nil, hash)
+	assert_eq(dynamic_bins.size(D), 1, "dedup: reinsert after pop")
 end
 
 local function test_set_center_no_rebucket()

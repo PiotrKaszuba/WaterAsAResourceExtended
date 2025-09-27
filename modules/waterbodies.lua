@@ -5,13 +5,13 @@ require("modules.dynamic_bins")
 waterbodies = {}
 
 function waterbodies.initWaterBodiesAndTiles()
-    if storage.WaterBodies == nil then
-        storage.WaterBodies = {}
+	if storage.WaterBodies == nil then
+		storage.WaterBodies = {}
 		storage.NextWaterBodyId = 1
 		storage.RecycledWaterBodyIds = {} -- array of waterBodyIds
 		storage.ValidWaterBodies = {} -- waterBodyId -> waterBody (reference)
 
-        storage.WaterTiles = {} -- surfaceName -> gridKey -> WaterBodyRef 
+		storage.WaterTiles = {} -- surfaceName -> gridKey -> WaterBodyRef 
 		storage.WaterBodyToNumTiles = {} -- erBodyId -> numTiles
 
 		-- waterBodyId -> shared ref table with numeric id at [1]
@@ -40,14 +40,14 @@ function waterbodies.initWaterBodiesAndTiles()
 end
 
 function waterbodies.getValidWaterBodies()
-    return storage.ValidWaterBodies
+	return storage.ValidWaterBodies
 end
 
 -- these functions use surfaceName instead of surface
 function waterbodies.initSurface(surfaceName)
-    if storage.WaterTiles[surfaceName] == nil then
-        storage.WaterTiles[surfaceName] = {} -- gridKey -> WaterBodyRef
-    end
+	if storage.WaterTiles[surfaceName] == nil then
+		storage.WaterTiles[surfaceName] = {} -- gridKey -> WaterBodyRef
+	end
 	if storage.OrphanedDryTilesOriginalName[surfaceName] == nil then
 		storage.OrphanedDryTilesOriginalName[surfaceName] = {} -- gridKey -> originalName
 	end
@@ -58,8 +58,8 @@ end
 
 function waterbodies.getWaterTile(gridKey, surface)
 	local surfaceName = surface.name
-    waterbodies.initSurface(surfaceName)
-    local waterBodyRef = storage.WaterTiles[surfaceName][gridKey]
+	waterbodies.initSurface(surfaceName)
+	local waterBodyRef = storage.WaterTiles[surfaceName][gridKey]
 	if waterBodyRef == nil then
 		return nil
 	end
@@ -92,8 +92,8 @@ function waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
 end
 
 function waterbodies.checkIfTileIsNotAssignedToValidWaterBody(gridKey, surface)
-    local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
-    return not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
+	local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
+	return not waterbodies.checkIfWaterBodyIdBelongsToValid(waterBodyId)
 end
 
 function waterbodies.getNextFreeWaterBodyId()
@@ -108,12 +108,12 @@ function waterbodies.getNextFreeWaterBodyId()
 		return recycledWaterBodyId
 	end
 
-    local waterBodyId = storage.NextWaterBodyId
-    while storage.WaterBodies[waterBodyId] ~= nil do
-        waterBodyId = waterBodyId + 1
-    end
+	local waterBodyId = storage.NextWaterBodyId
+	while storage.WaterBodies[waterBodyId] ~= nil do
+		waterBodyId = waterBodyId + 1
+	end
 	storage.NextWaterBodyId = waterBodyId + 1
-    return waterBodyId
+	return waterBodyId
 end
 
 function waterbodies.addOldRefsFromGridWithData(lazyArray, surfaceName, oldRefsSeen)
@@ -143,10 +143,10 @@ function waterbodies.removeOldRefs(waterBody, surfaceName)
 	local oldRefs = waterBodyRef[2]
 	local oldRefsSeen = {}
 
-    waterbodies.addOldRefsFromGridWithData(lazyWaterGridWithData, surfaceName, oldRefsSeen)
-    waterbodies.addOldRefsFromGridWithData(lazyDriedTilesGridWithData, surfaceName, oldRefsSeen)
+	waterbodies.addOldRefsFromGridWithData(lazyWaterGridWithData, surfaceName, oldRefsSeen)
+	waterbodies.addOldRefsFromGridWithData(lazyDriedTilesGridWithData, surfaceName, oldRefsSeen)
 	-- remove old refs that are not seen (preserve id->ref mapping)
-    local new_oldRefs = {}
+	local new_oldRefs = {}
 	for id, oldRef in pairs(oldRefs) do
 		if oldRefsSeen[oldRef] then
 			new_oldRefs[id] = oldRef
@@ -156,28 +156,28 @@ function waterbodies.removeOldRefs(waterBody, surfaceName)
 end
 
 function waterbodies.addNewWaterBodyAndSetId(waterBody)
-    local waterBodyId = waterbodies.getNextFreeWaterBodyId()
-    storage.WaterBodies[waterBodyId] = waterBody
-    waterBody.waterBodyId = waterBodyId
+	local waterBodyId = waterbodies.getNextFreeWaterBodyId()
+	storage.WaterBodies[waterBodyId] = waterBody
+	waterBody.waterBodyId = waterBodyId
 	if waterBody.valid then
 		storage.ValidWaterBodies[waterBodyId] = waterBody
 	end
 	storage.WaterBodyRef[waterBodyId] = {[1] = waterBodyId, [2] = {}}
-    return waterBodyId
+	return waterBodyId
 end
 
 function waterbodies.getWaterBody(waterBodyId)
 	if waterBodyId == nil then
 		return nil
 	end
-    return storage.WaterBodies[waterBodyId]
+	return storage.WaterBodies[waterBodyId]
 end
 
 function waterbodies.checkWaterBodyExists(waterBodyId)
 	if waterBodyId == nil then
 		return false
 	end
-    return storage.WaterBodies[waterBodyId] ~= nil
+	return storage.WaterBodies[waterBodyId] ~= nil
 end
 
 function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
@@ -198,16 +198,16 @@ function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
 		game.print("Warning: Tile found in both water and dry grid")
 	end
 	
-    if currentDryTile ~= nil then
-        local state = waterBody.waterBodyStateData
-        if state.DriedTiles > 0 then
-            state.DriedTiles = state.DriedTiles - 1
-        else
-            utils.profile_hits("waterbodies.removeTileFromWaterGrid", string.format("DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
-            game.print(string.format("Warning: DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
-        end
-		utils.LazyTables.remove(gridKey, gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
-    end
+	if currentDryTile ~= nil then
+		local state = waterBody.waterBodyStateData
+		if state.DriedTiles > 0 then
+			state.DriedTiles = state.DriedTiles - 1
+		else
+			utils.profile_hits("waterbodies.removeTileFromWaterGrid", string.format("DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
+			game.print(string.format("Warning: DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
+		end
+			utils.LazyTables.remove(gridKey, gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
+	end
 	if currentWaterTile ~= nil then
 		-- remove from grid
 		utils.LazyTables.remove(gridKey, gridData.waterGridWithData, gridData.lazyWaterGridWithData)
@@ -316,7 +316,6 @@ function waterbodies.initGridsData()
 		-- oldBinsets can be used when new one (i.e. after significant centroid change) is computing
 		-- oldBinsets are popped from and pushed to newBinset when newBinset is computed
 		oldBinsets = {},
-		
 
 		-- queue of tiles that are pending to be added to binset - with deduplication
 		-- doesn't use lazy tables
@@ -405,19 +404,19 @@ function waterbodies.updateGeometry(
 	if other_shape_data == nil and batchTileCount <= 0 then
 		return
 	end
-    local values = waterbodies.getGeometryValuesArray(
+	local values = waterbodies.getGeometryValuesArray(
 		other_shape_data,
 		batchMinX, batchMaxX,
 		batchMinY, batchMaxY,
 		batchSumX, batchSumY, batchTileCount
 	)
-    for i, name in ipairs(waterbodies.UpdateGeometryNames) do
+	for i, name in ipairs(waterbodies.UpdateGeometryNames) do
 		local value = values[i]
 		if value ~= nil then
 			shape_data[name] = waterbodies.LimitGeometryNamesToCompareOp[i](shape_data[name], value)
 		end
-    end
-    waterbodies.calculateDimensions(shape_data)
+	end
+	waterbodies.calculateDimensions(shape_data)
 end
 
 function waterbodies.updateGeometryOnRemove(shape_data, batchSumX, batchSumY, batchTileCount)
@@ -426,7 +425,7 @@ function waterbodies.updateGeometryOnRemove(shape_data, batchSumX, batchSumY, ba
 end
 
 function waterbodies.getCentroidChangeRateThreshold()
-    return settings.global["WaterBody-Centroid-Shift-Threshold"].value
+	return settings.global["WaterBody-Centroid-Shift-Threshold"].value
 end
 
 function waterbodies.didCentroidChangeSignificantly(waterBody, old_center_x, old_center_y)
@@ -474,9 +473,9 @@ function waterbodies.ensureAndUpdateBinset(waterBody)
 end
 
 function waterbodies.getCentroid(waterBody)
-    local shape = waterBody.waterBodyShapeData
+	local shape = waterBody.waterBodyShapeData
 	local tile_count = shape.TileCount
-    if tile_count <= 0 then
+	if tile_count <= 0 then
 		if tile_count < 0 then
 			utils.profile_hits("waterbodies.getCentroid", "tile_count < 0")
 			game.print("Error: Tile count is negative in getCentroid")
@@ -485,58 +484,57 @@ function waterbodies.getCentroid(waterBody)
 			utils.profile_hits("waterbodies.getCentroid", "tile_count == 0")
 			game.print("Warning: Tile count is 0 in getCentroid")
 		end
-        return nil
-    end
-    return { x = shape.SumX / tile_count, y = shape.SumY / tile_count }
+	return nil
+	end
+	return { x = shape.SumX / tile_count, y = shape.SumY / tile_count }
 end
 
 function waterbodies.initShapeData()
-    return {
+	return {
 		-- min/max positions are limit values ever seen on the waterbody
 		-- they are not exact because removal of tiles does not check
 		-- whether these values 'shrink' - they can only 'expand'
 		-- they should be used for the bounding area that the waterbody fits into
-        ["MinX"] = math.huge,  -- max X position ever seen on the waterbody
-        ["MaxX"] = -math.huge,
-        ["MinY"] = math.huge,
-        ["MaxY"] = -math.huge,
-		
+		["MinX"] = math.huge,  -- max X position ever seen on the waterbody
+		["MaxX"] = -math.huge,
+		["MinY"] = math.huge,
+		["MaxY"] = -math.huge,
+			
 		["SumX"] = 0,
-        ["SumY"] = 0,
-        ["TileCount"] = 0,
-        ["Hdif"] = 0,
-        ["Vdif"] = 0,
+		["SumY"] = 0,
+		["TileCount"] = 0,
+		["Hdif"] = 0,
+		["Vdif"] = 0,
 		["Hyp"] = 0,
-        
-    }
+	}
 end
 
 function waterbodies.initWaterBodyTileCountData()
-    return {
-        ["ShallowWater"] = 0,
-        ["DeepWater"] = 0,
-        ["ShallowWater-Shallow"] = 0,
-        ["ShallowWater-Mud"] = 0,
-    }   
+	return {
+		["ShallowWater"] = 0,
+		["DeepWater"] = 0,
+		["ShallowWater-Shallow"] = 0,
+		["ShallowWater-Mud"] = 0,
+	}   
 end
 
 function waterbodies.initWaterAreaData()
-    return {
-        ["WaterBodyType"] = 0,
-        ["BonusValue"] = 0,
-        ["AmountWtr"] = 0,
-        ["RegenAmount"] = 0,
-        ["TotalArea"] = 0,
-    }
+	return {
+	["WaterBodyType"] = 0,
+	["BonusValue"] = 0,
+	["AmountWtr"] = 0,
+	["RegenAmount"] = 0,
+	["TotalArea"] = 0,
+	}
 end
 
 function waterbodies.initWaterBodyStateData()
-    return {
+	return {
 		["Pumps"] = {}, -- array of pump_data (reference)
 		["Forces"] = {}, -- force name -> PlayerForce table (reference)
 		
-        ["WaterUsed"] = 0,	-- the actual water used synchronized on 'big updates'
-        ["WaterUsedPrev"] = 0,	-- the actual water used on the previous 'big update'
+	["WaterUsed"] = 0,	-- the actual water used synchronized on 'big updates'
+	["WaterUsedPrev"] = 0,	-- the actual water used on the previous 'big update'
 
 		["TempAvailableWater"] = 0,	-- the available water that can be used before the next 'big update' 
 		["TempUsedWater"] = 0,	-- the water used since the last 'big update' - used for small updates - if >= TempAvailableWater - the water body is depleted and triggers instant update
@@ -547,7 +545,7 @@ function waterbodies.initWaterBodyStateData()
 		["WaterUsedPenaltyRestored"] = 0,	-- the restored ater (above WaterUsed) that can negate the WaterUsedPenalty (up to that amount)
 
 		["TempInactive"] = true,	-- if true - the water body is inactive and all pumps are inactive - due to using all of the TempAvailableWater
-        ["Depleted"] = false,	-- if true - the water body is depleted and all pumps are inactive
+	["Depleted"] = false,	-- if true - the water body is depleted and all pumps are inactive
 			
 		-- alarm flags
 		["Fired50"] = false,
@@ -569,33 +567,33 @@ function waterbodies.initWaterBodyStateData()
 		["ToUpdate"] = false, -- if true, the water body will emit update message
 
 
-        ["MapMarkers"] = {},
-    }
+	["MapMarkers"] = {},
+	}
 end
 
 -- TODO: port more params from above
 -- IDEA: make them separate 'structures' such as SearchData, TileData, MapMarker, WaterBodyState (for changing values such as depleted), AlarmData, PositionData (minX, maxX, minY, maxY) etc.
 function waterbodies.InitWaterBody(
-    surface,
+	surface,
 	waterAreaData,
 	gridsData,
 
-    waterBodyShapeData,
-    waterBodyTileCountData,
+	waterBodyShapeData,
+	waterBodyTileCountData,
 	searchData,
 	waterBodyStateData,
 
-    waterBodyId,
-    waterBodyName
+	waterBodyId,
+	waterBodyName
 
 )
 	return {
 		valid = true, -- if false, the water body is not valid and should be deleted
 
-        surface = surface or nil,
-        waterBodyId = waterBodyId or nil,
-        waterBodyName = waterBodyName or nil,
-        merge_priority = 0,
+	surface = surface or nil,
+	waterBodyId = waterBodyId or nil,
+	waterBodyName = waterBodyName or nil,
+	merge_priority = 0,
 
 		waterAreaData = waterAreaData or waterbodies.initWaterAreaData(),
 		gridsData = gridsData or waterbodies.initGridsData(),
@@ -609,20 +607,20 @@ function waterbodies.InitWaterBody(
 end
 
 function waterbodies.signalEmptyToPlayer(waterBody)
-    return string.format("%s has no water tiles and is removed.", waterbodies.getFullNameForWaterBody(waterBody))
+	return string.format("%s has no water tiles and is removed.", waterbodies.getFullNameForWaterBody(waterBody))
 end
 
 function waterbodies.isWaterBodyEmpty(waterBody)
-    for _, count in pairs(waterBody.waterBodyTileCountData) do
-        if count > 0 then
-            return false
-        end
-    end
-    return true
+	for _, count in pairs(waterBody.waterBodyTileCountData) do
+	if count > 0 then
+		return false
+	end
+	end
+	return true
 end
 
 function waterbodies.isWaterBodyOrphaned(waterBody)
-    return #waterBody.waterBodyStateData.Pumps == 0
+	return #waterBody.waterBodyStateData.Pumps == 0
 end
 
 
@@ -804,7 +802,7 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 	local regenAmount = waterbodies.GetWaterBodyRegen(totalArea, bonusValue)
 
 	area_data.TotalArea = totalArea
-    area_data.BonusValue = bonusValue
+	area_data.BonusValue = bonusValue
 	area_data.AmountWtr = amountWater
 	area_data.RegenAmount = regenAmount
 	area_data.WaterBodyType = waterBodyType
@@ -823,9 +821,9 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 end
 
 function waterbodies.createNewWaterBody(surface)
-    local waterBody = waterbodies.InitWaterBody(surface)
-    local waterBodyId = waterbodies.addNewWaterBodyAndSetId(waterBody)
-    return waterBody, waterBodyId
+	local waterBody = waterbodies.InitWaterBody(surface)
+	local waterBodyId = waterbodies.addNewWaterBodyAndSetId(waterBody)
+	return waterBody, waterBodyId
 end
 
 
@@ -846,11 +844,11 @@ end
 -- requires waterGridWithData + gridKey to be present in scope
 -- can be used with driedTilesGridWithData
 function waterbodies.addTileToWaterGrid(waterGridWithData, gridKey, tileName, position, originalName)
-    waterGridWithData[gridKey] = {
-        name = tileName,
-        position = position,
-        originalName = originalName
-    }
+	waterGridWithData[gridKey] = {
+	name = tileName,
+	position = position,
+	originalName = originalName
+	}
 end
 
 function waterbodies.initCleanedWaterBody(water_body)
