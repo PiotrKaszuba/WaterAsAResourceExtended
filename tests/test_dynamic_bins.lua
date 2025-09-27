@@ -39,15 +39,15 @@ end
 -- --------- Helpers for inspecting structures ---------
 
 -- Bins keep already-popped slots until the front advances; subtract them when counting.
-local function sum_items_in_bins(D)
+local function sum_items_in_bins(D, name)
 	local num_backfill = #D.backfill
-	local total = D.total + num_backfill
-	local total_counting = num_backfill
+	local total = D.total - num_backfill
+	local total_counting = 0
 	local pop_desc = D.pop_descending
 	for i = 1, #D.bins do
 		local b = D.bins[i]
 		local num_items = #b.items
-		if pop_desc then
+		if not pop_desc then
 			if b.pop_idx and b.pop_idx > 1 then
 				num_items = num_items - (b.pop_idx - 1)
 			end
@@ -59,13 +59,13 @@ local function sum_items_in_bins(D)
 		total_counting = total_counting + num_items
 	end
 	if total < 0 then total = 0 end
-	assert_eq(total, total_counting, "sum_items_in_bins: total mismatch")
+	assert_eq(total, total_counting, (name or "sum_items_in_bins") .. " - total match")
 	return total
 end
 
 -- validates bin structure - does not care about popping order (so always sorted ascending)
 local function validate_invariants(D, name)
-	local total_calc = sum_items_in_bins(D) + #D.backfill
+	local total_calc = sum_items_in_bins(D, name) + #D.backfill
 	local ok_total = (total_calc == D.total)
 	if not ok_total then
 		printf("  invariant total mismatch: calc=%d D.total=%d", total_calc, D.total)
@@ -293,11 +293,11 @@ local function test_backfill_consume()
 		assert_eq(consumed, 0, string.format("backfill_consume %s: no consume with active front", label))
 		assert_eq(#D.backfill, 2, string.format("backfill_consume %s: unchanged backfill when front active", label))
 
-		local before = sum_items_in_bins(D)
+		local before = sum_items_in_bins(D, string.format("backfill_consume %s: before consume", label))
 		consumed = dynamic_bins.backfill_consume(D, 10, true)
 		assert_eq(consumed, 2, string.format("backfill_consume %s: consumed with ignore_front", label))
 		assert_eq(#D.backfill, 0, string.format("backfill_consume %s: backfill cleared", label))
-		assert_eq(sum_items_in_bins(D), before + 2, string.format("backfill_consume %s: items moved to bins", label))
+		assert_eq(sum_items_in_bins(D, string.format("backfill_consume %s: after consume", label)), before + 2, string.format("backfill_consume %s: items moved to bins", label))
 		validate_invariants(D, string.format("backfill_consume %s: invariants after consume", label))
 	end
 end

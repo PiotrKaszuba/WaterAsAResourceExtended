@@ -72,7 +72,7 @@ function dynamic_bins.init_bin(
 		max_ring = max_ring or nil, -- maximum ring index contained in the bin
 		items = items or {},  -- items contained in the bin
 		sorted = sorted or false, -- whether the items are sorted by ring index
-		pop_idx = pop_idx or 1, -- index of the next item to pop
+		pop_idx = pop_idx or nil, -- index of the next item to pop - if nil it has to be reset before usage
 	}
 end
 
@@ -194,12 +194,43 @@ local function remove_bin_at(dynamicBins, bins, idx)
 	return num_bins
 end
 
-local function reset_pop_idx(bin, pop_descending)
+local function set_pop_idx(bin, pop_descending)
+	local new_pop_idx = nil
 	if pop_descending then
-		bin.pop_idx = #bin.items
+		new_pop_idx = #bin.items
 	else
-		bin.pop_idx = 1
+		new_pop_idx = 1
 	end
+	bin.pop_idx = new_pop_idx
+	return new_pop_idx
+end
+
+local function reset_pop_idx(dynamicBins, bin)
+	-- remove items from the bin that are past the pop_idx
+	local pop_idx = bin.pop_idx
+	if pop_idx == nil then return end
+	local pop_desc = dynamicBins.pop_descending
+	local items = bin.items
+
+	if pop_desc then
+		-- for descending order we need to just remove the last items
+		-- pop_idx + 1 because we don't want to remove the item at the pop_idx
+		for i = #items, pop_idx + 1, -1 do
+			table.remove(items, i)
+		end
+	elseif pop_idx > 1 then
+
+		-- for ascending order we need to shift the items
+		-- create new items array with the remaining items
+		local new_items = {}
+		local j = 1
+		for i = pop_idx, #items do
+			new_items[j] = items[i]
+			j = j + 1
+		end
+		bin.items = new_items
+	end
+	bin.pop_idx = nil
 end
 
 local function should_route_to_backfill(pop_descending, ring_index, head_bin_min_ring, head_bin_max_ring)
@@ -288,6 +319,8 @@ local function split_bin(dynamicBins, bins, num_bins, start_bin_index)
 		stack[#stack] = nil
 		local bin = bins[bin_index]
 		if not bin then goto continue end
+		-- in order to split a bin we need to reset the pop_idx
+		reset_pop_idx(dynamicBins, bin)
 		local items = bin.items
 		local n = #items
 		if n <= cap then goto continue end
@@ -320,8 +353,6 @@ local function split_bin(dynamicBins, bins, num_bins, start_bin_index)
 			j = j + 1
 		end
 
-		reset_pop_idx(bin, dynamicBins.pop_descending)
-
 		local leftHi   = leftItems[mid].ring_index
 		local rightLo  = rightItems[1].ring_index
 
@@ -329,11 +360,8 @@ local function split_bin(dynamicBins, bins, num_bins, start_bin_index)
 			rightLo,
 			bin.max_ring,
 			rightItems,
-			true,
-			1
+			true
 		)
-
-		reset_pop_idx(rightBin, dynamicBins.pop_descending)
 
 		-- mutate left bin
 		bin.max_ring = leftHi
@@ -358,6 +386,9 @@ local function maybe_coalesce_adjacent(dynamicBins, bins, num_bins, bin_index, c
 	local left = bins[bin_index]
 	local right = bins[bin_index + 1]
 	if not left or not right then return false end
+	-- in order to coalesce adjacent bins we need to reset the pop_idx
+	reset_pop_idx(dynamicBins, left)
+	reset_pop_idx(dynamicBins, right)
 	local left_items = left.items
 	local right_items = right.items
 	local num_left_items = #left_items
@@ -429,7 +460,7 @@ function dynamic_bins._push_item(
 				ring_index,
 				{},
 				false,
-				1,
+				nil,
 
 				true,
 				bin_range_extension_flat,
@@ -440,6 +471,8 @@ function dynamic_bins._push_item(
 			)
 			num_bins = insert_bin(dynamicBins, bins, num_bins, bin_index, bin)
 		end
+		-- in order to push item into a bin we need to reset the pop_idx
+		reset_pop_idx(dynamicBins, bin)
 		local items = bin.items
 		local num_items = #items + 1
 		items[num_items] = item
@@ -615,6 +648,11 @@ function dynamic_bins.batch_pop(dynamicBins, k, only_backfill, deduplicate_hash_
 		end
 
 		local bin = bins[front]
+		-- in order to pop from (and sort) a bin we need to set the pop_idx
+		local pop_idx = bin.pop_idx
+		if pop_idx == nil then
+			pop_idx = set_pop_idx(bin, pop_descending)
+		end
 		local items = bin.items
 		local num_items = #items
 		if not bin.sorted then
@@ -633,10 +671,8 @@ function dynamic_bins.batch_pop(dynamicBins, k, only_backfill, deduplicate_hash_
 				items[i] = reordered[i]
 			end
 			bin.sorted = true
-			reset_pop_idx(bin, pop_descending)
 		end
 
-		local pop_idx = bin.pop_idx
 		local item = nil
 		if pop_descending then
 			if pop_idx and pop_idx >= 1 then
@@ -720,8 +756,8 @@ function dynamic_bins.backfill_consume(dynamicBins, max_items, ignore_front, ded
 		-- if not ignoring front and front is active - don't consume backfill
 		return 0
 	end
-
-	local item_datas, ring_indices, num_popped = dynamic_bins.batch_pop(dynamicBins, backfill_size, true,
+	local to_consume = math.min(backfill_size, max_items or backfill_size)
+	local item_datas, ring_indices, num_popped = dynamic_bins.batch_pop(dynamicBins, to_consume, true,
 		deduplicate_hash_function)
 
 	local consumed_items = {} -- array of { item_data, ring_index }
