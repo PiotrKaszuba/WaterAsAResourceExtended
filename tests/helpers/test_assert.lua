@@ -1,6 +1,6 @@
 local M = {}
 
-local passed, failed
+local passed, failed, failures
 
 local function printf(fmt, ...)
     print(string.format(fmt, ...))
@@ -12,6 +12,7 @@ end
 
 function M.start(msg)
     passed, failed = 0, 0
+    failures = {}
     if msg then
         print(msg)
     end
@@ -24,6 +25,9 @@ function M.ok(cond, name)
     else
         failed = failed + 1
         printf("[FAIL] %s", name)
+        if failures then
+            failures[#failures + 1] = name or "(unnamed assertion)"
+        end
     end
 end
 
@@ -44,6 +48,19 @@ function M.finish(label)
     else
         print("Some tests failed ❌")
     end
+end
+
+-- Introspection helpers for runners
+function M.get_counts()
+    return passed or 0, failed or 0
+end
+
+function M.get_failures()
+    return failures or {}
+end
+
+function M.has_failures()
+    return (failed or 0) > 0
 end
 
 return M
