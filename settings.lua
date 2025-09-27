@@ -114,7 +114,7 @@ local settings_definitions = {
         type = "bool-setting",
         name = "Visual-Depletion-Furthest-First",
         setting_type = "runtime-global",
-        default_value = false,
+        default_value = true,
         order = "d[maintenance]-c"
     },
     {

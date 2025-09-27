@@ -30,6 +30,7 @@ local function load_default_settings()
         ["FluidArea-RegenRate"] = 100,
         ["WaterBody-Centroid-Shift-Threshold"] = 0.025,
         ["Visual-Depletion-Start-Percentage"] = 80,
+        ["Visual-Depletion-Furthest-First"] = true,
         ["Pumps-Reactivation-LevelPerThousand"] = 990,
         ["FluidArea-RemoveDepletedOrphaned"] = true,
         ["Map-EnableMarkers"] = true,
