@@ -63,7 +63,10 @@ Here’s what I’d append to your summary as “design notes & operating rules�
 
 ## Backfill (lagging tiles)
 
-* Use **DynamicBins backfill**: if a pushed tile has `ring ≤ frontier.max_ring`, it goes to `backfill` and is popped **before** frontier bins. This ensures tiles that show up “behind” the front dry first (prevents holes).
+* Use **DynamicBins backfill**:
+  * In **centroid-out** mode, tiles with `ring ≤ frontier.max_ring` go to `backfill` and are popped **before** frontier bins.
+  * In **perimeter-in** mode, tiles with `ring ≥ frontier.min_ring` are treated the same way so late arrivals near the edge dry before the frontier moves inward.
+  This prevents holes regardless of the active draining orientation.
 
 ## Failure modes & fallbacks
 

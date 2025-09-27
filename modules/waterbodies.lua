@@ -443,15 +443,20 @@ function waterbodies.didCentroidChangeSignificantly(waterBody, old_center_x, old
 	return change_rate > change_rate_threshold
 end
 
+function waterbodies.getBinsetPopDescending(waterBody)
+	return settings.global["Visual-Depletion-Furthest-First"].value
+end
+
 function waterbodies.ensureAndUpdateBinset(waterBody)
-    local centroid = waterbodies.getCentroid(waterBody)
+	local centroid = waterbodies.getCentroid(waterBody)
 	if centroid == nil then return false end
 
 	local gridsData = waterBody.gridsData
 	local newBinset = gridsData.newBinset
+	local pop_descending = waterbodies.getBinsetPopDescending(waterBody)
 
 	if newBinset == nil then
-		newBinset = dynamic_bins.new(centroid.x, centroid.y)
+		newBinset = dynamic_bins.new(centroid.x, centroid.y, nil, nil, nil, nil, nil, nil, nil, nil, nil, pop_descending)
 		gridsData.newBinset = newBinset
 	else
 		local old_center_x, old_center_y = newBinset.initial_center_x, newBinset.initial_center_y
@@ -459,7 +464,7 @@ function waterbodies.ensureAndUpdateBinset(waterBody)
 		if significant_change then
 			local oldBinsets = gridsData.oldBinsets
 			table.insert(oldBinsets, 1, newBinset) -- insert at the beginning
-			newBinset = dynamic_bins.new(centroid.x, centroid.y)
+			newBinset = dynamic_bins.new(centroid.x, centroid.y, nil, nil, nil, nil, nil, nil, nil, nil, nil, pop_descending)
 			gridsData.newBinset = newBinset
 		else
 			dynamic_bins.set_center(newBinset, centroid.x, centroid.y)
