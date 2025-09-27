@@ -531,6 +531,17 @@ function utils.LazyTables.all_empty(main_table, lazy_tables_array, is_queue)
 	return v == nil
 end
 
+-- only for queues
+function utils.LazyTables.joint_queue_size(main_queue, lazy_queues_array)
+	local size = main_queue.size
+	for i = 1, #lazy_queues_array do
+		local lazy_queue = lazy_queues_array[i]
+		if lazy_queue then
+			size = size + lazy_queue.size
+		end
+	end
+	return size
+end
 
 utils.MapMarker = {}
 
