@@ -228,10 +228,10 @@ function waterbodies.getDriedStackOrPendingTilesEnqueueAndDequeue(is_dried_stack
 	enqueue = function(dried_stack_or_pending_tiles, gridKey) return deduplicate_enqueue(dried_stack_or_pending_tiles,
 			gridKey) end
 	if is_dried_stack then
-		dequeue = function(dried_stack_or_pending_tiles, lazy_queues_array) return deduplicate_dequeue(
-			dried_stack_or_pending_tiles, true, nil, lazy_queues_array) end
+		dequeue = function(dried_stack, lazy_queues_array) return deduplicate_dequeue(
+			dried_stack, true, nil, lazy_queues_array) end
 	else
-		dequeue = function(dried_stack_or_pending_tiles) return deduplicate_dequeue(dried_stack_or_pending_tiles) end
+		dequeue = function(pending_tiles) return deduplicate_dequeue(pending_tiles) end
 	end
 
 	return enqueue, dequeue
