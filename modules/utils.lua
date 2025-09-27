@@ -56,14 +56,14 @@ utils.DeepWaterTiles = {
 
 -- Adjacent position offsets for 8-directional search
 utils.AdjacentOffsets = {
-	{x =  0, y = -1}, -- north
-	{x =  1, y = -1}, -- northeast
-	{x =  1, y =  0}, -- east
-	{x =  1, y =  1}, -- southeast
-	{x =  0, y =  1}, -- south
-	{x = -1, y =  1}, -- southwest
-	{x = -1, y =  0}, -- west
-	{x = -1, y = -1}  -- northwest
+	{ x = 0,  y = -1 }, -- north
+	{ x = 1,  y = -1 }, -- northeast
+	{ x = 1,  y = 0 }, -- east
+	{ x = 1,  y = 1 }, -- southeast
+	{ x = 0,  y = 1 }, -- south
+	{ x = -1, y = 1 }, -- southwest
+	{ x = -1, y = 0 }, -- west
+	{ x = -1, y = -1 } -- northwest
 }
 
 function utils.rejectEntityPlacement(entity, reason)
@@ -76,7 +76,7 @@ function utils.rejectEntityPlacement(entity, reason)
 		end
 
 		if not mined then
-			entity.destroy({raise_destroy=true})
+			entity.destroy({ raise_destroy = true })
 		end
 	end
 end
@@ -134,8 +134,8 @@ function utils.GetMaxKey(t)
 end
 
 function utils.comma_value(n) -- credit http://richard.warburton.it
-	local left,num,right = string.match(n,'^([^%d]*%d)(%d*)(.-)$')
-	return left..(num:reverse():gsub('(%d%d%d)','%1,'):reverse())..right
+	local left, num, right = string.match(n, '^([^%d]*%d)(%d*)(.-)$')
+	return left .. (num:reverse():gsub('(%d%d%d)', '%1,'):reverse()) .. right
 end
 
 function utils.merge_arrays(array1, array2)
@@ -155,7 +155,6 @@ function utils.remove_table_from_array(array_of_tables, on_key, value_to_match)
 	return false
 end
 
-
 utils.Queue = {}
 
 -- Ring buffer queue with optional bounding.
@@ -163,42 +162,42 @@ utils.Queue = {}
 -- Default: unbounded (capacity grows as needed). If max_capacity is provided,
 -- the queue is bounded and new items are dropped when full (enqueue returns false).
 function utils.Queue.new(initial_capacity, max_capacity, growth_factor, deduplicate)
-    local cap = initial_capacity or 1024
-    if cap < 1 then cap = 1 end
-    return {
-        buffer = {},
-        capacity = cap,
-        size = 0,
-        head = 1, -- next index to read
-        tail = 1, -- next index to write
-        max_capacity = max_capacity, -- nil => unbounded
-        growth_factor = growth_factor or 2.0,
-        dropped = 0,
-        inQueue = deduplicate and {} or nil,
-    }
+	local cap = initial_capacity or 1024
+	if cap < 1 then cap = 1 end
+	return {
+		buffer = {},
+		capacity = cap,
+		size = 0,
+		head = 1,                    -- next index to read
+		tail = 1,                    -- next index to write
+		max_capacity = max_capacity, -- nil => unbounded
+		growth_factor = growth_factor or 2.0,
+		dropped = 0,
+		inQueue = deduplicate and {} or nil,
+	}
 end
 
 local function rb_grow(q)
-    -- Grow capacity if unbounded or below max; return true if grown
-    if q.max_capacity ~= nil and q.capacity >= q.max_capacity then
-        return false
-    end
-    local new_cap = math.max(1, math.floor(q.capacity * (q.growth_factor or 2.0)))
-    if q.max_capacity ~= nil then
-        if new_cap > q.max_capacity then new_cap = q.max_capacity end
-        if new_cap <= q.capacity then return false end
-    end
-    local new_buf = {}
-    -- copy existing elements in logical order into new buffer [1..size]
-    for i = 1, q.size do
-        local idx = ((q.head - 1 + i - 1) % q.capacity) + 1
-        new_buf[i] = q.buffer[idx]
-    end
-    q.buffer = new_buf
-    q.capacity = new_cap
-    q.head = 1
-    q.tail = q.size + 1
-    return true
+	-- Grow capacity if unbounded or below max; return true if grown
+	if q.max_capacity ~= nil and q.capacity >= q.max_capacity then
+		return false
+	end
+	local new_cap = math.max(1, math.floor(q.capacity * (q.growth_factor or 2.0)))
+	if q.max_capacity ~= nil then
+		if new_cap > q.max_capacity then new_cap = q.max_capacity end
+		if new_cap <= q.capacity then return false end
+	end
+	local new_buf = {}
+	-- copy existing elements in logical order into new buffer [1..size]
+	for i = 1, q.size do
+		local idx = ((q.head - 1 + i - 1) % q.capacity) + 1
+		new_buf[i] = q.buffer[idx]
+	end
+	q.buffer = new_buf
+	q.capacity = new_cap
+	q.head = 1
+	q.tail = q.size + 1
+	return true
 end
 
 function utils.Queue.deduplicate_enqueue(queue, value, at_front, deduplicate_hash_function)
@@ -208,7 +207,7 @@ function utils.Queue.deduplicate_enqueue(queue, value, at_front, deduplicate_has
 	end
 	local hash = deduplicate_hash_function and deduplicate_hash_function(value) or value
 	if set[hash] then return false end
-	local added  = utils.Queue.enqueue(queue, value, at_front)
+	local added = utils.Queue.enqueue(queue, value, at_front)
 	if added then set[hash] = true end
 	return added
 end
@@ -216,7 +215,7 @@ end
 -- in case lazy_queues_array is provided:
 -- lazy queues have to have the same deduplicate_hash_function as the main queue
 -- deduplication is only applied per queue basis, inQueue is not shared between queues
--- deduplication removes items from the actual queue it was drawn from 
+-- deduplication removes items from the actual queue it was drawn from
 function utils.Queue.deduplicate_dequeue(queue, dequeue_back, deduplicate_hash_function, lazy_queues_array)
 	local value = dequeue_back and utils.Queue.dequeue_back(queue) or utils.Queue.dequeue(queue)
 	if value ~= nil then
@@ -253,20 +252,20 @@ function utils.Queue.dequeue_with_lazy_arrays(queue, lazy_queues_array)
 end
 
 function utils.Queue.enqueue(queue, value, at_front)
-    -- Hot path: cache fields locally to reduce table lookups
-    local buffer = queue.buffer
-    local size = queue.size
-    local capacity = queue.capacity
-    if size >= capacity then
-        -- Might grow (unbounded) or drop (bounded)
-        if not rb_grow(queue) then
-            queue.dropped = (queue.dropped or 0) + 1
-            return false
-        end
-        -- Rebind locals after possible growth
-        buffer = queue.buffer
-        capacity = queue.capacity
-    end
+	-- Hot path: cache fields locally to reduce table lookups
+	local buffer = queue.buffer
+	local size = queue.size
+	local capacity = queue.capacity
+	if size >= capacity then
+		-- Might grow (unbounded) or drop (bounded)
+		if not rb_grow(queue) then
+			queue.dropped = (queue.dropped or 0) + 1
+			return false
+		end
+		-- Rebind locals after possible growth
+		buffer = queue.buffer
+		capacity = queue.capacity
+	end
 
 	if at_front then
 		-- decrement head position and write value at that position
@@ -294,21 +293,21 @@ function utils.Queue.enqueue(queue, value, at_front)
 end
 
 function utils.Queue.dequeue(queue)
-    if queue.size == 0 then return nil end
-    local buffer = queue.buffer
-    local head = queue.head
-    local capacity = queue.capacity
-    local value = buffer[head]
-    buffer[head] = nil
-    -- branch wrap instead of modulo
-    if head == capacity then
-        head = 1
-    else
-        head = head + 1
-    end
-    queue.head = head
-    queue.size = queue.size - 1
-    return value
+	if queue.size == 0 then return nil end
+	local buffer = queue.buffer
+	local head = queue.head
+	local capacity = queue.capacity
+	local value = buffer[head]
+	buffer[head] = nil
+	-- branch wrap instead of modulo
+	if head == capacity then
+		head = 1
+	else
+		head = head + 1
+	end
+	queue.head = head
+	queue.size = queue.size - 1
+	return value
 end
 
 function utils.Queue.dequeue_back(queue)
@@ -316,17 +315,17 @@ function utils.Queue.dequeue_back(queue)
 	local tail = queue.tail
 	-- step to the last valid element (tail points to next write)
 	if tail == 1 then tail = queue.capacity else tail = tail - 1 end
-  
+
 	local buf = queue.buffer
 	local v = buf[tail]
 	buf[tail] = nil
 	queue.tail = tail
 	queue.size = queue.size - 1
 	return v
-  end
+end
 
 function utils.Queue.is_empty(queue)
-    return queue.size == 0
+	return queue.size == 0
 end
 
 function utils.periodic_ticks_to_seconds(num_periodic_ticks)
@@ -345,7 +344,7 @@ end
 function utils.fixPositionToLeftTopCorner(position)
 	if not utils.checkIfPositionIsLeftTopCorner(position) then
 		local x, y = position.x, position.y
-		return {x = x - x % 1, y = y - y % 1}
+		return { x = x - x % 1, y = y - y % 1 }
 	end
 	return position
 end
@@ -369,7 +368,7 @@ utils.LazyTables = {}
 
 function utils.LazyTables.get(key, main_table, lazy_tables_array)
 	local value = main_table[key]
-	if value ~= nil	 then
+	if value ~= nil then
 		return value
 	end
 	local arr = lazy_tables_array or {}
@@ -397,7 +396,8 @@ function utils.LazyTables.remove(key, main_table, lazy_tables_array)
 	end
 end
 
-function utils.LazyTables.moveLazyQueue(main_queue, lazy_queue, max_values_to_move, extra_data, callback, enqueue, dequeue)
+function utils.LazyTables.moveLazyQueue(main_queue, lazy_queue, max_values_to_move, extra_data, callback, enqueue,
+										dequeue)
 	local moved = 0
 	enqueue = enqueue or utils.Queue.enqueue
 	dequeue = dequeue or utils.Queue.dequeue
@@ -440,7 +440,8 @@ function utils.LazyTables.wasAnyTableEmptied(extra_data_array)
 	return false
 end
 
-function utils.LazyTables.moveLazyTables(main_table, lazy_tables_array, max_values_to_move, max_per_table, is_queue, callback, enqueue, dequeue)
+function utils.LazyTables.moveLazyTables(main_table, lazy_tables_array, max_values_to_move, max_per_table, is_queue,
+										 callback, enqueue, dequeue)
 	if not lazy_tables_array or max_values_to_move <= 0 then return 0, {} end
 	local moved = 0
 	local i = 1
@@ -450,9 +451,10 @@ function utils.LazyTables.moveLazyTables(main_table, lazy_tables_array, max_valu
 	while moved < max_values_to_move and i <= #lazy_tables_array do
 		local currentTable = lazy_tables_array[i]
 		if currentTable then
-			extra_data_array[j] = {tableEmpty = false}
+			extra_data_array[j] = { tableEmpty = false }
 			local max_to_move = math.min(max_per_table, max_values_to_move - moved)
-			local tableMoved, tableEmpty = function_to_move(main_table, currentTable, max_to_move, extra_data_array[j], callback, enqueue, dequeue)
+			local tableMoved, tableEmpty = function_to_move(main_table, currentTable, max_to_move, extra_data_array[j],
+				callback, enqueue, dequeue)
 			moved = moved + tableMoved
 			if tableEmpty then
 				-- remove and do not increment i; next table shifts into position i
@@ -466,7 +468,6 @@ function utils.LazyTables.moveLazyTables(main_table, lazy_tables_array, max_valu
 			-- compact holes
 			table.remove(lazy_tables_array, i)
 		end
-		
 	end
 	return moved, extra_data_array
 end
@@ -495,7 +496,6 @@ function utils.LazyTables.next(main_table, lazy_tables_array, k, t)
 		-- if empty move to next lazy table
 		t = t + 1
 		k = nil
-		
 	end
 	local arr = lazy_tables_array or {}
 	while t <= #arr do
@@ -517,49 +517,49 @@ end
 utils.MapMarker = {}
 
 function utils.MapMarker.new(force, surface, position, text, icon)
-    local tag = force.add_chart_tag(surface, {position = position, text = text, icon = icon})
-    return {
-        tag = tag,
-        force = force,
-        surface = surface,
-        position = position,
-        text = text,
-        icon = icon
-    }
+	local tag = force.add_chart_tag(surface, { position = position, text = text, icon = icon })
+	return {
+		tag = tag,
+		force = force,
+		surface = surface,
+		position = position,
+		text = text,
+		icon = icon
+	}
 end
 
 function utils.MapMarker.valid(marker)
-    return marker.tag and marker.tag.valid
+	return marker.tag and marker.tag.valid
 end
 
 function utils.MapMarker.destroy(marker)
-    if utils.MapMarker.valid(marker) then
-        marker.tag.destroy()
-    end
+	if utils.MapMarker.valid(marker) then
+		marker.tag.destroy()
+	end
 end
 
 function utils.MapMarker.update(marker, position, text, icon)
-    if not utils.MapMarker.valid(marker) then return end
+	if not utils.MapMarker.valid(marker) then return end
 
-    local position_changed = position ~= nil and hot_utils.GridKey(position) ~= hot_utils.GridKey(marker.position)
-    local text_changed = text ~= nil and text ~= marker.text
-    local icon_changed = icon ~= nil and (icon.type ~= marker.icon.type or icon.name ~= marker.icon.name)
-	
+	local position_changed = position ~= nil and hot_utils.GridKey(position) ~= hot_utils.GridKey(marker.position)
+	local text_changed = text ~= nil and text ~= marker.text
+	local icon_changed = icon ~= nil and (icon.type ~= marker.icon.type or icon.name ~= marker.icon.name)
+
 	if position_changed then marker.position = position end
 	if text_changed then marker.text = text end
-    if icon_changed then marker.icon = icon end
-	
-    if position_changed then
+	if icon_changed then marker.icon = icon end
+
+	if position_changed then
 		-- position is read-only so we need to destroy and create a new tag
-        utils.MapMarker.destroy(marker)
-        marker.tag = marker.force.add_chart_tag(marker.surface, {
-            position = marker.position,
-            text = marker.text,
-            icon = marker.icon
-        })
+		utils.MapMarker.destroy(marker)
+		marker.tag = marker.force.add_chart_tag(marker.surface, {
+			position = marker.position,
+			text = marker.text,
+			icon = marker.icon
+		})
 	elseif text_changed or icon_changed then
 		-- text and icon are mutable so we can update them
 		marker.tag.text = marker.text
 		marker.tag.icon = marker.icon
-    end
+	end
 end

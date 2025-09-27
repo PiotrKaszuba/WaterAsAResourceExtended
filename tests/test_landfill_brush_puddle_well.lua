@@ -22,14 +22,14 @@ local function run_test(args)
     settings.global["Update-Budget-Per-Second"].value = update_budget_setting
     storage.UpdateBudget = update_budget_setting
     -- initial water line of three tiles
-    world:set_water_rectangle(surface, {x1 = 0, y1 = 0, x2 = 2, y2 = 0})
+    world:set_water_rectangle(surface, { x1 = 0, y1 = 0, x2 = 2, y2 = 0 })
 
     world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
-        position = {x = 0, y = -1},
+        position = { x = 0, y = -1 },
         surface = surface,
-        input_position = {x = 0, y = 0},
+        input_position = { x = 0, y = 0 },
     })
 
     test_env.run_ticks(120)
@@ -39,7 +39,7 @@ local function run_test(args)
     t.eq(wbody.waterAreaData.TotalArea, 3, "initial area")
 
     -- landfill two tiles at once using Nx1 brush
-    world:landfill_rectangle(surface, {x = 1, y = 0}, brush_size, 1)
+    world:landfill_rectangle(surface, { x = 1, y = 0 }, brush_size, 1)
     test_env.run_ticks(240)
 
     local remaining
@@ -58,9 +58,9 @@ local function run_test(args)
 end
 
 local tests = {
-    {brush_size = 1},
-    {brush_size = 2, additional_info = "This will print a warning that tile count is 0 in getCentroid"},
-    {brush_size = 2, update_budget_setting = 1000, additional_info = "This will print a warning that tile count is 0 in getCentroid"}
+    { brush_size = 1 },
+    { brush_size = 2, additional_info = "This will print a warning that tile count is 0 in getCentroid" },
+    { brush_size = 2, update_budget_setting = 1000,                                                     additional_info = "This will print a warning that tile count is 0 in getCentroid" }
 }
 
 for _, test in ipairs(tests) do

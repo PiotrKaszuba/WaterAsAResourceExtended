@@ -3,17 +3,17 @@ local t = require("tests.helpers.test_assert")
 local run_mock_test = require("tests.helpers.mock_test")
 
 local function enqueue(queue, position)
-    queue[#queue + 1] = {x = position.x, y = position.y}
+    queue[#queue + 1] = { x = position.x, y = position.y }
 end
 
 local function chunk_position_from_tile(tile_position)
-    return {x = math.floor(tile_position.x / 32), y = math.floor(tile_position.y / 32)}
+    return { x = math.floor(tile_position.x / 32), y = math.floor(tile_position.y / 32) }
 end
 
 local function run_test()
     t.start()
 
-    local _, surface = test_env.create_world({simulate_chunks = true, chunk_generation_per_tick = 0.5})
+    local _, surface = test_env.create_world({ simulate_chunks = true, chunk_generation_per_tick = 0.5 })
 
     require("modules.utils")
     require("modules.waterbody_scan")
@@ -21,13 +21,13 @@ local function run_test()
     local waterbody_scan = _G.waterbody_scan
     local tileInvalidOrOutOfMap = waterbody_scan.tileInvalidOrOutOfMap
 
-    local origin_tile = {x = 0.5, y = 0.5}
-    local far_tile = {x = 256, y = 0}
-    local first_chunk_tile = {x = 64.5, y = -0.5}
-    local second_chunk_tile = {x = 128.5, y = 0.5}
-    local reset_test_tile = {x = -64.5, y = -32.5}
-    local radius_center_tile = {x = 192, y = 0}
-    local radius_neighbor_tile = {x = 224, y = 32}
+    local origin_tile = { x = 0.5, y = 0.5 }
+    local far_tile = { x = 256, y = 0 }
+    local first_chunk_tile = { x = 64.5, y = -0.5 }
+    local second_chunk_tile = { x = 128.5, y = 0.5 }
+    local reset_test_tile = { x = -64.5, y = -32.5 }
+    local radius_center_tile = { x = 192, y = 0 }
+    local radius_neighbor_tile = { x = 224, y = 32 }
 
     local chunk_origin = chunk_position_from_tile(origin_tile)
     local chunk_far = chunk_position_from_tile(far_tile)
@@ -103,7 +103,8 @@ local function run_test()
 
     surface.request_to_generate_chunks(radius_center_tile)
     test_env.run_ticks(1)
-    t.eq(surface.is_chunk_generated(chunk_radius_center), false, "progress resets after queue empties before new requests")
+    t.eq(surface.is_chunk_generated(chunk_radius_center), false,
+        "progress resets after queue empties before new requests")
 
     surface.request_to_generate_chunks(radius_center_tile, 1)
 
@@ -112,7 +113,7 @@ local function run_test()
     local radius_chunks = {}
     for dx = -1, 1 do
         for dy = -1, 1 do
-            radius_chunks[#radius_chunks + 1] = {x = chunk_radius_center.x + dx, y = chunk_radius_center.y + dy}
+            radius_chunks[#radius_chunks + 1] = { x = chunk_radius_center.x + dx, y = chunk_radius_center.y + dy }
         end
     end
     for _, chunk_pos in ipairs(radius_chunks) do

@@ -45,19 +45,19 @@ local function sum_items_in_bins(D)
 	local total_counting = num_backfill
 	local pop_desc = D.pop_descending
 	for i = 1, #D.bins do
-        local b = D.bins[i]
-        local num_items = #b.items
-        if pop_desc then
-            if b.pop_idx and b.pop_idx > 1 then
-                num_items = num_items - (b.pop_idx - 1)
-            end
-        else
-            if b.pop_idx and b.pop_idx < num_items then
-                num_items = b.pop_idx
-            end
-        end
-        total_counting = total_counting + num_items
-    end
+		local b = D.bins[i]
+		local num_items = #b.items
+		if pop_desc then
+			if b.pop_idx and b.pop_idx > 1 then
+				num_items = num_items - (b.pop_idx - 1)
+			end
+		else
+			if b.pop_idx and b.pop_idx < num_items then
+				num_items = b.pop_idx
+			end
+		end
+		total_counting = total_counting + num_items
+	end
 	if total < 0 then total = 0 end
 	assert_eq(total, total_counting, "sum_items_in_bins: total mismatch")
 	return total

@@ -41,7 +41,7 @@ function split_families.create_family(
     parentCentroid,
     parentDiag,
     isPotentialSplit,
-    initialLandfills  -- array of positions
+    initialLandfills -- array of positions
 )
     split_families.init_storage()
     local id = next_family_id()
@@ -64,7 +64,7 @@ function split_families.create_family(
         -- tiles that were landfilled on the parent waterbody
         -- that will be searched for after the family is finalized
         -- there may be additional splits created from these landfills
-        -- that weren't part of the initial family 
+        -- that weren't part of the initial family
         -- and weren't detected during scanning of members
         -- we need to search for adjacent water tiles, check whether they belong to
         -- any of the members of the family, and if not - create new waterbody from them
@@ -82,7 +82,7 @@ function split_families.create_family(
         storage.WbIdToFamilyId[wbId] = id
     end
     storage.SplitFamilyById[id] = fam
-    
+
     if initialLandfills then
         for _, landfill_position in pairs(initialLandfills) do
             fam.landfills[hot_utils.GridKey(landfill_position)] = landfill_position
@@ -114,7 +114,7 @@ local function compute_score(fam, waterBody)
     if centroid == nil then return -math.huge end
     local pc = fam.parentCentroid
     local diag = fam.parentDiag
-    local dist = math.sqrt((centroid.x - pc.x)^2 + (centroid.y - pc.y)^2)
+    local dist = math.sqrt((centroid.x - pc.x) ^ 2 + (centroid.y - pc.y) ^ 2)
     local centroid_score = 1 - math.min(1, dist / math.max(diag, 1))
     local size_score = size / fam.parentArea
     local w_size, w_centroid = fam.isPotentialSplit and 0.3 or 0.7, fam.isPotentialSplit and 0.7 or 0.3
@@ -185,7 +185,7 @@ end
 function split_families.on_scan_finished(wbId)
     local fam = split_families.get_family_by_wb(wbId)
     if fam == nil then return end
-    
+
     fam.finished[wbId] = true
     recompute_successor(fam)
     finalize_if_done(fam)
@@ -209,7 +209,7 @@ function split_families.on_merged(parentOneId, parentTwoId, survivorId)
     local waterbody_id_to_family_id = storage.WbIdToFamilyId
     local family_by_id = storage.SplitFamilyById
     local familyOneId, familyTwoId = waterbody_id_to_family_id[parentOneId], waterbody_id_to_family_id[parentTwoId]
-    
+
     if familyOneId == nil and familyTwoId == nil then return end
     if familyOneId ~= nil and familyTwoId ~= nil and familyOneId ~= familyTwoId then
         -- merge families: keep the one with larger parentArea
@@ -268,7 +268,8 @@ local function seed_from_landfills(fam, max_landfills, updateBudget)
         if landfills_done >= max_landfills then break end
         landfills_done = landfills_done + 1
         -- if a landfill is neighboring to a water tile that belongs to one of the parents
-        local adjacent_waterbody_parent_tiles, _, _ = waterbody_scan.getAdjacentWaterAndLandTiles(landfill_position, surface, fam.parentIds)
+        local adjacent_waterbody_parent_tiles, _, _ = waterbody_scan.getAdjacentWaterAndLandTiles(landfill_position,
+            surface, fam.parentIds)
         if #adjacent_waterbody_parent_tiles > 0 then
             for _, adjacent_waterbody_parent_tile in pairs(adjacent_waterbody_parent_tiles) do
                 -- take first one and seed new waterbody from it
@@ -276,8 +277,9 @@ local function seed_from_landfills(fam, max_landfills, updateBudget)
                 if new_water_body and new_water_body.valid then
                     fam.members[new_water_body_id] = true
                     storage.WbIdToFamilyId[new_water_body_id] = fam.id
-                    fam.all_finished = false  -- reset to false since we have new member
-                    new_water_body_id = waterbody_scan.beginScanWaterArea(new_water_body_id, adjacent_waterbody_parent_tile, 1)
+                    fam.all_finished = false -- reset to false since we have new member
+                    new_water_body_id = waterbody_scan.beginScanWaterArea(new_water_body_id,
+                        adjacent_waterbody_parent_tile, 1)
 
                     if new_water_body_id then
                         local scan_amount = waterbody_scan.getInitialScanAmount()
@@ -309,7 +311,7 @@ function split_families.updateSplitFamilies(updateBudget, periodic_tick)
             local is_landfill_empty = next(fam.landfills) == nil
             local is_parent_cleared = next(fam.parentIds) == nil
             if is_landfill_empty or is_parent_cleared then
-                recompute_successor(fam, true)  -- final recompute
+                recompute_successor(fam, true) -- final recompute
                 clear_family(fam)
             else
                 seed_from_landfills(fam, max_landfills_per_update, updateBudget)
@@ -318,4 +320,3 @@ function split_families.updateSplitFamilies(updateBudget, periodic_tick)
         if updateBudget then updateBudget.budget = updateBudget.budget - 1 end
     end
 end
-

@@ -20,7 +20,7 @@ local default_args = {
     brush_offset_left = 50,
     brush_offset_top = 50,
     brush_size = 1,
-    
+
     wait_ticks = 60,
 
     expected_valid_waterbodies = 1,
@@ -43,16 +43,18 @@ local function single_waterbody_world_setup(args)
     local pump_left = math.floor(waterbody_left + pump_wb_offset_left) + 0.5
     local pump_top = math.floor(waterbody_top + pump_wb_offset_top) + 0.5
     -- messages
-    local setup_msg = string.format("Waterbody area: %s x %s; pump offset: %s x %s", waterbody_width, waterbody_height, pump_wb_offset_left, pump_wb_offset_top)
+    local setup_msg = string.format("Waterbody area: %s x %s; pump offset: %s x %s", waterbody_width, waterbody_height,
+        pump_wb_offset_left, pump_wb_offset_top)
 
     local world, surface = test_env.create_world()
-    world:set_water_rectangle(surface, {x1 = waterbody_left, y1 = waterbody_top, x2 = waterbody_right, y2 = waterbody_bottom})
+    world:set_water_rectangle(surface,
+        { x1 = waterbody_left, y1 = waterbody_top, x2 = waterbody_right, y2 = waterbody_bottom })
     world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
-        position = {x = pump_left, y = pump_top - 1},
+        position = { x = pump_left, y = pump_top - 1 },
         surface = surface,
-        input_position = {x = pump_left, y = pump_top},
+        input_position = { x = pump_left, y = pump_top },
     })
     return world, surface, setup_msg
 end
@@ -98,9 +100,10 @@ local function landfill_brush(args, world, surface)
     local brush_left = math.floor(waterbody_left + brush_offset_left)
     local brush_top = math.floor(waterbody_top + brush_offset_top)
 
-    test_assert.print(string.format("Landfill brush applied: brush_left: %s, brush_top: %s, brush_size: %s x %s", brush_left, brush_top, brush_size, brush_size))
+    test_assert.print(string.format("Landfill brush applied: brush_left: %s, brush_top: %s, brush_size: %s x %s",
+        brush_left, brush_top, brush_size, brush_size))
 
-    world:landfill_rectangle(surface, {x = brush_left, y = brush_top}, brush_size, brush_size)
+    world:landfill_rectangle(surface, { x = brush_left, y = brush_top }, brush_size, brush_size)
 end
 
 local function run_test(args)
@@ -135,23 +138,25 @@ local function run_test(args)
         end
     end
 
-    test_assert.eq(num_valid_waterbodies, expected_valid_waterbodies, string.format("number of valid waterbodies: %s, expected: %s", num_valid_waterbodies, expected_valid_waterbodies))
+    test_assert.eq(num_valid_waterbodies, expected_valid_waterbodies,
+        string.format("number of valid waterbodies: %s, expected: %s", num_valid_waterbodies, expected_valid_waterbodies))
 
     local brush_overlap_with_waterbody = brush_size * brush_size - brush_area_outside_waterbody
     local expected_biggest_waterbody_area = waterbody_width * waterbody_height - brush_overlap_with_waterbody
-    
-    test_assert.eq(biggest_waterbody_area, expected_biggest_waterbody_area, string.format("biggest waterbody area: %s, expected: %s", biggest_waterbody_area, expected_biggest_waterbody_area))
+
+    test_assert.eq(biggest_waterbody_area, expected_biggest_waterbody_area,
+        string.format("biggest waterbody area: %s, expected: %s", biggest_waterbody_area, expected_biggest_waterbody_area))
     test_assert.finish("Landfill brush test complete")
 end
 
 local tests = {
-    {brush_size = 1,},
-    {brush_size = 2,},
-    {brush_size = 3,},
-    {brush_size = 4,},
-    {brush_size = 5,},
-    {brush_size = 5, brush_offset_top = -1, brush_area_outside_waterbody = 5},
-    {brush_size = 20, wait_ticks = 300 },
+    { brush_size = 1, },
+    { brush_size = 2, },
+    { brush_size = 3, },
+    { brush_size = 4, },
+    { brush_size = 5, },
+    { brush_size = 5,  brush_offset_top = -1, brush_area_outside_waterbody = 5 },
+    { brush_size = 20, wait_ticks = 300 },
 }
 
 for _, test in ipairs(tests) do

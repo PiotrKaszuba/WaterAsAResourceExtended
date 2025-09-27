@@ -44,10 +44,10 @@ local function load_default_settings()
     }
 
     for name, value in pairs(global_defaults) do
-        settings.global[name] = {value = value}
+        settings.global[name] = { value = value }
     end
     for name, value in pairs(startup_defaults) do
-        settings.startup[name] = {value = value}
+        settings.startup[name] = { value = value }
     end
 end
 
@@ -73,4 +73,3 @@ function test_env.run_ticks(n)
 end
 
 return test_env
-

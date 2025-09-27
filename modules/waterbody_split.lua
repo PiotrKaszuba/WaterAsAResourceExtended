@@ -33,34 +33,37 @@ function waterbody_split.getWaterBodyLimitedBoundingBox(shape_data, center_posit
 	return bbox, rect_area_ratio
 end
 
-function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surface, center_position, updateBudget, nth_call)
+function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surface,
+													center_position, updateBudget, nth_call)
 	local current_check_size = 4
 	local rect_area_ratio = 0.0
 	local start_tile_gridKey = hot_utils.GridKey(start_tile_pos)
 	local connected_tiles = {}
-	connected_tiles[#connected_tiles+1] = start_tile_pos
+	connected_tiles[#connected_tiles + 1] = start_tile_pos
 	local missing_tiles = {} -- indicator table, gridKey -> true
 	for _, tile_pos in pairs(otherTiles_positions) do
 		missing_tiles[hot_utils.GridKey(tile_pos)] = true
 	end
 	missing_tiles[start_tile_gridKey] = nil
-	local found_all_tiles = false  -- if true all the missing/remaining tiles are connected
-    local bbox = nil
-    local hit_cap = false  -- whether we cannot tell if there is a split - because we hit the max side limit without checking the full bounding box
-    local last_all_connected_tiles = nil
-    local max_side = settings.global["Split-Max-BBox-Side"].value ---@cast max_side int
+	local found_all_tiles = false -- if true all the missing/remaining tiles are connected
+	local bbox = nil
+	local hit_cap = false      -- whether we cannot tell if there is a split - because we hit the max side limit without checking the full bounding box
+	local last_all_connected_tiles = nil
+	local max_side = settings.global["Split-Max-BBox-Side"].value ---@cast max_side int
 	while true do
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - (current_check_size * current_check_size) / 16
 		end
 		local limited_side = math.min(current_check_size, max_side)
-		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody.waterBodyShapeData, center_position, limited_side)
-		local all_connected_tiles = surface.get_connected_tiles(start_tile_pos, utils.IndicatorTableToArray(utils.WaterAndDryTiles), true, bbox)
+		bbox, rect_area_ratio = waterbody_split.getWaterBodyLimitedBoundingBox(waterBody.waterBodyShapeData,
+			center_position, limited_side)
+		local all_connected_tiles = surface.get_connected_tiles(start_tile_pos,
+			utils.IndicatorTableToArray(utils.WaterAndDryTiles), true, bbox)
 		last_all_connected_tiles = all_connected_tiles
 		for _, tile_pos in pairs(all_connected_tiles) do
 			local tile_pos_gridKey = hot_utils.GridKey(tile_pos)
 			if missing_tiles[tile_pos_gridKey] then
-				connected_tiles[#connected_tiles+1] = tile_pos
+				connected_tiles[#connected_tiles + 1] = tile_pos
 				missing_tiles[tile_pos_gridKey] = nil
 			end
 		end
@@ -88,14 +91,13 @@ function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, o
 				comp_sum_y = comp_sum_y + pos.y
 			end
 		end
-		local comp_centroid = {x = 0, y = 0}
+		local comp_centroid = { x = 0, y = 0 }
 		if comp_count > 0 then
 			comp_centroid.x = comp_sum_x / comp_count
 			comp_centroid.y = comp_sum_y / comp_count
 		end
 		return connected_tiles, missing_tiles, comp_count, comp_centroid, hit_cap
 	end
-	
 end
 
 function waterbody_split.checkIfAllTilesAreUsedAndUnique(all_tiles_positions, connected_tiles_sets_gridKeys)
@@ -121,7 +123,8 @@ function waterbody_split.signalWaterBodySplitToPlayer(waterBody, force, data)
 	local num_new_water_bodies = data.num_new_water_bodies
 	local is_potential_split = data.is_potential_split
 	local potential_split_str = is_potential_split and " potentially" or ""
-	return string.format("%s%s split into %s waterbodies.", waterbodies.getFullNameForWaterBody(waterBody), potential_split_str, num_new_water_bodies)
+	return string.format("%s%s split into %s waterbodies.", waterbodies.getFullNameForWaterBody(waterBody),
+		potential_split_str, num_new_water_bodies)
 end
 
 function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, surface, updateBudget)
@@ -132,21 +135,23 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 	-- check all adjacent water tiles around the landfilled tiles area
 	-- up to the search/expand depth of
 
-	local max_adjacent_depth = settings.global["Split-Max-Adjacent-Landfill-Depth-Check"].value ---@cast max_adjacent_depth int
-	
+	local max_adjacent_depth = settings.global["Split-Max-Adjacent-Landfill-Depth-Check"]
+	.value ---@cast max_adjacent_depth int
+
 	-- border land tiles should present if max_adjacent_depth is not enough
 	-- in that case we need to trigger potential split and add them to newly created split_family
-	local adjacent_waterbody_tiles, _, adjacent_border_land_tiles = waterbody_scan.getAdjacentWaterAndLandTiles(split_position, surface, waterBodyId, max_adjacent_depth)
+	local adjacent_waterbody_tiles, _, adjacent_border_land_tiles = waterbody_scan.getAdjacentWaterAndLandTiles(
+	split_position, surface, waterBodyId, max_adjacent_depth)
 
 	-- we need to check if there is a path between any of the adjacent water tiles
 	-- we can use get_connected_tiles with increasing area (BoundingBox)
 	local waterBody = waterbodies.getWaterBody(waterBodyId)
-    if not waterBody or not waterBody.valid then
-        return
-    end
+	if not waterBody or not waterBody.valid then
+		return
+	end
 
 	local connected_tile_sets = {} -- table of tables, each table is a set of connected tiles (seeds)
-	local seeds_stats = {} -- { {seed=pos, count=int, centroid={x,y}, hit_cap=bool} }
+	local seeds_stats = {}      -- { {seed=pos, count=int, centroid={x,y}, hit_cap=bool} }
 	local missing_tiles_positions = {}
 	local new_missing_tiles_positions = nil
 	for _, tile_pos in pairs(adjacent_waterbody_tiles) do
@@ -159,9 +164,12 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 			updateBudget.budget = updateBudget.budget - 1
 		end
 		local start_tile_pos = table.remove(missing_tiles_positions)
-		local connected_tiles, missing_tiles, comp_count, comp_centroid, hit_cap = waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, missing_tiles_positions, surface, split_position, updateBudget, nth_call)
+		local connected_tiles, missing_tiles, comp_count, comp_centroid, hit_cap = waterbody_split
+		.getWaterBodyConnectedTiles(waterBody, start_tile_pos, missing_tiles_positions, surface, split_position,
+			updateBudget, nth_call)
 		connected_tile_sets[#connected_tile_sets + 1] = connected_tiles
-		seeds_stats[#seeds_stats + 1] = { seed = start_tile_pos, count = comp_count, centroid = comp_centroid, hit_cap = hit_cap, chosen = false }
+		seeds_stats[#seeds_stats + 1] = { seed = start_tile_pos, count = comp_count, centroid = comp_centroid, hit_cap =
+		hit_cap, chosen = false }
 		if hit_cap then any_hit_cap = true end
 		new_missing_tiles_positions = {}
 		for _, tile_pos in pairs(missing_tiles_positions) do
@@ -176,10 +184,12 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 
 	local check_result = waterbody_split.checkIfAllTilesAreUsedAndUnique(adjacent_waterbody_tiles, connected_tile_sets)
 	if check_result ~= "ok" then
-		utils.profile_hits("waterbody_split.checkIfWaterBodyGotSplit", string.format("Water body got split, validation of neighboring water tiles failed: %s", check_result))
-		game.print(string.format("WARNING: Water body got split, validation of neighboring water tiles failed: %s", check_result))
+		utils.profile_hits("waterbody_split.checkIfWaterBodyGotSplit",
+			string.format("Water body got split, validation of neighboring water tiles failed: %s", check_result))
+		game.print(string.format("WARNING: Water body got split, validation of neighboring water tiles failed: %s",
+			check_result))
 	end
-	
+
 	-- now we have separated water bodies represented by initial tile_sets in connected_tile_sets
 	-- each tile_set represent a separate water body with a few tiles
 	-- we need to actually split the water bodies now
@@ -194,7 +204,8 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 	local is_potential_split = any_hit_cap or #adjacent_border_land_tiles > 0
 
 	if got_split then
-		waterbodies.signalPerForce(waterBody, waterbody_split.signalWaterBodySplitToPlayer, {num_new_water_bodies = #connected_tile_sets, is_potential_split = is_potential_split})
+		waterbodies.signalPerForce(waterBody, waterbody_split.signalWaterBodySplitToPlayer,
+			{ num_new_water_bodies = #connected_tile_sets, is_potential_split = is_potential_split })
 		local new_water_body_ids_and_positions = {}
 		-- choose primary successor among seeds
 		local parent_centroid = waterbodies.getCentroid(waterBody)
@@ -213,12 +224,12 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		for i, seed_stats in ipairs(seeds_stats) do
 			count = seed_stats.count
 			centroid = seed_stats.centroid
-	
+
 			if count and centroid then
-				size_score = math.sqrt(count / parent_area)  -- to match the scaling of centroid_score
+				size_score = math.sqrt(count / parent_area) -- to match the scaling of centroid_score
 				if parent_centroid ~= nil then
 					dx, dy = centroid.x - parent_centroid_x, centroid.y - parent_centroid_y
-					centroid_score = 1 - math.min(1, math.sqrt(dx*dx + dy*dy) / parent_diag)
+					centroid_score = 1 - math.min(1, math.sqrt(dx * dx + dy * dy) / parent_diag)
 				else
 					centroid_score = 0
 				end
@@ -231,8 +242,8 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 			end
 		end
 		seeds_stats[best_idx].chosen = true
-		local parent_data = {id = waterBody.waterBodyId, name = waterBody.waterBodyName}
-		
+		local parent_data = { id = waterBody.waterBodyId, name = waterBody.waterBodyName }
+
 		local pumps = waterBody.waterBodyStateData.Pumps
 		waterBody.waterBodyStateData.Pumps = {}
 		waterbodies.removeWaterBody(waterBody)
@@ -244,8 +255,9 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		for i, tile_set in ipairs(connected_tile_sets) do
 			first_tile_pos = tile_set[1]
 			new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
-			new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = first_tile_pos, waterBody = new_water_body, seed_stats = seeds_stats[i]}
-			
+			new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = { waterBodyId = new_water_body_id, position =
+			first_tile_pos, waterBody = new_water_body, seed_stats = seeds_stats[i] }
+
 			tmp_gridKey = hot_utils.GridKey(first_tile_pos)
 			created_at_positions[tmp_gridKey] = new_water_body_id
 		end
@@ -257,17 +269,18 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 				if entities.validatePumpPlacement(pump_data) then
 					-- fix position to left-top corner - because it is center based - from entity position
 					local pump_input_top_left_corner = utils.fixPositionToLeftTopCorner(pump_input_position)
-					
+
 					-- checking whether we already created a water body at this position from any seed position
 					tmp_gridKey = hot_utils.GridKey(pump_input_top_left_corner)
 					new_water_body_id = created_at_positions[tmp_gridKey]
 					if new_water_body_id == nil then
 						-- if not - create a new water body at this position
 						new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
-						new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = {waterBodyId = new_water_body_id, position = pump_input_top_left_corner, waterBody = new_water_body, seed_stats = nil}
+						new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = { waterBodyId =
+						new_water_body_id, position = pump_input_top_left_corner, waterBody = new_water_body, seed_stats = nil }
 						created_at_positions[pump_input_top_left_corner] = new_water_body_id
 					end
-					
+
 					-- waterBody got removed - so we just need to add it to the new water body
 					entities.addPumpToWaterBody(new_water_body_id, pump_data)
 				else
@@ -288,14 +301,16 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 					waterBody.waterBodyName = parent_data.name
 					waterBody.merge_priority = 1
 				end
-				waterbody_ids_and_positions_still_valid[#waterbody_ids_and_positions_still_valid + 1] = new_water_body_id_and_position
+				waterbody_ids_and_positions_still_valid[#waterbody_ids_and_positions_still_valid + 1] =
+				new_water_body_id_and_position
 				waterBody.waterBodyStateData.ScanWeight = 1.0 / num_new_water_bodies
-				memberIds[#memberIds+1] = new_water_body_id
+				memberIds[#memberIds + 1] = new_water_body_id
 			end
 		end
 
 		-- create family if enabled (check is in the call)
-		split_families.create_family(memberIds, parent_data.id, surface, parent_data.name, parent_area, parent_centroid, parent_diag, is_potential_split, adjacent_border_land_tiles)
+		split_families.create_family(memberIds, parent_data.id, surface, parent_data.name, parent_area, parent_centroid,
+			parent_diag, is_potential_split, adjacent_border_land_tiles)
 
 		-- this one scans only 1 tile and makes sure each waterbody 'claims' its own starting tile
 		local new_waterbodies_still_valid = {}
@@ -308,17 +323,15 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 				new_waterbodies_still_valid[#new_waterbodies_still_valid + 1] = new_water_body_id
 			end
 		end
-		
+
 		-- further scan with merges possible
 		local scan_amount = math.ceil(waterbody_scan.getInitialScanAmount() / #new_waterbodies_still_valid)
 		for _, new_water_body_id in ipairs(new_waterbodies_still_valid) do
 			waterbody_scan.continueScanWaterArea(new_water_body_id, scan_amount, updateBudget)
 		end
-		
+
 		if updateBudget then
 			updateBudget.budget = updateBudget.budget - num_new_water_bodies
 		end
-
 	end
-
 end

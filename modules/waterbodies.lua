@@ -11,17 +11,17 @@ function waterbodies.initWaterBodiesAndTiles()
 		storage.RecycledWaterBodyIds = {} -- array of waterBodyIds
 		storage.ValidWaterBodies = {} -- waterBodyId -> waterBody (reference)
 
-		storage.WaterTiles = {} -- surfaceName -> gridKey -> WaterBodyRef 
+		storage.WaterTiles = {}     -- surfaceName -> gridKey -> WaterBodyRef
 		storage.WaterBodyToNumTiles = {} -- erBodyId -> numTiles
 
 		-- waterBodyId -> shared ref table with numeric id at [1]
 		-- and a table at [2] (WaterBodyId -> WaterBodyRef) that shows which waterbody Ids are pointing to this waterbody
 		-- until they are removed..
-		-- pointer changes of this waterbody should be reflected in all IDS 
+		-- pointer changes of this waterbody should be reflected in all IDS
 		-- [10] = {
 		-- 		[1] = 10,
 		--		[2] = {
-		-- 			[9] = {[1] = 10, [2] = {}} -- that's a whole ref of 9 
+		-- 			[9] = {[1] = 10, [2] = {}} -- that's a whole ref of 9
 		--			}
 		--	}
 		-- that means that waterbody 9 is pointing to waterbody 10 (merged 9 into 10)
@@ -32,7 +32,7 @@ function waterbodies.initWaterBodiesAndTiles()
 		-- refs of waterbodies pointing at others should be removed from this table most likely
 		-- as they are included within [2] of waterbodies they point to
 		-- -1 is a special case for water bodies that are not assigned to any water body
-		storage.WaterBodyRef = {[-1] = {[1] = -1, [2] = {}}}
+		storage.WaterBodyRef = { [-1] = { [1] = -1, [2] = {} } }
 
 		storage.OrphanedDryTilesOriginalName = {} -- surfaceName -> gridKey -> originalName
 		storage.lazyOrphanedDryTilesOriginalName = {} -- surfaceName -> array of tables -> gridKey -> originalName
@@ -65,7 +65,6 @@ function waterbodies.getWaterTile(gridKey, surface)
 	end
 	return waterBodyRef[1]
 end
-
 
 function waterbodies.getMaxWaterBodySize()
 	local val = settings.global["FluidArea-MaxFluidAreaSize"].value
@@ -162,7 +161,7 @@ function waterbodies.addNewWaterBodyAndSetId(waterBody)
 	if waterBody.valid then
 		storage.ValidWaterBodies[waterBodyId] = waterBody
 	end
-	storage.WaterBodyRef[waterBodyId] = {[1] = waterBodyId, [2] = {}}
+	storage.WaterBodyRef[waterBodyId] = { [1] = waterBodyId, [2] = {} }
 	return waterBodyId
 end
 
@@ -186,27 +185,30 @@ function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
 	local currentWaterTile = utils.LazyTables.get(gridKey, gridData.waterGridWithData, gridData.lazyWaterGridWithData)
 	local currentDryTile = nil
 	if currentWaterTile == nil then
-		currentDryTile = utils.LazyTables.get(gridKey, gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
+		currentDryTile = utils.LazyTables.get(gridKey, gridData.driedTilesGridWithData,
+			gridData.lazyDriedTilesGridWithData)
 	end
 	if currentWaterTile == nil and currentDryTile == nil then
-			utils.profile_hits("waterbodies.removeTileFromWaterGrid", "Tile not found in water or dry grid")
-			game.print("Warning: Tile not found in water or dry grid")
-			return
+		utils.profile_hits("waterbodies.removeTileFromWaterGrid", "Tile not found in water or dry grid")
+		game.print("Warning: Tile not found in water or dry grid")
+		return
 	end
 	if currentWaterTile ~= nil and currentDryTile ~= nil then
 		utils.profile_hits("waterbodies.removeTileFromWaterGrid", "Tile found in both water and dry grid")
 		game.print("Warning: Tile found in both water and dry grid")
 	end
-	
+
 	if currentDryTile ~= nil then
 		local state = waterBody.waterBodyStateData
 		if state.DriedTiles > 0 then
 			state.DriedTiles = state.DriedTiles - 1
 		else
-			utils.profile_hits("waterbodies.removeTileFromWaterGrid", string.format("DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
-			game.print(string.format("Warning: DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
+			utils.profile_hits("waterbodies.removeTileFromWaterGrid",
+				string.format("DriedTiles is %d for a water body with dry tile being removed.", state.DriedTiles))
+			game.print(string.format("Warning: DriedTiles is %d for a water body with dry tile being removed.",
+				state.DriedTiles))
 		end
-			utils.LazyTables.remove(gridKey, gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
+		utils.LazyTables.remove(gridKey, gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
 	end
 	if currentWaterTile ~= nil then
 		-- remove from grid
@@ -229,12 +231,14 @@ end
 
 function waterbodies.getDriedStackOrPendingTilesEnqueueAndDequeue(is_dried_stack)
 	local enqueue, dequeue = nil, nil
-	
+
 	local deduplicate_enqueue = utils.Queue.deduplicate_enqueue
 	local deduplicate_dequeue = utils.Queue.deduplicate_dequeue
-	enqueue = function(dried_stack_or_pending_tiles, gridKey) return deduplicate_enqueue(dried_stack_or_pending_tiles, gridKey) end
+	enqueue = function(dried_stack_or_pending_tiles, gridKey) return deduplicate_enqueue(dried_stack_or_pending_tiles,
+			gridKey) end
 	if is_dried_stack then
-		dequeue = function(dried_stack_or_pending_tiles, lazy_queues_array) return deduplicate_dequeue(dried_stack_or_pending_tiles, true, nil, lazy_queues_array) end
+		dequeue = function(dried_stack_or_pending_tiles, lazy_queues_array) return deduplicate_dequeue(
+			dried_stack_or_pending_tiles, true, nil, lazy_queues_array) end
 	else
 		dequeue = function(dried_stack_or_pending_tiles) return deduplicate_dequeue(dried_stack_or_pending_tiles) end
 	end
@@ -248,13 +252,16 @@ function waterbodies.getSearchQueueEnqueueAndDequeue(search_queue)
 		local GridKey = hot_utils.GridKey
 		local deduplicate_enqueue = utils.Queue.deduplicate_enqueue
 		local deduplicate_dequeue = utils.Queue.deduplicate_dequeue
-		search_queue_enqueue = function(search_queue, position, at_front) return deduplicate_enqueue(search_queue, position, at_front, GridKey) end
-		search_queue_dequeue = function(search_queue, lazy_queues_array) return deduplicate_dequeue(search_queue, false, GridKey, lazy_queues_array) end
+		search_queue_enqueue = function(search_queue, position, at_front) return deduplicate_enqueue(search_queue,
+				position, at_front, GridKey) end
+		search_queue_dequeue = function(search_queue, lazy_queues_array) return deduplicate_dequeue(search_queue, false,
+				GridKey, lazy_queues_array) end
 	else
 		local enqueue = utils.Queue.enqueue
 		local dequeue_with_lazy_arrays = utils.Queue.dequeue_with_lazy_arrays
 		search_queue_enqueue = function(search_queue, position, at_front) return enqueue(search_queue, position, at_front) end
-		search_queue_dequeue = function(search_queue, lazy_queues_array) return dequeue_with_lazy_arrays(search_queue, lazy_queues_array) end
+		search_queue_dequeue = function(search_queue, lazy_queues_array) return dequeue_with_lazy_arrays(search_queue,
+				lazy_queues_array) end
 	end
 	return search_queue_enqueue, search_queue_dequeue
 end
@@ -306,7 +313,7 @@ function waterbodies.initGridsData()
 		driedStack = utils.Queue.new(nil, nil, nil, true), -- ordered array of dried tiles
 		lazyDriedStack = {},
 
-		
+
 		-- contains dynamic_bins with ring-bins of water tiles to be dried
 		-- new binset is the binset that is currently building
 		-- ring-bins increase in distance from the waterbody center
@@ -326,7 +333,7 @@ function waterbodies.initGridsData()
 		-- should be added to when adding or restoring a water tile (from dry)
 		-- and in a work loop when adding water tiles due to merge
 		pendingTiles = utils.Queue.new(nil, nil, nil, true),
-		
+
 
 	}
 end
@@ -334,7 +341,7 @@ end
 function waterbodies.calculateDimensions(shape_data)
 	shape_data["Hdif"] = shape_data["MaxX"] - shape_data["MinX"]
 	shape_data["Vdif"] = shape_data["MaxY"] - shape_data["MinY"]
-	shape_data["Hyp"] = math.sqrt((shape_data["Hdif"]^2) + (shape_data["Vdif"]^2))
+	shape_data["Hyp"] = math.sqrt((shape_data["Hdif"] ^ 2) + (shape_data["Vdif"] ^ 2))
 end
 
 -- changing the order of these names will break the code in
@@ -369,7 +376,7 @@ function waterbodies.getGeometryValuesArray(
 	batchMinY, batchMaxY,
 
 	batchSumX, batchSumY, batchTileCount
-	)
+)
 	if other_shape_data == nil then
 		return {
 			batchMinX,
@@ -400,7 +407,7 @@ function waterbodies.updateGeometry(
 	batchMinX, batchMaxX,
 	batchMinY, batchMaxY,
 	batchSumX, batchSumY, batchTileCount
-	)
+)
 	if other_shape_data == nil and batchTileCount <= 0 then
 		return
 	end
@@ -435,7 +442,7 @@ function waterbodies.didCentroidChangeSignificantly(waterBody, old_center_x, old
 
 	local dx = centroid.x - old_center_x
 	local dy = centroid.y - old_center_y
-	local distance = math.sqrt(dx*dx + dy*dy)
+	local distance = math.sqrt(dx * dx + dy * dy)
 	-- use hypotenuse as a reference distance
 	local change_rate = distance / waterBody.waterBodyShapeData.Hyp
 
@@ -463,7 +470,8 @@ function waterbodies.ensureAndUpdateBinset(waterBody)
 		if significant_change then
 			local oldBinsets = gridsData.oldBinsets
 			table.insert(oldBinsets, 1, newBinset) -- insert at the beginning
-			newBinset = dynamic_bins.new(centroid.x, centroid.y, nil, nil, nil, nil, nil, nil, nil, nil, nil, pop_descending)
+			newBinset = dynamic_bins.new(centroid.x, centroid.y, nil, nil, nil, nil, nil, nil, nil, nil, nil,
+				pop_descending)
 			gridsData.newBinset = newBinset
 		else
 			dynamic_bins.set_center(newBinset, centroid.x, centroid.y)
@@ -484,7 +492,7 @@ function waterbodies.getCentroid(waterBody)
 			utils.profile_hits("waterbodies.getCentroid", "tile_count == 0")
 			game.print("Warning: Tile count is 0 in getCentroid")
 		end
-	return nil
+		return nil
 	end
 	return { x = shape.SumX / tile_count, y = shape.SumY / tile_count }
 end
@@ -495,11 +503,11 @@ function waterbodies.initShapeData()
 		-- they are not exact because removal of tiles does not check
 		-- whether these values 'shrink' - they can only 'expand'
 		-- they should be used for the bounding area that the waterbody fits into
-		["MinX"] = math.huge,  -- max X position ever seen on the waterbody
+		["MinX"] = math.huge, -- max X position ever seen on the waterbody
 		["MaxX"] = -math.huge,
 		["MinY"] = math.huge,
 		["MaxY"] = -math.huge,
-			
+
 		["SumX"] = 0,
 		["SumY"] = 0,
 		["TileCount"] = 0,
@@ -515,38 +523,38 @@ function waterbodies.initWaterBodyTileCountData()
 		["DeepWater"] = 0,
 		["ShallowWater-Shallow"] = 0,
 		["ShallowWater-Mud"] = 0,
-	}   
+	}
 end
 
 function waterbodies.initWaterAreaData()
 	return {
-	["WaterBodyType"] = 0,
-	["BonusValue"] = 0,
-	["AmountWtr"] = 0,
-	["RegenAmount"] = 0,
-	["TotalArea"] = 0,
+		["WaterBodyType"] = 0,
+		["BonusValue"] = 0,
+		["AmountWtr"] = 0,
+		["RegenAmount"] = 0,
+		["TotalArea"] = 0,
 	}
 end
 
 function waterbodies.initWaterBodyStateData()
 	return {
-		["Pumps"] = {}, -- array of pump_data (reference)
-		["Forces"] = {}, -- force name -> PlayerForce table (reference)
-		
-	["WaterUsed"] = 0,	-- the actual water used synchronized on 'big updates'
-	["WaterUsedPrev"] = 0,	-- the actual water used on the previous 'big update'
+		["Pumps"] = {},       -- array of pump_data (reference)
+		["Forces"] = {},      -- force name -> PlayerForce table (reference)
 
-		["TempAvailableWater"] = 0,	-- the available water that can be used before the next 'big update' 
-		["TempUsedWater"] = 0,	-- the water used since the last 'big update' - used for small updates - if >= TempAvailableWater - the water body is depleted and triggers instant update
+		["WaterUsed"] = 0,    -- the actual water used synchronized on 'big updates'
+		["WaterUsedPrev"] = 0, -- the actual water used on the previous 'big update'
 
-		
-		["WaterUsedPenalty"] = 0,	-- the water used penalty that is applied to the water body - it occurs when waterbody is created on the water tiles that had been used in previous waterbody depleted to some extent
+		["TempAvailableWater"] = 0, -- the available water that can be used before the next 'big update'
+		["TempUsedWater"] = 0, -- the water used since the last 'big update' - used for small updates - if >= TempAvailableWater - the water body is depleted and triggers instant update
 
-		["WaterUsedPenaltyRestored"] = 0,	-- the restored ater (above WaterUsed) that can negate the WaterUsedPenalty (up to that amount)
 
-		["TempInactive"] = true,	-- if true - the water body is inactive and all pumps are inactive - due to using all of the TempAvailableWater
-	["Depleted"] = false,	-- if true - the water body is depleted and all pumps are inactive
-			
+		["WaterUsedPenalty"] = 0,   -- the water used penalty that is applied to the water body - it occurs when waterbody is created on the water tiles that had been used in previous waterbody depleted to some extent
+
+		["WaterUsedPenaltyRestored"] = 0, -- the restored ater (above WaterUsed) that can negate the WaterUsedPenalty (up to that amount)
+
+		["TempInactive"] = true,    -- if true - the water body is inactive and all pumps are inactive - due to using all of the TempAvailableWater
+		["Depleted"] = false,       -- if true - the water body is depleted and all pumps are inactive
+
 		-- alarm flags
 		["Fired50"] = false,
 		["Fired75"] = false,
@@ -558,16 +566,16 @@ function waterbodies.initWaterBodyStateData()
 
 		["FiredCreated"] = false, -- if true - the water body was created and the message was already sent to the players
 
-		["DriedTiles"] = 0, -- the current number of tiles that are dried - used for gradual depletion appearance
+		["DriedTiles"] = 0,     -- the current number of tiles that are dried - used for gradual depletion appearance
 
 		["ScanLoopCount"] = 0,  -- the number of big updates since started scanning
 		["OrphanedSecondsCount"] = 0, -- the number of seconds since the water body was orphaned
 
 		["ToCalculate"] = false, -- if true, the water body area data needs to be calculated
-		["ToUpdate"] = false, -- if true, the water body will emit update message
+		["ToUpdate"] = false,   -- if true, the water body will emit update message
 
 
-	["MapMarkers"] = {},
+		["MapMarkers"] = {},
 	}
 end
 
@@ -590,10 +598,10 @@ function waterbodies.InitWaterBody(
 	return {
 		valid = true, -- if false, the water body is not valid and should be deleted
 
-	surface = surface or nil,
-	waterBodyId = waterBodyId or nil,
-	waterBodyName = waterBodyName or nil,
-	merge_priority = 0,
+		surface = surface or nil,
+		waterBodyId = waterBodyId or nil,
+		waterBodyName = waterBodyName or nil,
+		merge_priority = 0,
 
 		waterAreaData = waterAreaData or waterbodies.initWaterAreaData(),
 		gridsData = gridsData or waterbodies.initGridsData(),
@@ -612,9 +620,9 @@ end
 
 function waterbodies.isWaterBodyEmpty(waterBody)
 	for _, count in pairs(waterBody.waterBodyTileCountData) do
-	if count > 0 then
-		return false
-	end
+		if count > 0 then
+			return false
+		end
 	end
 	return true
 end
@@ -623,10 +631,57 @@ function waterbodies.isWaterBodyOrphaned(waterBody)
 	return #waterBody.waterBodyStateData.Pumps == 0
 end
 
-
-waterbodies.Oceans = {"Arctic","Atlantic","Indian","Pacific","Southern"}
-waterbodies.Lakes = {"Alakol","Albano","Albert","Alexandrina","Amadeus","Amatitlán","Apanás","Argyle","Assal","Athabasca","Atitlán","Baikal","Balaton","Balkhash","Bangweulu","Baringo","Biel","Big Stone ","Biwa","Bled","Bosumtwi","Bracciano","Bras d’Or ","Buir","Burragorang","Chad","Champlain","Chapala","Chelan","Chiemsee","Chilka ","Chilwa","Chiuta","Chott El-Chergui","Chott El-Hodna","Chott El-Jarid","Chott Melrhir","Chrissie","Chūzenji","Coeur d’Alene","Como","Constance","Crater","Cuitzeo","Derwent","Dhebar","Dian","Dongting","Earn","Edward","Elton","Er","Erie","Eucumbene","Eyasi","Eyre","Faguibine","Fingers","Flathead","Frome","Gairdner","Garda","Gatun","Geneva","George","Great ","Great Bear","Great Salt","Great Slave","Grevelingen","Guier","Ḥammār","Hawea","Hawr Al-Ḥabbāniyyah","Hongze","Hornindals","Hövsgöl","Hulun","Hume Reservoir","Huron","IJsselmeer","Iliamna","Ilmen","Ilopango","Inari","Iseo","Island","Izabal","Kainji","Kariba","Kawartha","Kentucky","Khanka","Kisale","Kivu","Koko Nor","Kolleru","Königssee","Kyoga","Lac Débo","Lac la Ronge","Lac Saint-Jean","Ladoga","Laguna de Bay","Lanao","Last Mountain","Lauricocha","Lesser Slave","Llanquihue","Loch Awe","Loch Katrine","Loch Leven","Loch Lomond","Loch Ness","Loch Shiel","Lough Allen","Lough Corrib","Lough Derg","Lough Erne","Lough Mask","Lough Neagh","Lough Ree","Lucerne","Lugano","Magadi","Maggiore","Mai-Ndombe","Mainit","Mälar","Malebo Pool","Malombe","Managua","Manapouri","Manitoba","Manyara","Mapam","Mar Chiquita","Mead","Melville","Memphremagog","Menindee","Michigan","Mistassini","Mjøsa","Montenegro","Moosehead","Muskoka","Mweru","Mývatn","Nahuel Huapí","Naivasha","Nakuru","Näsi","Nasser","Natron","Naujan","Nemi","Neuchâtel","Neusiedler","Ngami","Nicaragua","Nipigon","Nipissing","Nyasa","Ohrid","Okeechobee","Onega","Ontario","Orta","Päijänne","Peipus","Pend Oreille","Petén Itzá","Pielinen","Pontchartrain","Poopó","Poyang","Prespa","Pukaki","Pulicat","Pyramid","Rainy","Rangeley","Reelfoot","Reindeer","River Tummel","Rotorua","Rudolf","Rukwa","Saimaa","Saint Clair","Sambhar Salt","Saranac","Scutari","Sea of Galilee","Sevan","Sevier","Shala","Siljan","Simcoe","Soap","Soda","Štrbské Pleso","Superior","Taal","Tahoe","Tai","Tana","Tanganyika","Taupo","Te Anau","Tegernsee","Tekapo","Tengiz","Teshekpuk","Texcoco","Thingvalla","Titicaca","Toba","Todos los Santos","Tonle Sap","Torrens","Towada","Trasimeno","Tumba","Tuz","Tyers","Tyri","Tyrrell","Ullswater","Urmia","Utah","Valencia","Van","Väner","Vätter","Victoria","Volta","Võrtsjärv","Waikaremoana","Wakatipu","Wanaka","Windermere","Winnipeg","Winnipegosis","Winnipesaukee","Wissel","Wollaston","Wular","Yellowstone","Yojoa","Ysyk","Zaysan","Zürich"}
-waterbodies.Seas = {"Adriatic","Aegean","Albemarle Sound","Alboran","Amundsen","Amundsen Gulf","Andaman","Arabian","Arafura","Archipelago","Arctic Ocean","Argentine","Argolic Gulf","Baffin Bay","Balearic","Bali","Baltic","Banda","Barents","Bass Strait","Bay of Bengal","Bay of Biscay","Bay of Campeche","Bay of Fundy","Beaufort","Bellingshausen","Bering","Bismarck","Black","Block Island Sound","Bohai","Bohol","Bothnian","Buzzards Bay","Camotes","Cantabrian","Cape Cod Bay","Caribbean","Celebes","Celtic","Central Baltic","Ceram","Chesapeake Bay","Chilean","Chukchi","Cilician","Cooperation","Coral","Cosmonauts","Davis","Davis Strait","Delaware Bay","Denmark Strait","Dering Harbor","Drake Passage","D'Urville","East China","East Siberian","English Channel","Fishers Island Sound","Flanders Bay","Flore","Florida Bay","Fort Pond Bay","Gardiners Bay","Golfo de los Mosquitos","Great Australian Bight","Greenland","Gulf of Aden","Gulf of Alaska","Gulf of Carpentaria","Gulf of Corinth","Gulf of Darién","Gulf of Genoa","Gulf of Gonâve","Gulf of Guinea","Gulf of Honduras","Gulf of Lion","Gulf of Maine","Gulf of Martaban","Gulf of Mexico","Gulf of Oman","Gulf of Paria","Gulf of Riga","Gulf of Sidra","Gulf of St. Lawrence","Gulf of Thailand","Gulf of Venezuela","Gulf St Vincent","Halmahera","Hudson Bay","Hudson Strait","Icarian","Inland","Investigator Strait","Ionian","Irish","Irminger","Jamaica Bay","James Bay","Java","Kara","King Haakon VII","Koro","Labrador","Laccadive","Laptev","Lazarev","Levantine","Libyan","Ligurian","Lincoln","Long Beach Bay","Long Island Sound","Lower New York Bay","Mar de Grau","Massachusetts Bay","Mawson","Mediterranean","Mobile Bay","Molucca","Mozambique Channel","Myrtoan","Nantucket Sound","Napeague Bay","Narragansett Bay","New York Bay","North","North  Harbor","North Euboean Gulf","Norwegian","Noyack Bay","Oresund Strait","Pamlico Sound","Pechora","Peconic Bay","Pensacola Bay","Persian Gulf","Philippine","Pipes Cove","Prince Gustav Adolf","Queen Victoria","Raritan Bay","Red","Rhode Island Sound","Riiser-Larsen","Ross","Sag Harbor Bay","Salish","Sandy Hook Bay","Saronic Gulf","Savu","Scotia","Seto Inland","Shelter Island Sound","Sibuyan","Solomon","Somov","South China","South Euboean Gulf","Southold Bay","Spencer Gulf","Sulu","Tampa Bay","Tasman","The Northwest Passages","Thermaic Gulf","Thracian","Three Mile Harbor","Timor","Tobaccolot Bay","Tyrrhenian","Upper New York Bay","Vermillion Bay","Vineyard Sound","Visayan","Wadden","Wandel","Weddell","White","Yellow"}
+waterbodies.Oceans = { "Arctic", "Atlantic", "Indian", "Pacific", "Southern" }
+waterbodies.Lakes = { "Alakol", "Albano", "Albert", "Alexandrina", "Amadeus", "Amatitlán", "Apanás", "Argyle", "Assal",
+	"Athabasca", "Atitlán", "Baikal", "Balaton", "Balkhash", "Bangweulu", "Baringo", "Biel", "Big Stone ", "Biwa", "Bled",
+	"Bosumtwi", "Bracciano", "Bras d’Or ", "Buir", "Burragorang", "Chad", "Champlain", "Chapala", "Chelan", "Chiemsee",
+	"Chilka ", "Chilwa", "Chiuta", "Chott El-Chergui", "Chott El-Hodna", "Chott El-Jarid", "Chott Melrhir", "Chrissie",
+	"Chūzenji", "Coeur d’Alene", "Como", "Constance", "Crater", "Cuitzeo", "Derwent", "Dhebar", "Dian", "Dongting",
+	"Earn", "Edward", "Elton", "Er", "Erie", "Eucumbene", "Eyasi", "Eyre", "Faguibine", "Fingers", "Flathead", "Frome",
+	"Gairdner", "Garda", "Gatun", "Geneva", "George", "Great ", "Great Bear", "Great Salt", "Great Slave", "Grevelingen",
+	"Guier", "Ḥammār", "Hawea", "Hawr Al-Ḥabbāniyyah", "Hongze", "Hornindals", "Hövsgöl", "Hulun", "Hume Reservoir",
+	"Huron", "IJsselmeer", "Iliamna", "Ilmen", "Ilopango", "Inari", "Iseo", "Island", "Izabal", "Kainji", "Kariba",
+	"Kawartha", "Kentucky", "Khanka", "Kisale", "Kivu", "Koko Nor", "Kolleru", "Königssee", "Kyoga", "Lac Débo",
+	"Lac la Ronge", "Lac Saint-Jean", "Ladoga", "Laguna de Bay", "Lanao", "Last Mountain", "Lauricocha", "Lesser Slave",
+	"Llanquihue", "Loch Awe", "Loch Katrine", "Loch Leven", "Loch Lomond", "Loch Ness", "Loch Shiel", "Lough Allen",
+	"Lough Corrib", "Lough Derg", "Lough Erne", "Lough Mask", "Lough Neagh", "Lough Ree", "Lucerne", "Lugano", "Magadi",
+	"Maggiore", "Mai-Ndombe", "Mainit", "Mälar", "Malebo Pool", "Malombe", "Managua", "Manapouri", "Manitoba", "Manyara",
+	"Mapam", "Mar Chiquita", "Mead", "Melville", "Memphremagog", "Menindee", "Michigan", "Mistassini", "Mjøsa",
+	"Montenegro", "Moosehead", "Muskoka", "Mweru", "Mývatn", "Nahuel Huapí", "Naivasha", "Nakuru", "Näsi", "Nasser",
+	"Natron", "Naujan", "Nemi", "Neuchâtel", "Neusiedler", "Ngami", "Nicaragua", "Nipigon", "Nipissing", "Nyasa", "Ohrid",
+	"Okeechobee", "Onega", "Ontario", "Orta", "Päijänne", "Peipus", "Pend Oreille", "Petén Itzá", "Pielinen",
+	"Pontchartrain", "Poopó", "Poyang", "Prespa", "Pukaki", "Pulicat", "Pyramid", "Rainy", "Rangeley", "Reelfoot",
+	"Reindeer", "River Tummel", "Rotorua", "Rudolf", "Rukwa", "Saimaa", "Saint Clair", "Sambhar Salt", "Saranac",
+	"Scutari", "Sea of Galilee", "Sevan", "Sevier", "Shala", "Siljan", "Simcoe", "Soap", "Soda", "Štrbské Pleso",
+	"Superior", "Taal", "Tahoe", "Tai", "Tana", "Tanganyika", "Taupo", "Te Anau", "Tegernsee", "Tekapo", "Tengiz",
+	"Teshekpuk", "Texcoco", "Thingvalla", "Titicaca", "Toba", "Todos los Santos", "Tonle Sap", "Torrens", "Towada",
+	"Trasimeno", "Tumba", "Tuz", "Tyers", "Tyri", "Tyrrell", "Ullswater", "Urmia", "Utah", "Valencia", "Van", "Väner",
+	"Vätter", "Victoria", "Volta", "Võrtsjärv", "Waikaremoana", "Wakatipu", "Wanaka", "Windermere", "Winnipeg",
+	"Winnipegosis", "Winnipesaukee", "Wissel", "Wollaston", "Wular", "Yellowstone", "Yojoa", "Ysyk", "Zaysan", "Zürich" }
+waterbodies.Seas = { "Adriatic", "Aegean", "Albemarle Sound", "Alboran", "Amundsen", "Amundsen Gulf", "Andaman",
+	"Arabian", "Arafura", "Archipelago", "Arctic Ocean", "Argentine", "Argolic Gulf", "Baffin Bay", "Balearic", "Bali",
+	"Baltic", "Banda", "Barents", "Bass Strait", "Bay of Bengal", "Bay of Biscay", "Bay of Campeche", "Bay of Fundy",
+	"Beaufort", "Bellingshausen", "Bering", "Bismarck", "Black", "Block Island Sound", "Bohai", "Bohol", "Bothnian",
+	"Buzzards Bay", "Camotes", "Cantabrian", "Cape Cod Bay", "Caribbean", "Celebes", "Celtic", "Central Baltic", "Ceram",
+	"Chesapeake Bay", "Chilean", "Chukchi", "Cilician", "Cooperation", "Coral", "Cosmonauts", "Davis", "Davis Strait",
+	"Delaware Bay", "Denmark Strait", "Dering Harbor", "Drake Passage", "D'Urville", "East China", "East Siberian",
+	"English Channel", "Fishers Island Sound", "Flanders Bay", "Flore", "Florida Bay", "Fort Pond Bay", "Gardiners Bay",
+	"Golfo de los Mosquitos", "Great Australian Bight", "Greenland", "Gulf of Aden", "Gulf of Alaska",
+	"Gulf of Carpentaria", "Gulf of Corinth", "Gulf of Darién", "Gulf of Genoa", "Gulf of Gonâve", "Gulf of Guinea",
+	"Gulf of Honduras", "Gulf of Lion", "Gulf of Maine", "Gulf of Martaban", "Gulf of Mexico", "Gulf of Oman",
+	"Gulf of Paria", "Gulf of Riga", "Gulf of Sidra", "Gulf of St. Lawrence", "Gulf of Thailand", "Gulf of Venezuela",
+	"Gulf St Vincent", "Halmahera", "Hudson Bay", "Hudson Strait", "Icarian", "Inland", "Investigator Strait", "Ionian",
+	"Irish", "Irminger", "Jamaica Bay", "James Bay", "Java", "Kara", "King Haakon VII", "Koro", "Labrador", "Laccadive",
+	"Laptev", "Lazarev", "Levantine", "Libyan", "Ligurian", "Lincoln", "Long Beach Bay", "Long Island Sound",
+	"Lower New York Bay", "Mar de Grau", "Massachusetts Bay", "Mawson", "Mediterranean", "Mobile Bay", "Molucca",
+	"Mozambique Channel", "Myrtoan", "Nantucket Sound", "Napeague Bay", "Narragansett Bay", "New York Bay", "North",
+	"North  Harbor", "North Euboean Gulf", "Norwegian", "Noyack Bay", "Oresund Strait", "Pamlico Sound", "Pechora",
+	"Peconic Bay", "Pensacola Bay", "Persian Gulf", "Philippine", "Pipes Cove", "Prince Gustav Adolf", "Queen Victoria",
+	"Raritan Bay", "Red", "Rhode Island Sound", "Riiser-Larsen", "Ross", "Sag Harbor Bay", "Salish", "Sandy Hook Bay",
+	"Saronic Gulf", "Savu", "Scotia", "Seto Inland", "Shelter Island Sound", "Sibuyan", "Solomon", "Somov", "South China",
+	"South Euboean Gulf", "Southold Bay", "Spencer Gulf", "Sulu", "Tampa Bay", "Tasman", "The Northwest Passages",
+	"Thermaic Gulf", "Thracian", "Three Mile Harbor", "Timor", "Tobaccolot Bay", "Tyrrhenian", "Upper New York Bay",
+	"Vermillion Bay", "Vineyard Sound", "Visayan", "Wadden", "Wandel", "Weddell", "White", "Yellow" }
 
 waterbodies.WaterBodyTypesToName = {
 	[0] = "Puddle",
@@ -690,7 +745,7 @@ function waterbodies.getAvailableNamesForWaterBodyType(waterBodyType)
 			availableNames[#availableNames + 1] = name
 		end
 	end
-	
+
 	return availableNames
 end
 
@@ -718,7 +773,6 @@ function waterbodies.GenerateWaterBodyName(waterBody)
 		end
 	end
 end
-
 
 waterbodies.WaterBodyTileTypesToAmountWaterTypes = {
 	["ShallowWater"] = "TileFluidAmount-Shallow",
@@ -757,7 +811,6 @@ function waterbodies.GetAmountWaterForWaterBodyTileType(tileType, include_multip
 	return settings.global[waterbodies.WaterBodyTileTypesToAmountWaterTypes[tileType]].value * multiplier
 end
 
-
 function waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 	local totalArea = 0
 	local totalWater = 0
@@ -771,7 +824,8 @@ function waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 		end
 		local penalty_amount = waterBody.waterBodyTileCountPercentagePenalty[tileType]
 		if penalty_amount ~= nil then
-			local amountWaterPenalty = penalty_amount / 100 * waterbodies.GetAmountWaterForWaterBodyTileType(tileType) * multiplier
+			local amountWaterPenalty = penalty_amount / 100 * waterbodies.GetAmountWaterForWaterBodyTileType(tileType) *
+			multiplier
 			penaltyWaterUsed = penaltyWaterUsed + amountWaterPenalty
 		end
 	end
@@ -793,7 +847,7 @@ end
 
 function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 	local area_data = waterBody.waterAreaData
-	
+
 	local totalArea, totalWater, penaltyWaterUsed = waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 	local waterBodyType = waterbodies.GetWaterBodyType(totalArea)
 	local bonusValue = waterbodies.WaterBodyTypeToRegenBonusValue[waterBodyType]
@@ -806,7 +860,7 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 	area_data.AmountWtr = amountWater
 	area_data.RegenAmount = regenAmount
 	area_data.WaterBodyType = waterBodyType
-	
+
 	local state_data = waterBody.waterBodyStateData
 	state_data.WaterUsedPenalty = penaltyWaterUsed
 	state_data.TempAvailableWater = waterbodies.calculateRemainingWater(waterBody)
@@ -817,7 +871,6 @@ function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 
 
 	state_data.ToCalculate = false
-
 end
 
 function waterbodies.createNewWaterBody(surface)
@@ -825,9 +878,6 @@ function waterbodies.createNewWaterBody(surface)
 	local waterBodyId = waterbodies.addNewWaterBodyAndSetId(waterBody)
 	return waterBody, waterBodyId
 end
-
-
-
 
 function waterbodies.signalPerForce(water_body, signal_func, additional_args)
 	local water_body_forces = water_body.waterBodyStateData.Forces
@@ -839,15 +889,13 @@ function waterbodies.signalPerForce(water_body, signal_func, additional_args)
 	end
 end
 
-
-
 -- requires waterGridWithData + gridKey to be present in scope
 -- can be used with driedTilesGridWithData
 function waterbodies.addTileToWaterGrid(waterGridWithData, gridKey, tileName, position, originalName)
 	waterGridWithData[gridKey] = {
-	name = tileName,
-	position = position,
-	originalName = originalName
+		name = tileName,
+		position = position,
+		originalName = originalName
 	}
 end
 
@@ -871,7 +919,7 @@ end
 
 function waterbodies.removeWaterBody(waterBody)
 	waterBody.valid = false
-	
+
 	local waterBodyId = waterBody.waterBodyId
 
 	waterbodies.destroyMapMarkers(waterBody.waterBodyStateData)
@@ -879,24 +927,24 @@ function waterbodies.removeWaterBody(waterBody)
 	-- dry tiles become orphaned - we need to remember their original name
 	local gridData = waterBody.gridsData
 	if next(gridData.driedTilesGridWithData) ~= nil then
-		utils.LazyTables.on_merge(storage.lazyOrphanedDryTilesOriginalName[waterBody.surface.name], gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
+		utils.LazyTables.on_merge(storage.lazyOrphanedDryTilesOriginalName[waterBody.surface.name],
+			gridData.driedTilesGridWithData, gridData.lazyDriedTilesGridWithData)
 		gridData.driedTilesGridWithData = {}
 		gridData.lazyDriedTilesGridWithData = {}
 	end
-	
+
 	-- remove from split families -- member mode
 	split_families.on_removed(waterBodyId)
-	
+
 	-- Remove most data from water body (garbage collection)
 	storage.WaterBodies[waterBodyId] = waterbodies.initCleanedWaterBody(waterBody)
 	storage.ValidWaterBodies[waterBodyId] = nil
 	storage.WaterBodyRef[waterBodyId] = nil
-
 end
 
-
 function waterbodies.calculateTotalWaterUsed(waterbody)
-	local total_water_used = waterbody.waterBodyStateData.WaterUsed + waterbody.waterBodyStateData.WaterUsedPenalty - waterbody.waterBodyStateData.WaterUsedPenaltyRestored
+	local total_water_used = waterbody.waterBodyStateData.WaterUsed + waterbody.waterBodyStateData.WaterUsedPenalty -
+	waterbody.waterBodyStateData.WaterUsedPenaltyRestored
 	return total_water_used
 end
 

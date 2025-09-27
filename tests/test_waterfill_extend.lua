@@ -9,14 +9,14 @@ local run_mock_test = require("tests.helpers.mock_test")
 local function run_test()
     t.start()
     local world, surface = test_env.create_world()
-    world:set_water_rectangle(surface, {x1 = 0, y1 = 0, x2 = 0, y2 = 0})
+    world:set_water_rectangle(surface, { x1 = 0, y1 = 0, x2 = 0, y2 = 0 })
 
     world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
-        position = {x = 0, y = -1},
+        position = { x = 0, y = -1 },
         surface = surface,
-        input_position = {x = 0, y = 0},
+        input_position = { x = 0, y = 0 },
     })
 
     test_env.run_ticks(120)
@@ -24,7 +24,7 @@ local function run_test()
     local wbody = storage.WaterBodies and storage.WaterBodies[1]
     t.ok(wbody ~= nil, "initial water body created")
 
-    world:waterfill(surface, {x = 1, y = 0})
+    world:waterfill(surface, { x = 1, y = 0 })
     test_env.run_ticks(120)
 
     t.eq(wbody.waterAreaData.AmountWtr, 75, "water amount after extension")

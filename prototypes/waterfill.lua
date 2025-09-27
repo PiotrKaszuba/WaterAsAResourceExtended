@@ -4,7 +4,7 @@ local function emptyPic()
         priority = "high",
         width = 1,
         height = 1,
-        shift = {0, 0}
+        shift = { 0, 0 }
     }
 end
 
@@ -27,8 +27,8 @@ local waterfill_tech = {
     unit = {
         count = 100,
         ingredients = {
-            {"automation-science-pack", 1},
-            {"logistic-science-pack", 1},
+            { "automation-science-pack", 1 },
+            { "logistic-science-pack",   1 },
         },
         time = 30
     },
@@ -48,9 +48,9 @@ local waterfill_recipe = {
             name = "explosives",
             amount = 1,
         },
-        {type="fluid", name="water", amount=500},
+        { type = "fluid", name = "water", amount = 500 },
     },
-    results = {{type="item", name="waterfill", amount=3}}
+    results = { { type = "item", name = "waterfill", amount = 3 } }
 }
 
 -- item
@@ -74,21 +74,21 @@ local waterfill_placer = {
     icon = "__WaterAsAResourceExtended__/graphics/icons/water.png",
     icon_size = 128,
     picture = emptyPic(),
-    collision_mask = {layers={object=true, floor=true}},
-    collision_box = {{-0.1, -0.1}, {0.1, 0.1}},
-    flags = {"placeable-neutral", "player-creation", "filter-directions"},
+    collision_mask = { layers = { object = true, floor = true } },
+    collision_box = { { -0.1, -0.1 }, { 0.1, 0.1 } },
+    flags = { "placeable-neutral", "player-creation", "filter-directions" },
     fluid = "water",
     fluid_box = {
         filter = "water",
         pipe_connections = {
             {
-                position = {0, 0.0},
+                position = { 0, 0.0 },
                 flow_direction = "output",
-                direction=8,
+                direction = 8,
             }
         },
         production_type = "none",
-        volume=100,
+        volume = 100,
     },
     placeable_position_visualization = {
         priority = "extra-high-no-scale",
@@ -99,10 +99,10 @@ local waterfill_placer = {
         scale = 0.5
     },
     pumping_speed = 1,
-    energy_source={type='electric', usage_priority="secondary-input"},
-    energy_usage="0.01W",
-    fluid_source_offset={0, 0},
-    tile_buildability_rules={{area={{-0.3, -1.0}, {0.3, -0.6}}, required_tiles={layers={water_tile=true}}}},
+    energy_source = { type = 'electric', usage_priority = "secondary-input" },
+    energy_usage = "0.01W",
+    fluid_source_offset = { 0, 0 },
+    tile_buildability_rules = { { area = { { -0.3, -1.0 }, { 0.3, -0.6 } }, required_tiles = { layers = { water_tile = true } } } },
     minable = {
         mining_time = 0.1,
         result = "waterfill",

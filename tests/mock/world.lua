@@ -10,7 +10,7 @@ local function warn(message)
 end
 
 local function copy_position(x, y)
-    return {x = x, y = y}
+    return { x = x, y = y }
 end
 
 local function align_tile_coordinates(x, y)
@@ -76,11 +76,12 @@ local function new_surface(name, default_tile, chunk_settings)
             else
                 for index, chunk_pos in ipairs(initial_generated) do
                     if type(chunk_pos) ~= "table" or type(chunk_pos.x) ~= "number" or type(chunk_pos.y) ~= "number" then
-                        warn(string.format("initial_generated_chunks[%d] is not a chunk position table; skipping entry", index))
+                        warn(string.format("initial_generated_chunks[%d] is not a chunk position table; skipping entry",
+                            index))
                     else
                         local cx = math.floor(chunk_pos.x)
                         local cy = math.floor(chunk_pos.y)
-                        local key = grid_key({x = cx, y = cy})
+                        local key = grid_key({ x = cx, y = cy })
                         surface._generated_chunks[key] = true
                     end
                 end
@@ -118,18 +119,18 @@ local function new_surface(name, default_tile, chunk_settings)
         local position = copy_position(tile_x, tile_y)
         if surface._chunks_enabled then
             local chunk_x, chunk_y = chunk_coords_from_map(tile_x, tile_y)
-            local chunk_key = grid_key({x = chunk_x, y = chunk_y})
+            local chunk_key = grid_key({ x = chunk_x, y = chunk_y })
             if not surface._generated_chunks[chunk_key] then
                 if surface._requested_chunks[chunk_key] then
-                    return {name = "out-of-map", position = position, valid = true}
+                    return { name = "out-of-map", position = position, valid = true }
                 else
-                    return {position = position, valid = false}
+                    return { position = position, valid = false }
                 end
             end
         end
         local key = grid_key(position)
         local tile_name = surface.tiles[key] or surface.default_tile
-        return {name = tile_name, position = position, valid = true}
+        return { name = tile_name, position = position, valid = true }
     end
 
     function surface.set_tiles(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
@@ -199,7 +200,7 @@ local function new_surface(name, default_tile, chunk_settings)
         if not surface._chunks_enabled then return true end
         local chunk_x = math.floor(chunk_position.x)
         local chunk_y = math.floor(chunk_position.y)
-        local key = grid_key({x = chunk_x, y = chunk_y})
+        local key = grid_key({ x = chunk_x, y = chunk_y })
         return surface._generated_chunks[key] or false
     end
 
@@ -213,7 +214,7 @@ local function new_surface(name, default_tile, chunk_settings)
             for dy = -radius, radius do
                 local cx = chunk_x + dx
                 local cy = chunk_y + dy
-                local key = grid_key({x = cx, y = cy})
+                local key = grid_key({ x = cx, y = cy })
                 if not surface._generated_chunks[key] and not surface._requested_chunks[key] then
                     surface._requested_chunks[key] = true
                     surface._chunk_queue[#surface._chunk_queue + 1] = key
@@ -242,31 +243,31 @@ local function new_surface(name, default_tile, chunk_settings)
         if not allowed[start_name] then return {} end
 
         local result = {}
-        local queue = {start_pos}
-        local visited = {[grid_key(start_pos)] = true}
+        local queue = { start_pos }
+        local visited = { [grid_key(start_pos)] = true }
         local function inside_bbox(pos)
             if not bbox then return true end
             return pos.x >= bbox.left_top.x and pos.x < bbox.right_bottom.x and
-                   pos.y >= bbox.left_top.y and pos.y < bbox.right_bottom.y
+                pos.y >= bbox.left_top.y and pos.y < bbox.right_bottom.y
         end
-        local dirs = {{1,0}, {-1,0}, {0,1}, {0,-1}}
+        local dirs = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }
         if include_diagonal then
-            dirs[#dirs+1] = {1,1}
-            dirs[#dirs+1] = {1,-1}
-            dirs[#dirs+1] = {-1,1}
-            dirs[#dirs+1] = {-1,-1}
+            dirs[#dirs + 1] = { 1, 1 }
+            dirs[#dirs + 1] = { 1, -1 }
+            dirs[#dirs + 1] = { -1, 1 }
+            dirs[#dirs + 1] = { -1, -1 }
         end
         local qi = 1
         while queue[qi] do
             local pos = queue[qi]
             qi = qi + 1
-            result[#result+1] = {x = pos.x, y = pos.y}
+            result[#result + 1] = { x = pos.x, y = pos.y }
             for _, d in ipairs(dirs) do
-                local np = {x = pos.x + d[1], y = pos.y + d[2]}
+                local np = { x = pos.x + d[1], y = pos.y + d[2] }
                 local key = grid_key(np)
                 if not visited[key] and inside_bbox(np) and allowed[surface.get_tile(np).name] then
                     visited[key] = true
-                    queue[#queue+1] = np
+                    queue[#queue + 1] = np
                 end
             end
         end
@@ -281,10 +282,11 @@ function World.new(options)
     local self = setmetatable({
         next_surface_id = 1,
         _simulate_chunks = not not options.simulate_chunks,
-        _chunk_generation_rate = resolve_chunk_generation_rate(options.chunk_generation_per_tick, options.chunk_generation_delay, 0.5),
+        _chunk_generation_rate = resolve_chunk_generation_rate(options.chunk_generation_per_tick,
+            options.chunk_generation_delay, 0.5),
     }, World)
     -- setup default force and player
-    local force = {name = "player", valid = true, index = 1}
+    local force = { name = "player", valid = true, index = 1 }
     force.print = mock.make_printer("force", force.name)
 
     local function resolve_surface(surface_ref)
@@ -299,12 +301,12 @@ function World.new(options)
         if not surface then
             error("surface not found for add_chart_tag: " .. tostring(surface_ref))
         end
-        local position = spec.position or {x = 0, y = 0}
+        local position = spec.position or { x = 0, y = 0 }
         local tag = {
             valid = true,
             force = force,
             surface = surface,
-            position = {x = position.x, y = position.y},
+            position = { x = position.x, y = position.y },
             text = spec.text or "",
             icon = spec.icon,
         }
@@ -314,6 +316,7 @@ function World.new(options)
             tag.valid = false
             remove_chart_tag(surface, tag)
         end
+
         return tag
     end
 
@@ -424,18 +427,18 @@ function World.new(options)
     local function normalize_mining_results(results)
         if not results then return {} end
         if type(results) ~= "table" or results.name or results[1] == nil then
-            results = {results}
+            results = { results }
         end
         local normalized = {}
         for _, entry in ipairs(results) do
             if type(entry) == "string" then
-                normalized[#normalized + 1] = {name = entry, count = 1}
+                normalized[#normalized + 1] = { name = entry, count = 1 }
             elseif type(entry) == "table" then
                 local name = entry.name or entry[1]
                 if name then
                     local count = stack_count(entry)
                     if count <= 0 then count = 1 end
-                    normalized[#normalized + 1] = {name = name, count = count}
+                    normalized[#normalized + 1] = { name = name, count = count }
                 end
             end
         end
@@ -449,7 +452,8 @@ function World.new(options)
         if results then
             return normalize_mining_results(results)
         end
-        local single = entity.mine_result or entity.minable_result or proto.mine_result or proto.minable_result or entity.name
+        local single = entity.mine_result or entity.minable_result or proto.mine_result or proto.minable_result or
+        entity.name
         return normalize_mining_results(single)
     end
 
@@ -476,7 +480,7 @@ function World.new(options)
             entity = entity,
             player_index = player.index,
         })
-        entity.destroy({raise_destroy=false})
+        entity.destroy({ raise_destroy = false })
         return true
     end
 
@@ -489,7 +493,8 @@ function World:create_surface(name, default_tile, options)
     options = options or {}
     local simulate_chunks = options.simulate_chunks
     if simulate_chunks == nil then simulate_chunks = self._simulate_chunks end
-    local generation_rate = resolve_chunk_generation_rate(options.chunk_generation_per_tick, options.chunk_generation_delay, self._chunk_generation_rate)
+    local generation_rate = resolve_chunk_generation_rate(options.chunk_generation_per_tick,
+        options.chunk_generation_delay, self._chunk_generation_rate)
     local chunk_settings = {
         enabled = simulate_chunks,
         rate = generation_rate,
@@ -507,7 +512,7 @@ function World:set_water_rectangle(surface, rect)
     local tiles = {}
     for x = rect.x1, rect.x2 do
         for y = rect.y1, rect.y2 do
-            tiles[#tiles + 1] = {name = "water", position = {x = x, y = y}}
+            tiles[#tiles + 1] = { name = "water", position = { x = x, y = y } }
         end
     end
     surface:set_tiles(tiles)
@@ -527,16 +532,16 @@ function World:landfill_rectangle(surface, top_left, width, height)
     local tiles = {}
     for dx = 0, width - 1 do
         for dy = 0, height - 1 do
-            local pos = {x = top_left.x + dx, y = top_left.y + dy}
+            local pos = { x = top_left.x + dx, y = top_left.y + dy }
             local old_name = surface.get_tile(pos).name
-            tiles[#tiles+1] = {old_tile = {name = old_name}, position = pos} -- array[OldTileAndPosition]
+            tiles[#tiles + 1] = { old_tile = { name = old_name }, position = pos } -- array[OldTileAndPosition]
         end
     end
     surface:set_tiles(tiles)
     mock.raise_event(defines.events.on_player_built_tile, {
         player_index = 1,
         surface_index = surface.index,
-        tile = {name = "landfill"},
+        tile = { name = "landfill" },
         tiles = tiles,
     })
 end
@@ -548,7 +553,7 @@ function World:build_entity(spec, player_index, require_item_name)
         if player.get_item_count(require_item_name) < 1 then
             return nil
         end
-        player.remove_item({name = require_item_name, count = 1})
+        player.remove_item({ name = require_item_name, count = 1 })
     end
 
     local entity = {
@@ -561,7 +566,7 @@ function World:build_entity(spec, player_index, require_item_name)
         valid = true,
         active = true,
         pumped_last_tick = 0,
-        prototype = {type = spec.type or spec.name},
+        prototype = { type = spec.type or spec.name },
         last_user = game.players[player_index or 1],
     }
     surface.next_unit = surface.next_unit + 1
@@ -570,22 +575,22 @@ function World:build_entity(spec, player_index, require_item_name)
         entity.valid = false
         surface.entities[entity.unit_number] = nil
         if opts and opts.raise_destroy then
-            mock.raise_event(defines.events.script_raised_destroy, {entity = entity})
+            mock.raise_event(defines.events.script_raised_destroy, { entity = entity })
         end
     end
+
     entity.get_fluid_source_tile = function() return spec.input_position or spec.position end
     surface.entities[entity.unit_number] = entity
-    mock.raise_event(defines.events.on_built_entity, {entity = entity})
+    mock.raise_event(defines.events.on_built_entity, { entity = entity })
     return entity
 end
 
 function World:mine_entity(entity)
     if not entity.valid then return end
-    mock.raise_event(defines.events.on_player_mined_entity, {entity = entity, player_index = 1})
+    mock.raise_event(defines.events.on_player_mined_entity, { entity = entity, player_index = 1 })
     entity.destroy()
 end
 
 return {
     World = World,
 }
-

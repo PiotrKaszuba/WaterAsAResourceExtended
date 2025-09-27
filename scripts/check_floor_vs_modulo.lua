@@ -3,18 +3,18 @@
 
 function a(pos)
     local x, y = pos.x, pos.y
-    return {x = x - x % 1, y = y - y % 1}
+    return { x = x - x % 1, y = y - y % 1 }
 end
 
 function b(pos)
-    return {x = math.floor(pos.x), y = math.floor(pos.y)}
+    return { x = math.floor(pos.x), y = math.floor(pos.y) }
 end
 
 local posx = {
-    {x = 10, y = 10},
-    {x = 10.5, y = 10.5},
-    {x = -10, y = -10},
-    {x = -9.5, y = -9.5},
+    { x = 10,   y = 10 },
+    { x = 10.5, y = 10.5 },
+    { x = -10,  y = -10 },
+    { x = -9.5, y = -9.5 },
 }
 
 local runs = 1000000

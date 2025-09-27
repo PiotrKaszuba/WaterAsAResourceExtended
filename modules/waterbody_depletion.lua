@@ -5,8 +5,8 @@ waterbody_depletion = {}
 
 function waterbody_depletion.sortTilesByDistance(tiles, focusPoint, sortAscending)
     table.sort(tiles, function(a, b)
-        local distA = (a.position.x - focusPoint.x)^2 + (a.position.y - focusPoint.y)^2
-        local distB = (b.position.x - focusPoint.x)^2 + (b.position.y - focusPoint.y)^2
+        local distA = (a.position.x - focusPoint.x) ^ 2 + (a.position.y - focusPoint.y) ^ 2
+        local distB = (b.position.x - focusPoint.x) ^ 2 + (b.position.y - focusPoint.y) ^ 2
         if sortAscending then
             return distA < distB
         else
@@ -67,7 +67,7 @@ function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percent
 
     local tilesToChange = {}
     local numToProcess = math.min(math.abs(tilesToProcessCount), #candidateTiles)
-	local processedCount = 0
+    local processedCount = 0
 
     for i = 1, numToProcess do
         local tileData = candidateTiles[i]
@@ -81,7 +81,7 @@ function waterbody_depletion.updateGradualDepletionAppearance(waterBody, percent
             tilesToChange[#tilesToChange + 1] = { name = tileData.originalName, position = tileData.position }
             tileData.name = tileData.originalName
         end
-		processedCount = processedCount + 1
+        processedCount = processedCount + 1
     end
 
     if isDepleting then

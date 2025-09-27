@@ -43,11 +43,11 @@ function tiles.placerWater(placed)
     placed.destroy()
 
     local tileArray = {}
-	tileArray[1] = {
-		name = replacement,
-		position = {x=pos.x, y=pos.y},
-        old_tile = {name = old_tile_name}
-	}
+    tileArray[1] = {
+        name = replacement,
+        position = { x = pos.x, y = pos.y },
+        old_tile = { name = old_tile_name }
+    }
 
     -- 5th argument is false to prevent script_raised_set_tiles event
     surface.set_tiles(tileArray, true, true, true, false)
@@ -55,17 +55,15 @@ function tiles.placerWater(placed)
         tileArray,
         surface
     )
-
 end
 
-
 function tiles.initTileEvent(eventType, position, surface, tileData)
-	return {
-		type = eventType, -- "landfill" or "waterfill"
-		position = position,
-		surface = surface,
-		tileData = tileData
-	}
+    return {
+        type = eventType, -- "landfill" or "waterfill"
+        position = position,
+        surface = surface,
+        tileData = tileData
+    }
 end
 
 function tiles.addTileEvent(eventType, position, surface, tileData)
@@ -74,9 +72,9 @@ function tiles.addTileEvent(eventType, position, surface, tileData)
 end
 
 function tiles.processTileEventQueue(maxEvents, updateBudget)
-	local queue = tiles.getTileEventQueue()
+    local queue = tiles.getTileEventQueue()
     local processedCount = 0
-    
+
     while not utils.Queue.is_empty(queue) and processedCount < maxEvents and updateBudget.budget > 0 do
         local event = utils.Queue.dequeue(queue)
         if event then
@@ -88,7 +86,7 @@ function tiles.processTileEventQueue(maxEvents, updateBudget)
         end
         processedCount = processedCount + 1
     end
-    
+
     return processedCount
 end
 
@@ -105,10 +103,11 @@ function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
         local old_tile = tile_event.old_tile
         local old_name = old_tile and old_tile.name
         local new_name = placed_name or tile_event.name
-        
+
         if old_name == nil then
             utils.profile_hits("handleTileEventsInternal", "no old tile name")
-            game.print("Warning: script_raised_set_tiles with no old tile name. Problems may arise if landfill was placed not on water or waterfill was placed on water or dry (depleted) tile.")
+            game.print(
+            "Warning: script_raised_set_tiles with no old tile name. Problems may arise if landfill was placed not on water or waterfill was placed on water or dry (depleted) tile.")
         end
 
         if utils.IsDryTile(new_name) then
@@ -118,17 +117,18 @@ function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
             -- if something else than dry tile is placed on dry tile:
             -- we can for sure remove it from OrphanedDryTilesOriginalName
             local gridKey = hot_utils.GridKey(position)
-            utils.LazyTables.remove(gridKey, storage.OrphanedDryTilesOriginalName[surfaceName], storage.lazyOrphanedDryTilesOriginalName[surfaceName]) 
+            utils.LazyTables.remove(gridKey, storage.OrphanedDryTilesOriginalName[surfaceName],
+                storage.lazyOrphanedDryTilesOriginalName[surfaceName])
         end
 
         if new_name == "landfill" and ((old_name and utils.IsWaterTile(old_name)) or (not old_name)) then
             tiles.addTileEvent("landfill", position, surface, {
                 originalTileName = old_name,
-				tileName = new_name,
+                tileName = new_name,
             })
         elseif utils.IsWaterTile(new_name) and ((old_name and not utils.IsWaterTile(old_name)) or (not old_name)) then
             tiles.addTileEvent("waterfill", position, surface, {
-				originalTileName = old_name,
+                originalTileName = old_name,
                 tileName = new_name,
             })
         end
@@ -138,59 +138,57 @@ end
 function tiles.processWaterfillEvent(tileEvent, updateBudget)
     local position = tileEvent.position
     local surface = tileEvent.surface
-    
-	if updateBudget then
-		updateBudget.budget = updateBudget.budget - 1
-	end
+
+    if updateBudget then
+        updateBudget.budget = updateBudget.budget - 1
+    end
 
     -- Find adjacent water bodies
     local adjacentWaterBodies = tiles.findAdjacentWaterBodies(position, surface)
-    
+
     -- if there are no adjacent water bodies - dont do anything
 
     if #adjacentWaterBodies == 1 then
         -- Extend existing water body
         local waterBodyId = adjacentWaterBodies[1]
         local waterBody = waterbodies.getWaterBody(waterBodyId)
-        
+
         if waterBody and waterBody.valid then
             local search_queue_enqueue, _ = waterbodies.getSearchQueueEnqueueAndDequeue(waterBody.searchData.searchQueue)
             search_queue_enqueue(waterBody.searchData.searchQueue, position)
             waterBody.searchData.finished = false
             waterBody.waterBodyStateData.ToCalculate = true
             waterBody.waterBodyStateData.ToUpdate = true
-			-- also remove the tile from edge grid
+            -- also remove the tile from edge grid
             local gridsData = waterBody.gridsData
             utils.LazyTables.remove(hot_utils.GridKey(position), gridsData.edgeGrid, gridsData.lazyEdgeGrid)
         end
-
     elseif #adjacentWaterBodies > 1 then
         -- Multiple water bodies - merge them
         waterbody_merge.mergeMultipleWaterBodies(adjacentWaterBodies, position, surface)
-		if updateBudget then
-			updateBudget.budget = updateBudget.budget - #adjacentWaterBodies
-		end
+        if updateBudget then
+            updateBudget.budget = updateBudget.budget - #adjacentWaterBodies
+        end
     end
 end
 
 function tiles.findAdjacentWaterBodies(position, surface)
     local waterBodyIds = {}
     local seen = {}
-    
+
     for _, offset in pairs(utils.AdjacentOffsets) do
-        local adj_pos = {x = position.x + offset.x, y = position.y + offset.y}
+        local adj_pos = { x = position.x + offset.x, y = position.y + offset.y }
         local adj_gridKey = hot_utils.GridKey(adj_pos)
         local waterBodyId = waterbodies.getWaterTile(adj_gridKey, surface)
-        
+
         if not waterbodies.checkIfTileIsNotAssignedToValidWaterBody(adj_gridKey, surface) and not seen[waterBodyId] then
             waterBodyIds[#waterBodyIds + 1] = waterBodyId
             seen[waterBodyId] = true
         end
     end
-    
+
     return waterBodyIds
 end
-
 
 function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, surface, updateBudget)
     local tileType = waterbodies.WaterTileToWaterBodyTileType[originalTileName]
@@ -200,9 +198,9 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     local surfaceName = surface.name
 
     -- 1. Reduce tile count that will be used for water amount calculation
-    waterBody.waterBodyTileCountData[tileType] = 
+    waterBody.waterBodyTileCountData[tileType] =
         math.max(0, waterBody.waterBodyTileCountData[tileType] - 1)
-    
+
     -- 2. Regenerate some water used based on current percentage use
     -- reverse penalty (overall it will decrease amount of reamining water due to AmountWtr decreasing more than water used)
     local currentPercentageUsed = waterbodies.calculatePercentageWaterUsed(waterBody)
@@ -213,17 +211,17 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
     -- 3a. Update centroid geometry on removal
     waterbodies.updateGeometryOnRemove(waterBody.waterBodyShapeData, -position.x, -position.y, -1)
-    
+
     -- 4. Mark tile as unassigned in global registry
     hot_utils.addNewWaterTile(gridKey, surfaceName, -1)
-    
+
     -- 5. Recalculate edges around this position
     waterbody_scan.recalculateEdgesAroundPosition(waterBody, position, surface, updateBudget)
-    
+
     -- 6. Mark for water amount recalculation
     waterBody.waterBodyStateData.ToCalculate = true
     waterBody.waterBodyStateData.ToUpdate = true
-    
+
     -- 7. Check if water body becomes empty
     if waterbodies.isWaterBodyEmpty(waterBody) then
         waterbodies.signalPerForce(waterBody, waterbodies.signalEmptyToPlayer)
@@ -231,24 +229,23 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     end
 end
 
-
 function tiles.processLandfillEvent(tileEvent, updateBudget)
     -- assume position is left-top corner already
-	local position = tileEvent.position
-	local surface = tileEvent.surface
+    local position = tileEvent.position
+    local surface = tileEvent.surface
     local gridKey = hot_utils.GridKey(position)
     local waterBodyId = waterbodies.getWaterTile(gridKey, surface)
-    
+
     -- check if tile is assigned (to valid or invalid) water body
     if waterbodies.checkIfWaterBodyIdIsOfAssignedValue(waterBodyId) then
         local waterBody = waterbodies.getWaterBody(waterBodyId)
         local budget_cost = 0
 
         -- if valid - reduce tile from water body
-		if waterBody and waterBody.valid then
+        if waterBody and waterBody.valid then
             budget_cost = budget_cost + 2
             tiles.reduceTileFromWaterBody(waterBody, tileEvent.tileData.originalTileName, position, surface, updateBudget)
-        
+
             -- if still valid - check if water body got split
             if waterBody and waterBody.valid then
                 budget_cost = budget_cost + 2

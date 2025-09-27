@@ -20,7 +20,7 @@ function QueueProbe.attach(queue_utils)
             enqueue = queue_module.enqueue,
             dequeue_back = queue_module.dequeue_back,
         },
-        stats_by_queue = setmetatable({}, {__mode = "k"}),
+        stats_by_queue = setmetatable({}, { __mode = "k" }),
     }, QueueProbe)
 
     queue_module.new = function(...)
@@ -156,10 +156,10 @@ function BudgetCycleTracker:update(budget, tick)
         self.current.end_value = budget.budget
         if budget.budget <= 0 then
             if not self.current.exhausted then
-                    self.current.first_exhaust_tick = tick
+                self.current.first_exhaust_tick = tick
             end
-                self.current.exhausted = true
-            end
+            self.current.exhausted = true
+        end
     end
 end
 
@@ -191,31 +191,31 @@ function BudgetCycleTracker:summary()
 end
 
 local configs = {
-    {name = "tiles-limited-low", tiles_per_sec = 120, update_budget = 150, expected_limiter = "tiles"},
-    {name = "tiles-limited-mid", tiles_per_sec = 360, update_budget = 400, expected_limiter = "tiles"},
-    {name = "balanced-400-410", tiles_per_sec = 400, update_budget = 410, expected_limiter = "balanced"},
+    { name = "tiles-limited-low",                  tiles_per_sec = 120,   update_budget = 150,   expected_limiter = "tiles" },
+    { name = "tiles-limited-mid",                  tiles_per_sec = 360,   update_budget = 400,   expected_limiter = "tiles" },
+    { name = "balanced-400-410",                   tiles_per_sec = 400,   update_budget = 410,   expected_limiter = "balanced" },
 
-    {name = "budget-limited-400-360", tiles_per_sec = 400, update_budget = 360, expected_limiter = "budget"},
-    {name = "budget-limited-525-500", tiles_per_sec = 525, update_budget = 500, expected_limiter = "budget"},
-    
-    {name = "tiles-limited-10000-50000-side-250", tiles_per_sec = 10000, update_budget = 50000, expected_limiter = "tiles", side_size = 250},
+    { name = "budget-limited-400-360",             tiles_per_sec = 400,   update_budget = 360,   expected_limiter = "budget" },
+    { name = "budget-limited-525-500",             tiles_per_sec = 525,   update_budget = 500,   expected_limiter = "budget" },
+
+    { name = "tiles-limited-10000-50000-side-250", tiles_per_sec = 10000, update_budget = 50000, expected_limiter = "tiles",   side_size = 250 },
 
 
 }
 
 local function apply_scan_settings(cfg)
-    settings.global["FluidArea-Additional-Tiles-Per-Second"] = {value = cfg.tiles_per_sec}
-    settings.global["Update-Budget-Per-Second"] = {value = cfg.update_budget}
+    settings.global["FluidArea-Additional-Tiles-Per-Second"] = { value = cfg.tiles_per_sec }
+    settings.global["Update-Budget-Per-Second"] = { value = cfg.update_budget }
 end
 
 local function seed_large_water_body(world, surface, side_size)
-    world:set_water_rectangle(surface, {x1 = 0, y1 = 0, x2 = side_size - 1, y2 = side_size - 1})
+    world:set_water_rectangle(surface, { x1 = 0, y1 = 0, x2 = side_size - 1, y2 = side_size - 1 })
     world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
-        position = {x = 0, y = -1},
+        position = { x = 0, y = -1 },
         surface = surface,
-        input_position = {x = 0, y = 0},
+        input_position = { x = 0, y = 0 },
     })
 end
 
@@ -319,9 +319,11 @@ local function run_config(cfg)
             effectiveness_of_scans_percentage
         ))
 
-        t.eq(result.water_area, side_size * side_size, string.format("Water body area is %d for %s", side_size * side_size, cfg.name))
+        t.eq(result.water_area, side_size * side_size,
+            string.format("Water body area is %d for %s", side_size * side_size, cfg.name))
 
-        t.ok(cfg.expected_limiter == limiter_description, string.format("Expected limiter: %s, got: %s", cfg.expected_limiter, limiter_description))
+        t.ok(cfg.expected_limiter == limiter_description,
+            string.format("Expected limiter: %s, got: %s", cfg.expected_limiter, limiter_description))
 
         t.ok(
             stats and not stats.enqueue_front and not stats.dequeue_back,
@@ -332,7 +334,7 @@ local function run_config(cfg)
         )
 
         t.finish(string.format("Scan performance results: %s", cfg.name))
-    end, nil, {n_longest_ticks = 10})
+    end, nil, { n_longest_ticks = 10 })
 end
 
 local function run_suite(configs)

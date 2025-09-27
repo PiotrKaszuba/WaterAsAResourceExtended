@@ -7,7 +7,7 @@ hot_utils = {}
 -- also, because it has to be used exclusively - the utils.GridKey(position) got removed
 -- uses 10 milion as multiplier because factorio limits world to 2 milion x 2 milion
 -- Lua uses double-precision floating point (IEEE 754) for all numbers
--- maximum integer value that can be stored precisely in a 
+-- maximum integer value that can be stored precisely in a
 -- double-precision floating-point format is equal to 9,007,199,254,740,991
 -- that's about 9 * 10^15
 -- so we use 10 milion = 10^7 as multiplier, because 10^7 * 2*10^6 = 2 * 10^13 < 9 * 10^15
@@ -15,12 +15,11 @@ function hot_utils.GridKey(position)
 	return position.x * 10000000 + position.y
 end
 
-
 -- hot write variant that accepts a pre-bound reference
 function hot_utils.addNewWaterTileRef(gridKey, surfaceName, waterBodyRef)
 	local previous_owner_ref = storage.WaterTiles[surfaceName][gridKey]
 	if previous_owner_ref == waterBodyRef then
-		return  -- no need to do anything
+		return -- no need to do anything
 	end
 	storage.WaterTiles[surfaceName][gridKey] = waterBodyRef
 
@@ -47,7 +46,7 @@ end
 -- assumes WaterTiles and surface are initialized
 -- requires surfaceName to be passed around in hot loops
 function hot_utils.getWaterTile(gridKey, surfaceName)
-    local waterBodyRef = storage.WaterTiles[surfaceName][gridKey]
+	local waterBodyRef = storage.WaterTiles[surfaceName][gridKey]
 	if waterBodyRef == nil then
 		return nil
 	end
@@ -58,8 +57,8 @@ end
 -- uses surfaceName instead of surface
 -- assumes ValidWaterBodies are initialized and completely trusted
 function hot_utils.checkIfTileIsNotAssignedToValidWaterBody(gridKey, surfaceName)
-    local waterBodyId = hot_utils.getWaterTile(gridKey, surfaceName)
-    return storage.ValidWaterBodies[waterBodyId] == nil
+	local waterBodyId = hot_utils.getWaterTile(gridKey, surfaceName)
+	return storage.ValidWaterBodies[waterBodyId] == nil
 end
 
 -- same as waterbodies.addNewWaterTile but optimized for hot paths
@@ -92,6 +91,8 @@ function hot_utils.getWaterTilePercentageWaterUsed(gridKey, surfaceName)
 	return 0
 end
 
-function hot_utils.isTileInGrid(waterGridWithData, lazyWaterGridWithData, driedTilesGridWithData, lazyDriedTilesGridWithData, gridKey)
-	return utils.LazyTables.get(gridKey, waterGridWithData, lazyWaterGridWithData) ~= nil or utils.LazyTables.get(gridKey, driedTilesGridWithData, lazyDriedTilesGridWithData) ~= nil
+function hot_utils.isTileInGrid(waterGridWithData, lazyWaterGridWithData, driedTilesGridWithData,
+								lazyDriedTilesGridWithData, gridKey)
+	return utils.LazyTables.get(gridKey, waterGridWithData, lazyWaterGridWithData) ~= nil or
+	utils.LazyTables.get(gridKey, driedTilesGridWithData, lazyDriedTilesGridWithData) ~= nil
 end

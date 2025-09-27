@@ -74,20 +74,20 @@ local function record_event(name, tick, time)
         list = {}
         performance.events[name] = list
     end
-    list[#list + 1] = {tick = tick, time = time}
+    list[#list + 1] = { tick = tick, time = time }
     performance.pending_event_time = performance.pending_event_time + time
 end
 
 local function record_tick(tick, time)
-    performance.ticks[#performance.ticks + 1] = {tick = tick, time = time}
+    performance.ticks[#performance.ticks + 1] = { tick = tick, time = time }
     local total = time + performance.pending_event_time
-    performance.real_ticks[#performance.real_ticks + 1] = {tick = tick, time = total}
+    performance.real_ticks[#performance.real_ticks + 1] = { tick = tick, time = total }
     performance.pending_event_time = 0
 end
 
 local function compute_stats(list, n_longest_ticks)
     local count, min, max, sum = #list, nil, nil, 0
-    local longest_ticks = {}  -- longest_tick is a sorted array of the longest ticks (from longest to shortest)
+    local longest_ticks = {} -- longest_tick is a sorted array of the longest ticks (from longest to shortest)
     for _, entry in ipairs(list) do
         local t = entry.time
         if not min or t < min then min = t end
@@ -107,13 +107,13 @@ local function compute_stats(list, n_longest_ticks)
         end
     end
     local avg = count > 0 and (sum / count) or 0
-    return {count = count, min = min or 0, max = max or 0, avg = avg, sum = sum, longest_ticks = longest_ticks}
+    return { count = count, min = min or 0, max = max or 0, avg = avg, sum = sum, longest_ticks = longest_ticks }
 end
 
 function performance.report(args)
     local use_color = args and args.use_color or true
     local n_longest_ticks = args and args.n_longest_ticks or 0
-    
+
     local no_color_format = function(s)
         return string.format("%.3fms", s * 1000)
     end
@@ -214,8 +214,8 @@ reset_performance()
 function mock.reset()
     -- globals
     storage = {}
-    settings = {global = {}, startup = {}}
-    remote = {interfaces = {}, call = function() end}
+    settings = { global = {}, startup = {} }
+    remote = { interfaces = {}, call = function() end }
 
     reset_chunk_surfaces()
 
@@ -256,7 +256,7 @@ function mock.reset()
             script_raised_set_tiles = 10,
             on_research_finished = 11,
         },
-        direction = {north = 0, east = 2, south = 4, west = 6},
+        direction = { north = 0, east = 2, south = 4, west = 6 },
     }
 
     performance.reset()
@@ -313,7 +313,7 @@ function mock.run_tick()
     local start = os.clock()
     for n, handler in pairs(script._on_nth_tick) do
         if mock.tick % n == 0 then
-            handler({tick = mock.tick})
+            handler({ tick = mock.tick })
         end
     end
     local elapsed = os.clock() - start

@@ -4,9 +4,9 @@ forces = {}
 
 
 function forces.initPlayerForces()
-    if storage.PlayerForces == nil then
-        storage.PlayerForces = {}
-    end
+	if storage.PlayerForces == nil then
+		storage.PlayerForces = {}
+	end
 end
 
 function forces.getGameForce(name)
@@ -22,17 +22,17 @@ function forces.InitPlayerForce(name)
 end
 
 function forces.getPlayerForce(name)
-    return storage.PlayerForces[name]
+	return storage.PlayerForces[name]
 end
 
 function forces.checkForceExists(name)
-    return storage.PlayerForces[name] ~= nil
+	return storage.PlayerForces[name] ~= nil
 end
 
 function forces.AddForceIfNotExists(name)
-    if not forces.checkForceExists(name) then
-        storage.PlayerForces[name] = forces.InitPlayerForce(name)
-    end
+	if not forces.checkForceExists(name) then
+		storage.PlayerForces[name] = forces.InitPlayerForce(name)
+	end
 	return storage.PlayerForces[name]
 end
 
@@ -43,7 +43,7 @@ forces.TechYieldBoostLevels = {
 	[3] = 1.0 * 0.85 ^ 3,
 	[4] = 1.0 * 0.85 ^ 4,
 	[5] = 1.0 * 0.85 ^ 5,
-	
+
 }
 
 forces.TechYieldBoostLevelInfiniteBoost = 0.15
@@ -52,10 +52,11 @@ function forces.GetTechYieldBoost(research_name, research_level)
 	if utils.CheckSubstring(research_name, forces.TechYieldBoostName) then
 		local maxLevel = utils.GetMaxKey(forces.TechYieldBoostLevels)
 		local boostLevel = tonumber(utils.RemovePrefix(research_name, forces.TechYieldBoostName))
-		
+
 		local boost = 1.0
 		if boostLevel > maxLevel then
-			boost = forces.TechYieldBoostLevels[maxLevel] * (forces.TechYieldBoostLevelInfiniteBoost ^ (research_level - maxLevel))
+			boost = forces.TechYieldBoostLevels[maxLevel] *
+			(forces.TechYieldBoostLevelInfiniteBoost ^ (research_level - maxLevel))
 		else
 			boost = forces.TechYieldBoostLevels[boostLevel]
 		end

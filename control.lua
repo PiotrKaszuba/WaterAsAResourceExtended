@@ -10,27 +10,28 @@ require("modules.split_families")
 
 control = {}
 
-control.periodic_update_ticks = 1 -- periodic update every tick: 60/s
+control.periodic_update_ticks = 1     -- periodic update every tick: 60/s
 control.desired_big_update_ticks = 30 -- big update 2x per second: 2/s
-control.scanning_update_ticks = 10 -- scanning loop a few times per second: 6/s; shift by 1 tick not to run on big update
-control.extra_work_update_ticks = 5 -- 12/s; shift by 2 ticks not to run on big update nor scanning update
+control.scanning_update_ticks = 10    -- scanning loop a few times per second: 6/s; shift by 1 tick not to run on big update
+control.extra_work_update_ticks = 5   -- 12/s; shift by 2 ticks not to run on big update nor scanning update
 
 function control.is_picker_dollies_available()
-    return (remote and remote.interfaces['PickerDollies']) or false
+	return (remote and remote.interfaces['PickerDollies']) or false
 end
 
 function control.Init()
 	if storage.PeriodicTick == nil then
 		storage.PeriodicTick = 0
 	end
-    if storage.PeriodicTicksPerBigUpdate == nil then
-        storage.PeriodicTicksPerBigUpdate =  math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
-    end
+	if storage.PeriodicTicksPerBigUpdate == nil then
+		storage.PeriodicTicksPerBigUpdate = math.ceil(control.desired_big_update_ticks / control.periodic_update_ticks)
+	end
 	if storage.PeriodicTicksPerScanningUpdate == nil then
-		storage.PeriodicTicksPerScanningUpdate =  math.ceil(control.scanning_update_ticks / control.periodic_update_ticks)
+		storage.PeriodicTicksPerScanningUpdate = math.ceil(control.scanning_update_ticks / control.periodic_update_ticks)
 	end
 	if storage.PeriodicTicksPerExtraWorkUpdate == nil then
-		storage.PeriodicTicksPerExtraWorkUpdate =  math.ceil(control.extra_work_update_ticks / control.periodic_update_ticks)
+		storage.PeriodicTicksPerExtraWorkUpdate = math.ceil(control.extra_work_update_ticks /
+		control.periodic_update_ticks)
 	end
 	if storage.UpdateBudget == nil then
 		storage.UpdateBudget = settings.global["Update-Budget-Per-Second"].value
@@ -49,7 +50,7 @@ function control.Init()
 	if storage.CurrentUpdateBudget == nil then
 		storage.CurrentUpdateBudget = control.initUpdateBudget()
 	end
-	
+
 	waterbodies.initWaterBodiesAndTiles()
 	tiles.initTileEventQueue()
 	entities.initTrackedEntities()
@@ -64,13 +65,13 @@ end
 
 function control.initUpdateBudget(periodic_ticks_per_update)
 	local periodic_ticks_per_update = periodic_ticks_per_update or storage.PeriodicTicksPerBigUpdate
-	return {budget = utils.normalize_update_values_per_second(storage.UpdateBudget, true, periodic_ticks_per_update)}
+	return { budget = utils.normalize_update_values_per_second(storage.UpdateBudget, true, periodic_ticks_per_update) }
 end
 
 function control.BigUpdate(updateBudget, periodicTick)
 	-- events handling
 	tiles.processTileEventQueue(utils.normalize_update_values_per_second(storage.MaxEventsPerSecond, true), updateBudget)
-    waterbody_update.updateWaterBodies(updateBudget)
+	waterbody_update.updateWaterBodies(updateBudget)
 	entities.updatePumpStates()
 	-- families of split waterbodies: maintenance
 	split_families.updateSplitFamilies(updateBudget, periodicTick)
@@ -91,9 +92,9 @@ function PeriodicUpdate()
 		control.BigUpdate(storage.CurrentUpdateBudget, periodicTick)
 	else
 		-- if not big update tick, we need to check for scanning update
-        if periodicTick % storage.PeriodicTicksPerScanningUpdate == 1 then
-            -- reuse the same per-second budget across big/scanning updates
-            waterbody_scan.scanningUpdateAll(storage.CurrentUpdateBudget)
+		if periodicTick % storage.PeriodicTicksPerScanningUpdate == 1 then
+			-- reuse the same per-second budget across big/scanning updates
+			waterbody_scan.scanningUpdateAll(storage.CurrentUpdateBudget)
 		else
 			-- extra work update
 			if periodicTick % storage.PeriodicTicksPerExtraWorkUpdate == 2 then
@@ -102,18 +103,20 @@ function PeriodicUpdate()
 		end
 	end
 	storage.PeriodicTick = periodicTick + 1
-
 end
 
--- SCRIPT EVENTS -- 
+-- SCRIPT EVENTS --
 script.on_init(control.Init)
 
 script.on_nth_tick(control.periodic_update_ticks, PeriodicUpdate) -- Run the main update - 'small update' - most likely every game tick
 
-script.on_event({defines.events.on_built_entity, defines.events.on_robot_built_entity}, event_handlers.BuiltEntity)
-script.on_event({defines.events.on_player_mined_entity,defines.events.script_raised_destroy,defines.events.on_robot_mined_entity,defines.events.on_entity_died}, event_handlers.DestroyedEntity)
-script.on_event({defines.events.script_raised_teleported}, event_handlers.TeleportedEntity)
-script.on_event({defines.events.on_player_built_tile,defines.events.on_robot_built_tile}, event_handlers.handlePlayerTileEvents)
-script.on_event({defines.events.script_raised_set_tiles}, event_handlers.handleScriptTileEvents)
+script.on_event({ defines.events.on_built_entity, defines.events.on_robot_built_entity }, event_handlers.BuiltEntity)
+script.on_event(
+{ defines.events.on_player_mined_entity, defines.events.script_raised_destroy, defines.events.on_robot_mined_entity,
+	defines.events.on_entity_died }, event_handlers.DestroyedEntity)
+script.on_event({ defines.events.script_raised_teleported }, event_handlers.TeleportedEntity)
+script.on_event({ defines.events.on_player_built_tile, defines.events.on_robot_built_tile },
+	event_handlers.handlePlayerTileEvents)
+script.on_event({ defines.events.script_raised_set_tiles }, event_handlers.handleScriptTileEvents)
 
 script.on_event(defines.events.on_research_finished, event_handlers.TechTrack)

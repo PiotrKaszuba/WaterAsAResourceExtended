@@ -20,7 +20,6 @@ function entities.removeTrackedEntity(unit_number)
     storage.TrackedEntities[unit_number] = nil
 end
 
-
 entities.offshore_pump_prototype_type = "offshore-pump"
 entities.offshore_drain_prototype_type = "offshore-drain"
 
@@ -85,11 +84,13 @@ end
 function entities.validatePumpPlacement(pump_data)
     -- Validate that the pump can be placed (must be on water) and its base not on dry tile
     local surface = pump_data.surface
-    local input_position_on_water_or_dry = utils.validate_tile_placement(pump_data.input_position, surface, utils.WaterAndDryTiles)
+    local input_position_on_water_or_dry = utils.validate_tile_placement(pump_data.input_position, surface,
+        utils.WaterAndDryTiles)
     if not input_position_on_water_or_dry then
         return false
     end
-    local base_position_not_water_or_dry = utils.validate_tile_placement(pump_data.spritepos, surface, nil, utils.WaterAndDryTiles)
+    local base_position_not_water_or_dry = utils.validate_tile_placement(pump_data.spritepos, surface, nil,
+        utils.WaterAndDryTiles)
     return base_position_not_water_or_dry
 end
 
@@ -102,7 +103,6 @@ function entities.DestroyedPump(entity)
     entities.removePumpFromWaterBody(unit_number, pump_data.waterBodyId)
     entities.removeTrackedEntity(unit_number)
 end
-
 
 function entities.TeleportedPump(entity)
     -- it shouldn't happen - issue a warning and disable the pump
@@ -117,9 +117,6 @@ function entities.TeleportedPump(entity)
     entities.DestroyedPump(entity)
 end
 
-
-
-
 function entities.deactivatePump(pump_data)
     pump_data.entity.active = false
 end
@@ -129,7 +126,6 @@ function entities.disablePump(pump_data)
     entities.deactivatePump(pump_data)
     pump_data.disabled = true
 end
-
 
 function entities.activatePump(pump_data)
     -- activate only if it is not disabled
@@ -145,12 +141,12 @@ function entities.enablePump(pump_data)
 end
 
 function entities.call_on_each_waterbody_pump(waterBodyId, func)
-	local waterBody = waterbodies.getWaterBody(waterBodyId)
-	if waterBody and waterBody.valid then
-		for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
-			func(pump_data)
-		end
-	end
+    local waterBody = waterbodies.getWaterBody(waterBodyId)
+    if waterBody and waterBody.valid then
+        for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
+            func(pump_data)
+        end
+    end
 end
 
 function entities.disableWaterBodyPumps(waterBodyId)
@@ -166,19 +162,19 @@ function entities.activateWaterBodyPumps(waterBodyId)
 end
 
 function entities.disablePumpsAndRemoveWaterBody(waterBody)
-	entities.disableWaterBodyPumps(waterBody.waterBodyId)
+    entities.disableWaterBodyPumps(waterBody.waterBodyId)
     waterbodies.removeWaterBody(waterBody)
 end
 
 function entities.getFirstPumpPerForce(waterBody)
-	local force_to_pump = {}
-	for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
+    local force_to_pump = {}
+    for _, pump_data in ipairs(waterBody.waterBodyStateData.Pumps) do
         local force_name = pump_data.playerForce.name
-		if not force_to_pump[force_name] then
-			force_to_pump[force_name] = pump_data
-		end
-	end
-	return force_to_pump
+        if not force_to_pump[force_name] then
+            force_to_pump[force_name] = pump_data
+        end
+    end
+    return force_to_pump
 end
 
 function entities.updatePumpStates()
@@ -200,7 +196,7 @@ function entities.updatePumpStates()
                         not pump_data.disabled
                     )
                 end
-                
+
                 if should_be_active then
                     entities.activatePump(pump_data)
                 else

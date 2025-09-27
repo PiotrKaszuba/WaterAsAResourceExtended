@@ -32,27 +32,28 @@ local function run_test()
     local entities = _G.entities
     local tiles = _G.tiles
 
-    world:set_water_rectangle(surface, {x1 = 0, y1 = 0, x2 = 0, y2 = 0})
+    world:set_water_rectangle(surface, { x1 = 0, y1 = 0, x2 = 0, y2 = 0 })
 
     local player = game.players[1]
     local player_index = player.index
 
     local player_inventory = player._inventory_contents
     -- check if has "offshore-pump - shouldn't have any now
-    t.ok(player_inventory["offshore-pump"] == nil or player_inventory["offshore-pump"] == 0, "player doesn't have offshore-pump in inventory")
+    t.ok(player_inventory["offshore-pump"] == nil or player_inventory["offshore-pump"] == 0,
+        "player doesn't have offshore-pump in inventory")
 
     -- try to build pump without item
     local pump_wrong_place = world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
-        position = {x = 0, y = -2},
+        position = { x = 0, y = -2 },
         surface = surface,
-        input_position = {x = 0, y = -1},
+        input_position = { x = 0, y = -1 },
     }, player_index, "offshore-pump")
     t.ok(pump_wrong_place == nil, "pump creation attempt without item fails and returns nil")
 
     -- now add item to inventory and try again
-    player.insert({name = "offshore-pump", count = 1})
+    player.insert({ name = "offshore-pump", count = 1 })
 
     -- check if has "offshore-pump - should have one now
     t.ok(player_inventory["offshore-pump"] == 1, "player has offshore-pump in inventory")
@@ -60,9 +61,9 @@ local function run_test()
     local pump_wrong_place = world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
-        position = {x = 0, y = -2},
+        position = { x = 0, y = -2 },
         surface = surface,
-        input_position = {x = 0, y = -1},
+        input_position = { x = 0, y = -1 },
     }, player_index, "offshore-pump")
 
     -- build should fail because of placement - should still have pump in inventory
@@ -73,13 +74,14 @@ local function run_test()
     local pump = world:build_entity({
         name = "offshore-pump",
         type = "offshore-pump",
-        position = {x = 0, y = -1},
+        position = { x = 0, y = -1 },
         surface = surface,
-        input_position = {x = 0, y = 0},
+        input_position = { x = 0, y = 0 },
     }, player_index, "offshore-pump")
 
     t.ok(pump and pump.valid, "pump created at correct place")
-    t.ok(player_inventory["offshore-pump"] == 0 or player_inventory["offshore-pump"] == nil, "pump removed from inventory after successful build")
+    t.ok(player_inventory["offshore-pump"] == 0 or player_inventory["offshore-pump"] == nil,
+        "pump removed from inventory after successful build")
 
     test_env.run_ticks(120)
 
@@ -100,22 +102,26 @@ local function run_test()
 
     local force_to_pump = entities.getFirstPumpPerForce(waterbody)
     t.ok(force_to_pump ~= nil, "force_to_pump created")
-    t.ok(force_to_pump["player"] ~= nil and force_to_pump["player"].entity == pump, "force_to_pump has player force before destroy and it's the same pump")
+    t.ok(force_to_pump["player"] ~= nil and force_to_pump["player"].entity == pump,
+        "force_to_pump has player force before destroy and it's the same pump")
 
 
     local forces_of_wb_before = waterbody.waterBodyStateData.Forces
-    t.ok(forces_of_wb_before ~= nil and forces_of_wb_before["player"] ~= nil, "forces_of_wb has player force before destroy")
+    t.ok(forces_of_wb_before ~= nil and forces_of_wb_before["player"] ~= nil,
+        "forces_of_wb has player force before destroy")
 
-    pump.destroy({raise_destroy = true})
+    pump.destroy({ raise_destroy = true })
     local tracked_after = entities.getTrackedEntity(pump.unit_number)
     t.eq(tracked_after, nil, "script raised destroy removed tracked pump")
 
     local force_to_pump_after = entities.getFirstPumpPerForce(waterbody)
-    t.ok(force_to_pump_after ~= nil and force_to_pump_after["player"] == nil, "force_to_pump has no player force after destroy")
+    t.ok(force_to_pump_after ~= nil and force_to_pump_after["player"] == nil,
+        "force_to_pump has no player force after destroy")
 
 
     local forces_of_wb_after = waterbody.waterBodyStateData.Forces
-    t.ok(forces_of_wb_after ~= nil and forces_of_wb_after["player"] == nil, "forces_of_wb has no player force after destroy")
+    t.ok(forces_of_wb_after ~= nil and forces_of_wb_after["player"] == nil,
+        "forces_of_wb has no player force after destroy")
 
     test_env.run_ticks(120)
 
@@ -128,7 +134,7 @@ local function run_test()
     local force = game.forces["player"]
     local tag_count = #force.find_chart_tags(surface)
     local extra_tag = force.add_chart_tag(surface.index, {
-        position = {x = 5, y = 5},
+        position = { x = 5, y = 5 },
         text = "Test marker",
     })
     t.ok(extra_tag and extra_tag.valid, "add_chart_tag returns valid tag")
@@ -141,9 +147,9 @@ local function run_test()
 
     local queue = tiles.getTileEventQueue()
     local initial_size = queue.size
-    world:set_water_rectangle(surface, {x1 = 1, y1 = 0, x2 = 1, y2 = 0})
+    world:set_water_rectangle(surface, { x1 = 1, y1 = 0, x2 = 1, y2 = 0 })
     surface.set_tiles({
-        {name = "landfill", position = {x = 1, y = 0}, old_tile = {name = "water"}},
+        { name = "landfill", position = { x = 1, y = 0 }, old_tile = { name = "water" } },
     }, true, true, true, true)
     t.eq(queue.size, initial_size + 1, "script raised set_tiles enqueues tile event")
 
@@ -151,4 +157,3 @@ local function run_test()
 end
 
 run_mock_test(run_test)
-
