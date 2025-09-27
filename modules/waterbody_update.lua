@@ -123,11 +123,9 @@ function waterbody_update.updateWaterLevel(waterBody, waterUsedChange, regenAmou
     -- and they might be present to be made up for by the natural regeneration or drainage, etc.
     -- we will only limit natural regeneration not to occur if it would go below 0
     state.WaterUsed = state.WaterUsed + waterUsedChange
-    local regen = regenAmount or 0
-
     local totalWaterUsed = waterbodies.calculateTotalWaterUsed(waterBody)
 
-    local regen = math.max(0, math.min(regen, totalWaterUsed)) -- this ensures that regen is not greater than the water used and positive
+    local regen = math.max(0, math.min(regenAmount or 0, totalWaterUsed)) -- this ensures that regen is not greater than the water used and positive
 
     local remainingWaterUsedPenalty = math.max(0, state.WaterUsedPenalty - state.WaterUsedPenaltyRestored)
     local regen1 = math.min(state.WaterUsed, regen)
