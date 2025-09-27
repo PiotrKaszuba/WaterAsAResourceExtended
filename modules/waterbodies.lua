@@ -217,16 +217,7 @@ function waterbodies.removeTileFromWaterGrid(waterBody, gridKey)
 end
 
 function waterbodies.checkIfScanningIsFinished(search_data)
-	local lazy_search_queue = search_data.lazySearchQueue
-	if lazy_search_queue and #lazy_search_queue > 0 then
-		for i = 1, #lazy_search_queue do
-			local lazy_table = lazy_search_queue[i]
-			if lazy_table and not utils.Queue.is_empty(lazy_table) then
-				return false
-			end
-		end
-	end
-	return utils.Queue.is_empty(search_data.searchQueue)
+	return utils.LazyTables.all_empty(search_data.searchQueue, search_data.lazySearchQueue, true)
 end
 
 function waterbodies.getDriedStackOrPendingTilesEnqueueAndDequeue(is_dried_stack)

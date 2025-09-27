@@ -514,6 +514,24 @@ function utils.LazyTables.next(main_table, lazy_tables_array, k, t)
 	return nil, nil, nil
 end
 
+function utils.LazyTables.all_empty(main_table, lazy_tables_array, is_queue)
+	if is_queue then
+		if lazy_tables_array and #lazy_tables_array > 0 then
+			for i = 1, #lazy_tables_array do
+				local lazy_table = lazy_tables_array[i]
+				if lazy_table and not utils.Queue.is_empty(lazy_table) then
+					return false
+				end
+			end
+		end
+		return utils.Queue.is_empty(main_table)
+	end
+
+	local _, v, _ = utils.LazyTables.next(main_table, lazy_tables_array)
+	return v == nil
+end
+
+
 utils.MapMarker = {}
 
 function utils.MapMarker.new(force, surface, position, text, icon)
