@@ -175,7 +175,7 @@ function waterbody_update.handleDepletion(waterBody)
     end
 
     waterbody_update.handleDepletionAlarms(waterBody, percentUsed)
-    waterbody_depletion.updateDepletionAppearance(waterBody)
+    waterbody_depletion.updateDepletionAppearanceCount(waterBody)
 end
 
 function waterbody_update.waterBodyDepleted(waterBody)
@@ -323,7 +323,8 @@ function waterbody_update.updateWaterBodies(updateBudget)
 end
 
 -- Move tiles into the newBinset dynamic binset.
--- From: pendingTiles queue, old binsets, backfill of newBinset if front is not active
+-- From: pendingTiles queue, old binsets (these 2 in requestNewBinsetUpdate)
+-- and from backfill of newBinset if front is not active
 -- Validates each tile still belongs to this water body as water.
 -- Returns number of tiles moved (used to deduct update budget outside).
 function waterbody_update.binsetMaintenance(waterBody, gridsData, max_to_move)
@@ -339,18 +340,12 @@ function waterbody_update.binsetMaintenance(waterBody, gridsData, max_to_move)
     local moved = 0
 
     -- Fast references for validation/lookups
-    local scanningFinished = waterBody.searchData.finished
     local waterGridWithData = gridsData.waterGridWithData
-    local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
-    local pending_tiles_enqueue, pending_tiles_dequeue = waterbodies.getDriedStackOrPendingTilesEnqueueAndDequeue(false)
-    local lazy_tables_get = utils.LazyTables.get
-    local dynamic_bins_push = dynamic_bins.push
+    local pending_tiles_enqueue, _ = waterbodies.getDriedStackOrPendingTilesEnqueueAndDequeue(false)
+    
     local dynamic_bins_backfill_consume = dynamic_bins.backfill_consume
-    local dynamic_bins_batch_pop = dynamic_bins.batch_pop
 
-    local pending_tiles_size = pendingTiles.size
-
-    if #oldBinsets == 0 and newBinset.total <= 0 and pending_tiles_size == 0 then
+    if #oldBinsets == 0 and newBinset.total <= 0 and pendingTiles.size == 0 then
         -- theoretically there is no water tiles (under these conditions)
         -- check against the truth if that's the case
         -- and if there is some water tiles - re-prime pending tiles
@@ -370,53 +365,8 @@ function waterbody_update.binsetMaintenance(waterBody, gridsData, max_to_move)
         end
     end
 
-    -- consume old binsets
-    if scanningFinished and #oldBinsets > 0 then
-        -- copy 50% of max_to_move from old binsets
-        -- it won't go through (deduplication in) pending tiles
-        local amount_copy = math.ceil(max_to_move * 0.5)
-
-        local oldBinset = oldBinsets[1]
-        while moved < amount_copy and #oldBinsets > 0 do
-            if oldBinset.total <= 0 then
-                -- binset is empty - remove it and try next one
-                table.remove(oldBinsets, 1)
-                oldBinset = oldBinsets[1]
-                if oldBinset == nil then
-                    -- no more old binsets - break
-                    break
-                end
-            end
-            local item_datas, ring_indices, num_popped = dynamic_bins_batch_pop(oldBinset, amount_copy)
-            moved = moved + num_popped
-            amount_copy = amount_copy - num_popped
-            for i = 1, num_popped do
-                local gridKey = item_datas[i]
-                local tileData = lazy_tables_get(gridKey, waterGridWithData, lazyWaterGridWithData)
-                if tileData ~= nil then
-                    local pos = tileData.position
-                    dynamic_bins_push(newBinset, gridKey, pos.x, pos.y)
-                end
-            end
-        end
-    end
-
-    pending_tiles_size = pendingTiles.size
-    -- consume pending tiles
-    while moved < max_to_move and pending_tiles_size > 0 do
-        local gridKey = pending_tiles_dequeue(pendingTiles)
-        if gridKey == nil then break end
-        pending_tiles_size = pending_tiles_size - 1
-
-        -- Validate the tile still belongs to this waterbody as water
-        local tileData = lazy_tables_get(gridKey, waterGridWithData, lazyWaterGridWithData)
-        moved = moved + 1
-        if tileData ~= nil then
-            local pos = tileData.position
-            dynamic_bins_push(newBinset, gridKey, pos.x, pos.y)
-        end
-        -- If tileData is missing, it might have dried or moved; drop it silently
-    end
+    local searchFinished = waterBody.searchData.finished
+    moved = moved + waterbody_depletion.requestNewBinsetUpdate(gridsData, max_to_move - moved, searchFinished, 0.5)
 
     if moved < max_to_move then
         -- attempt to fix backfill on the current binset
@@ -595,7 +545,24 @@ function waterbody_update.prepareUpdateConditionFunc(waterBody)
     return false
 end
 
+function waterbody_update.prepareToDryTilesUpdateConditionFunc(waterBody)
+    local state = waterBody.waterBodyStateData
+    if state.ToDryTiles ~= 0 then
+        return true
+    end
+    return false
+end
+
 function waterbody_update.extraWorkUpdate(updateBudget)
+    -- TODO: capture ToDryTiles and make them a priority
+    -- Each waterbody with ToDryTiles should calculate how much tiles
+    -- it has to dry per each work update (need to know how many work updates before next big update)
+    -- so that it for sure can process quite evenly all ToDryTiles before the next big update
+    -- only after that it should process other work if budgets allow
+    -- preferably a separate function and filter for this before surfaces even?
+    -- if the work wouldn't be enough then increase past budgets to get it done evenly
+    -- need to capture how many more work updates are there before next big update
+
     local update_budget_per_move = 1 / 100
     local initial_work_weight = 0
     local work_weight_per_surface = 1
