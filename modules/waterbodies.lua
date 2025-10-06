@@ -556,7 +556,8 @@ function waterbodies.initWaterBodyStateData()
 		["Fired99"] = false,
 
 		["FiredCreated"] = false, -- if true - the water body was created and the message was already sent to the players
-
+		
+		["ToDryTiles"] = 0, 	-- the number of tiles that are scheduled to be dried before the next big update
 		["DriedTiles"] = 0,     -- the current number of tiles that are dried - used for gradual depletion appearance
 
 		["ScanLoopCount"] = 0,  -- the number of big updates since started scanning

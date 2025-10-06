@@ -100,9 +100,11 @@ function waterbody_merge.mergeWaterBodyStateData(waterBodyStateData, other_water
 
 	waterBodyStateData.FiredCreated = waterBodyStateData.FiredCreated
 
+	waterBodyStateData.ToDryTiles = waterBodyStateData.ToDryTiles + other_waterBodyStateData.ToDryTiles
 	waterBodyStateData.DriedTiles = waterBodyStateData.DriedTiles + other_waterBodyStateData.DriedTiles
 	-- let's remove dry tiles count from the other water body - so orphaned dry tiles won't trigger on waterbody removal
 	other_waterBodyStateData.DriedTiles = 0
+	other_waterBodyStateData.ToDryTiles = 0
 
 	waterBodyStateData.ScanLoopCount = waterBodyStateData.ScanLoopCount
 	waterBodyStateData.OrphanedSecondsCount = waterBodyStateData.OrphanedSecondsCount +
