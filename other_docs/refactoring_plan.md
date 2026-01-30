@@ -60,12 +60,14 @@ END OF TESTING SECTION
 
     BTW. we can also use for that taking connected tiles but first we need to hit some tile close to focus point. we could try tile then edge pattern then expand somehow else until we hit something? 
     and after we obtain a tile that BELONGS to WB that we believe is close to focus point we could take larger and larger areas of connected tiles for depletion - some focus point leeway could be given because this search for tile can also make some inaccuracies anyway?
+
+(DONE)
 -> I believe all dried tiles should be held on a stack so on restoration we don't care about patterns / or if they changed (pumps/shapes) we just take from stack and restore that - only adding to a way to add to stack might change.
 
 
 Maybe:
 
-
+(NAH, DONT NEED WITH SEARCH QUEUE DEDUPLICATION)
 -> can remake scan algorithm to start with EdgePattern and apply processTile for each there - our current 'already searched' method will trigger on these tiles so:
     then scan calling EdgePattern cannot block 'already searched' tiles because we haven't got their EdgePatterns yet
     we would need to check at EdgePattern iteration - before proceeding
@@ -138,6 +140,8 @@ ADDITIONAL IDEAS:
 2. Update budget on depletion appearance? - IDK
 10. reevaluate mods additions (that were in original script) / mod updates, "ScenFunc" for scenario created games etc. - some additions that might handle logic in various cases and be useful
 11. some stats commands etc.
+
+(DONE)
 13. consider the DriedTiles to be held in a separate indicator table of some levels - to quickly access and restore them - maybe the same for depletion happens gradually? like bootstrapping future computation if update budget is there? 
 
 
