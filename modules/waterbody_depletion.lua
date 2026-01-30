@@ -1,5 +1,6 @@
 require("modules.waterbodies")
 require("modules.utils")
+require("modules.dynamic_bins")
 
 waterbody_depletion = {}
 
@@ -101,15 +102,15 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
         local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
         local getDryTileForWetTile = utils.getDryTileForWetTile
         -- prepare binsets to have enough tiles
-        local dynamic_bins = gridsData.newBinset
-        local dynamic_bins_total = dynamic_bins.total
+        local newBinset = gridsData.newBinset
+        local binset_total = newBinset.total
 
         local min_count, extra_count_ratio = waterbody_depletion.getMinBinsetCountAndExtraCountRatio()
 
         local quality_count = min_count + math.ceil(num_tiles * extra_count_ratio)
         
-        local quality_missing_count = quality_count - dynamic_bins_total
-        local missing_count = num_tiles - dynamic_bins_total
+        local quality_missing_count = quality_count - binset_total
+        local missing_count = num_tiles - binset_total
 
         if quality_missing_count > 0 then
             -- request new binset update - but it might not grant all tiles we would like
@@ -123,10 +124,10 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
             end
         end
 
-        dynamic_bins_total = dynamic_bins.total
-        local to_pop_tiles = math.min(num_tiles, dynamic_bins_total)
+        binset_total = newBinset.total
+        local to_pop_tiles = math.min(num_tiles, binset_total)
 
-        local item_datas, _, num_available_tiles = dynamic_bins.batch_pop(dynamic_bins, to_pop_tiles)
+        local item_datas, _, num_available_tiles = dynamic_bins.batch_pop(newBinset, to_pop_tiles)
         
         local dryTileName = nil
         local gridKey, tile_data, cur_table = nil, nil, nil
@@ -261,8 +262,7 @@ function waterbody_depletion.updateDepletionAppearanceCount(waterBody)
     -- this function updates the requested value of tiles to dry or restore: ToDryTiles
     -- also monitors the state and possibly fixes value of DriedTiles to 0 if needed 
     -- actual visual update is deferred to work loop
-    -- BUT the assumption is that all ToDryTiles have to processed before the next big update
-    -- so that entering this function value of ToDryTiles is 0
+    -- expects ToDryTiles to be 0 on entry (all work processed before next big update)
 
     local state = waterBody.waterBodyStateData
     local gridsData = waterBody.gridsData
@@ -273,10 +273,11 @@ function waterbody_depletion.updateDepletionAppearanceCount(waterBody)
     local driedTiles = state.DriedTiles
 
     if toDryTiles ~= 0 then
-        -- entering depletion update should have toDryTiles at 0
-        utils.profile_hits("waterbody_depletion.updateDepletionAppearance", "when entering depletion update toDryTiles is not 0")
-        game.print("Warning: when entering depletion update toDryTiles is not 0")
-        return
+        -- This should not happen - work should complete before next big update
+        -- Track for profiling and warn, but continue with calculation
+        utils.profile_hits("waterbody_depletion.updateDepletionAppearanceCount", "unexpected ToDryTiles: " .. toDryTiles)
+        game.print(string.format("Warning: ToDryTiles is %d (expected 0) for %s - work not completed before big update",
+            toDryTiles, waterBody.waterBodyName or "unknown"))
     end
     
     if driedTiles == 0 then
@@ -302,15 +303,17 @@ function waterbody_depletion.updateDepletionAppearanceCount(waterBody)
     local startPercentage = waterbody_depletion.getVisualDepletionStartPercentage()
     local percentUsed = waterbodies.calculatePercentageWaterUsed(waterBody)
 
+    local newToDryTiles = 0
     if percentUsed < startPercentage then
         -- we need to restore all tiles so set toDryTiles to -driedTiles
-        toDryTiles = -driedTiles
+        newToDryTiles = -driedTiles
     else
         -- we are in the depletion values area so we need to calculate how many tiles should be dried
         local totalTiles = waterBody.waterAreaData.TotalArea
         local targetChangedTiles = math.floor(totalTiles * ((percentUsed - startPercentage) / (100 - startPercentage)))
-        toDryTiles = targetChangedTiles - driedTiles
+        newToDryTiles = targetChangedTiles - driedTiles
     end
 
-    state.ToDryTiles = toDryTiles
+    -- Direct assignment: ToDryTiles = target - current (no accumulation)
+    state.ToDryTiles = newToDryTiles
 end
