@@ -553,17 +553,83 @@ function waterbody_update.prepareToDryTilesUpdateConditionFunc(waterBody)
     return false
 end
 
-function waterbody_update.extraWorkUpdate(updateBudget)
-    -- TODO: capture ToDryTiles and make them a priority
-    -- Each waterbody with ToDryTiles should calculate how much tiles
-    -- it has to dry per each work update (need to know how many work updates before next big update)
-    -- so that it for sure can process quite evenly all ToDryTiles before the next big update
-    -- only after that it should process other work if budgets allow
-    -- preferably a separate function and filter for this before surfaces even?
-    -- if the work wouldn't be enough then increase past budgets to get it done evenly
-    -- need to capture how many more work updates are there before next big update
+function waterbody_update.getToDryTilesQuota(waterBody, total_to_dry_across_all, max_tiles_this_update)
+    local state = waterBody.waterBodyStateData
+    local to_dry = math.abs(state.ToDryTiles)
+    if to_dry == 0 then return 0 end
 
+    -- Calculate remaining extra work updates before next big update
+    -- Big update at periodicTick % 30 == 0, extra work at periodicTick % 5 == 2
+    local ticks_into_cycle = storage.PeriodicTick % storage.PeriodicTicksPerBigUpdate
+    local ticks_until_next_big = storage.PeriodicTicksPerBigUpdate - ticks_into_cycle
+    local updates_remaining = math.max(1, math.floor(ticks_until_next_big / storage.PeriodicTicksPerExtraWorkUpdate))
+
+    -- Spread evenly across remaining updates, ceiling to ensure completion
+    local per_update = math.ceil(to_dry / updates_remaining)
+
+    -- Distribute max_tiles proportionally among all waterbodies with work
+    local proportional_share = 0
+    if total_to_dry_across_all > 0 then
+        proportional_share = math.ceil(max_tiles_this_update * to_dry / total_to_dry_across_all)
+    end
+
+    return math.min(per_update, proportional_share, to_dry)
+end
+
+function waterbody_update.processToDryTilesFirst(updateBudget, update_budget_per_tile)
+    if updateBudget.budget <= 0 then return end
+    
+    -- Build list of waterbodies with work to do
+    local validWaterBodies = waterbodies.getValidWaterBodies()
+    local working_array = {}
+    local total_to_dry = 0
+    
+    for _, waterBody in pairs(validWaterBodies) do
+        if waterbody_update.prepareToDryTilesUpdateConditionFunc(waterBody) then
+            working_array[#working_array + 1] = waterBody
+            total_to_dry = total_to_dry + math.abs(waterBody.waterBodyStateData.ToDryTiles)
+        end
+    end
+
+    if #working_array == 0 then return end
+    
+    -- Calculate max tiles we can process this update based on budget
+    local max_tiles_this_update = math.floor(updateBudget.budget / update_budget_per_tile)
+
+    for _, waterBody in ipairs(working_array) do
+        if updateBudget.budget <= 0 then break end
+
+        local state = waterBody.waterBodyStateData
+        local to_dry = state.ToDryTiles
+        if to_dry == 0 then goto continue end
+
+        local quota = waterbody_update.getToDryTilesQuota(waterBody, total_to_dry, max_tiles_this_update)
+        if quota <= 0 then goto continue end
+
+        local is_depleting = to_dry > 0
+        local processed = waterbody_depletion.getTilesDepleting(waterBody, is_depleting, quota)
+
+        -- Update ToDryTiles (subtract for depleting, add for restoring)
+        if is_depleting then
+            state.ToDryTiles = to_dry - processed
+        else
+            state.ToDryTiles = to_dry + processed
+        end
+
+        updateBudget.budget = updateBudget.budget - (processed * update_budget_per_tile)
+
+        ::continue::
+    end
+end
+
+function waterbody_update.extraWorkUpdate(updateBudget)
     local update_budget_per_move = 1 / 100
+
+    -- FIRST: Process ToDryTiles with priority
+    waterbody_update.processToDryTilesFirst(updateBudget, update_budget_per_move)
+    if updateBudget.budget <= 0 then return end
+
+    -- Then existing logic for orphaned tiles and maintenance
     local initial_work_weight = 0
     local work_weight_per_surface = 1
     local lazyOrphanedDryTilesOriginalName = storage.lazyOrphanedDryTilesOriginalName
