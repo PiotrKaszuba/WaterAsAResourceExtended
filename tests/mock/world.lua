@@ -591,6 +591,21 @@ function World:mine_entity(entity)
     entity.destroy()
 end
 
+function World:set_pump_flow(entity, amount)
+    if entity and entity.valid then
+        entity.pumped_last_tick = amount or 0
+    end
+end
+
+function World:complete_research(tech_name, level)
+    local research = {
+        name = tech_name,
+        level = level or 1,
+        force = self.force,
+    }
+    mock.raise_event(defines.events.on_research_finished, { research = research })
+end
+
 return {
     World = World,
 }
