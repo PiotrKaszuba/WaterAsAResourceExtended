@@ -35,7 +35,11 @@ end
 
 function waterbody_split.getWaterBodyConnectedTiles(waterBody, start_tile_pos, otherTiles_positions, surface,
 													center_position, updateBudget, nth_call)
-	local current_check_size = 4
+	-- Ensure initial bbox is large enough to include start_tile_pos when centered on center_position
+	local dx = math.abs(start_tile_pos.x - center_position.x)
+	local dy = math.abs(start_tile_pos.y - center_position.y)
+	local min_side_for_start = 2 * math.max(dx, dy) + 2  -- +2 for margin
+	local current_check_size = math.max(4, min_side_for_start)
 	local rect_area_ratio = 0.0
 	local start_tile_gridKey = hot_utils.GridKey(start_tile_pos)
 	local connected_tiles = {}
@@ -196,7 +200,7 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 
 	-- or if we have adjacent_border_land_tiles - there is also a potential split
 
-	-- select one tile from each connected_tile_set andcreate new water bodies from them
+	-- select one tile from each connected_tile_set and create new water bodies from them
 	-- as well as from all the water pumps that are present in the water body
 	-- handle the drained water so that none can exploit it for free water
 
@@ -274,12 +278,12 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 					tmp_gridKey = hot_utils.GridKey(pump_input_top_left_corner)
 					new_water_body_id = created_at_positions[tmp_gridKey]
 					if new_water_body_id == nil then
-						-- if not - create a new water body at this position
-						new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
-						new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = { waterBodyId =
-						new_water_body_id, position = pump_input_top_left_corner, waterBody = new_water_body, seed_stats = nil }
-						created_at_positions[pump_input_top_left_corner] = new_water_body_id
-					end
+					-- if not - create a new water body at this position
+					new_water_body, new_water_body_id = waterbodies.createNewWaterBody(surface)
+					new_water_body_ids_and_positions[#new_water_body_ids_and_positions + 1] = { waterBodyId =
+					new_water_body_id, position = pump_input_top_left_corner, waterBody = new_water_body, seed_stats = nil }
+					created_at_positions[tmp_gridKey] = new_water_body_id
+				end
 
 					-- waterBody got removed - so we just need to add it to the new water body
 					entities.addPumpToWaterBody(new_water_body_id, pump_data)
@@ -301,10 +305,10 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 					waterBody.waterBodyName = parent_data.name
 					waterBody.merge_priority = 1
 				end
-				waterbody_ids_and_positions_still_valid[#waterbody_ids_and_positions_still_valid + 1] =
-				new_water_body_id_and_position
-				waterBody.waterBodyStateData.ScanWeight = 1.0 / num_new_water_bodies
-				memberIds[#memberIds + 1] = new_water_body_id
+			waterbody_ids_and_positions_still_valid[#waterbody_ids_and_positions_still_valid + 1] =
+			new_water_body_id_and_position
+			waterBody.searchData.ScanWeight = 1.0 / num_new_water_bodies
+			memberIds[#memberIds + 1] = new_water_body_id
 			end
 		end
 
@@ -325,9 +329,11 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 		end
 
 		-- further scan with merges possible
-		local scan_amount = math.ceil(waterbody_scan.getInitialScanAmount() / #new_waterbodies_still_valid)
-		for _, new_water_body_id in ipairs(new_waterbodies_still_valid) do
-			waterbody_scan.continueScanWaterArea(new_water_body_id, scan_amount, updateBudget)
+		if #new_waterbodies_still_valid > 0 then
+			local scan_amount = math.ceil(waterbody_scan.getInitialScanAmount() / #new_waterbodies_still_valid)
+			for _, new_water_body_id in ipairs(new_waterbodies_still_valid) do
+				waterbody_scan.continueScanWaterArea(new_water_body_id, scan_amount, updateBudget)
+			end
 		end
 
 		if updateBudget then
