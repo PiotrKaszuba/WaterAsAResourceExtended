@@ -2,7 +2,7 @@
 
 **Turns water into a finite resource in Factorio 2.0+**
 
-Offshore pumps now deplete the waterbodies they draw from. Water tiles visually change as they're consumed, and waterbodies slowly regenerate over time. Research technologies to reduce water consumption, use waterfill to extend water sources, and manage your water supply strategically.
+Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually shrink as they're consumed, and water slowly regenerate over time. Research technologies to reduce water consumption, use waterfill to extend water sources, and manage your water supply strategically.
 
 ## Core Mechanics
 
@@ -14,14 +14,14 @@ Offshore pumps now deplete the waterbodies they draw from. Water tiles visually 
   - Deep water: 150L per tile (configurable)
 
 ### Visual Depletion
-- Water tiles visually change as the waterbody depletes (starting at 80% used, configurable)
+- Water tiles "dry out" as the waterbody depletes (starting at 80% used, configurable)
 - Depletion spreads from the edges toward the waterbody's center (centroid)
 - "Furthest First" mode ensures tiles farthest from the center dry first (enabled by default)
-- Custom tile types (`lake-shallow`, `lake-deep`) are used for depleted areas to avoid conflicts with other mods
+- Custom tile types are used for depleted areas to avoid conflicts with other mods.
 
 ### Regeneration
 - Waterbodies slowly regenerate water over time
-- Non-linear scaling for balanced gameplay:
+- Non-linear scaling for strategic resource management:
   - Best regeneration at 75% depleted (150% of base rate)
   - Reduced regeneration at 0% depleted (75% rate) and 100% depleted (50% rate)
 - Configurable base regeneration rate
@@ -34,7 +34,7 @@ Offshore pumps now deplete the waterbodies they draw from. Water tiles visually 
 ## Technology Tree
 
 ### Yield Boost Research
-Reduce water consumption through research. Each level reduces consumption by 15% (multiplicative).
+Reduce water consumption through research. Each level reduces water consumption of offshore pumps by 15% (multiplicative).
 
 | Tier | Effect | Science Packs | Cost |
 |------|--------|---------------|------|
@@ -43,7 +43,7 @@ Reduce water consumption through research. Each level reduces consumption by 15%
 | 3 | 61.4% usage | + Logistic | 300 |
 | 4 | 52.2% usage | + Chemical | 400 |
 | 5 | 44.4% usage | + Utility | 500 |
-| 6+ | -15% each | + Space | Exponential (infinite) |
+| 6+ | -15% each | + Space | 1k, 2k, ... |
 
 ### Waterfill Technology
 - **Prerequisites**: Landfill, Explosives
