@@ -4,6 +4,20 @@
 
 Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually shrink as they're consumed, and water slowly regenerate over time. Research technologies to reduce water consumption, use waterfill to extend water sources, and manage your water supply strategically.
 
+---
+
+> ⚠️ **Beta Release Notice**
+> 
+> This mod is currently in beta. You may encounter debug messages, unexpected behavior, or errors during gameplay.
+> 
+> **Contributions welcome!** Help improve this mod by:
+> - Reporting bugs or error messages on the [Mod Portal](https://mods.factorio.com/mod/WaterAsAResourceExtended) discussion page
+> - Opening issues on [GitHub](https://github.com/PiotrKaszworowski/WaterAsAResourceExtended)
+> - Submitting pull requests with bug fixes, code improvements, or new features
+> - Suggesting design changes, functionality additions/removals, or graphics/content enhancements
+
+---
+
 ## Core Mechanics
 
 ### Finite Water System
