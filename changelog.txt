@@ -1,4 +1,9 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.2
+Date: 2026.02.01
+  Bugfixes:
+    - Fix: Technology yield boost formula for levels 6+ now correctly applies 15% reduction per level
+---------------------------------------------------------------------------------------------------
 Version: 2.0.1
 Date: 2026.02.01
   Changes:
