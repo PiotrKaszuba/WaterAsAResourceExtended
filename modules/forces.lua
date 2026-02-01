@@ -36,17 +36,16 @@ function forces.AddForceIfNotExists(name)
 	return storage.PlayerForces[name]
 end
 
+forces.TechYieldBoostLevelInfiniteBoost = 0.15
 forces.TechYieldBoostName = "waar-yield-boost-"
 forces.TechYieldBoostLevels = {
-	[1] = 1.0 * 0.85 ^ 1,
-	[2] = 1.0 * 0.85 ^ 2,
-	[3] = 1.0 * 0.85 ^ 3,
-	[4] = 1.0 * 0.85 ^ 4,
-	[5] = 1.0 * 0.85 ^ 5,
+	[1] = 1.0 * (1 - forces.TechYieldBoostLevelInfiniteBoost) ^ 1,
+	[2] = 1.0 * (1 - forces.TechYieldBoostLevelInfiniteBoost) ^ 2,
+	[3] = 1.0 * (1 - forces.TechYieldBoostLevelInfiniteBoost) ^ 3,
+	[4] = 1.0 * (1 - forces.TechYieldBoostLevelInfiniteBoost) ^ 4,
+	[5] = 1.0 * (1 - forces.TechYieldBoostLevelInfiniteBoost) ^ 5,
 
 }
-
-forces.TechYieldBoostLevelInfiniteBoost = 0.15
 
 function forces.GetTechYieldBoost(research_name, research_level)
 	if utils.CheckSubstring(research_name, forces.TechYieldBoostName) then
@@ -55,8 +54,9 @@ function forces.GetTechYieldBoost(research_name, research_level)
 
 		local boost = 1.0
 		if boostLevel > maxLevel then
+			-- Use boostLevel consistently (not research_level) to avoid negative exponents
 			boost = forces.TechYieldBoostLevels[maxLevel] *
-			(forces.TechYieldBoostLevelInfiniteBoost ^ (research_level - maxLevel))
+			((1 - forces.TechYieldBoostLevelInfiniteBoost) ^ (boostLevel - maxLevel))
 		else
 			boost = forces.TechYieldBoostLevels[boostLevel]
 		end
