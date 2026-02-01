@@ -2,7 +2,7 @@
 
 **Turns water into a finite resource in Factorio 2.0+**
 
-Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually shrink as they're consumed, and water slowly regenerate over time. Research technologies to reduce water consumption, use waterfill to extend water sources, and manage your water supply strategically.
+Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually shrink as they're consumed, and water slowly regenerates over time. Research technologies to reduce water consumption, use waterfill to extend water sources, and manage your water supply strategically.
 
 ---
 
@@ -12,7 +12,7 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 > 
 > **Contributions welcome!** Help improve this mod by:
 > - Reporting bugs or error messages on the [Mod Portal](https://mods.factorio.com/mod/WaterAsAResourceExtended) discussion page
-> - Opening issues on [GitHub](https://github.com/PiotrKaszworowski/WaterAsAResourceExtended)
+> - Opening issues on [GitHub](https://github.com/PiotrKaszuba/WaterAsAResourceExtended)
 > - Submitting pull requests with bug fixes, code improvements, or new features
 > - Suggesting design changes, functionality additions/removals, or graphics/content enhancements
 
@@ -28,9 +28,8 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
   - Deep water: 150L per tile (configurable)
 
 ### Visual Depletion
-- Water tiles "dry out" as the waterbody depletes (starting at 80% used, configurable)
+- Water tiles "dry out" as the waterbody depletes (starting at 80% depletion, configurable)
 - Depletion spreads from the edges toward the waterbody's center (centroid)
-- "Furthest First" mode ensures tiles farthest from the center dry first (enabled by default)
 - Custom tile types are used for depleted areas to avoid conflicts with other mods.
 
 ### Regeneration
@@ -42,7 +41,7 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 
 ### Pump Behavior
 - Pumps automatically deactivate when their waterbody reaches 100% depletion
-- Pumps reactivate when water returns above threshold (default: 99% remaining)
+- Pumps reactivate when water returns above threshold (default: 99% depletion)
 - Water usage is multiplied by the force's technology bonus
 
 ## Technology Tree
