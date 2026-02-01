@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.1
+Date: 2026.02.01
+  Changes:
+    - Automatic detection and registration of existing offshore pumps when mod is added to an existing save or scenario
+    - Fix: Mod is fully initialized when upgraded from below 2.0.0 version
+---------------------------------------------------------------------------------------------------
 Version: 2.0.0
 Date: 2025.8.01
   Changes:
