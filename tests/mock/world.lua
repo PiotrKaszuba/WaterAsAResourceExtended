@@ -274,6 +274,46 @@ local function new_surface(name, default_tile, chunk_settings)
         return result
     end
 
+    function surface.find_entities_filtered(filter)
+        local results = {}
+        for _, entity in pairs(surface.entities) do
+            if entity.valid then
+                local matches = true
+                if filter.type then
+                    local entity_type = entity.prototype and entity.prototype.type
+                    if type(filter.type) == "table" then
+                        local found = false
+                        for _, t in ipairs(filter.type) do
+                            if entity_type == t then found = true; break end
+                        end
+                        matches = matches and found
+                    else
+                        matches = matches and (entity_type == filter.type)
+                    end
+                end
+                if filter.name then
+                    if type(filter.name) == "table" then
+                        local found = false
+                        for _, n in ipairs(filter.name) do
+                            if entity.name == n then found = true; break end
+                        end
+                        matches = matches and found
+                    else
+                        matches = matches and (entity.name == filter.name)
+                    end
+                end
+                if filter.force then
+                    local entity_force = entity.force and entity.force.name
+                    matches = matches and (entity_force == filter.force)
+                end
+                if matches then
+                    results[#results + 1] = entity
+                end
+            end
+        end
+        return results
+    end
+
     return surface
 end
 
@@ -582,6 +622,38 @@ function World:build_entity(spec, player_index, require_item_name)
     entity.get_fluid_source_tile = function() return spec.input_position or spec.position end
     surface.entities[entity.unit_number] = entity
     mock.raise_event(defines.events.on_built_entity, { entity = entity })
+    return entity
+end
+
+-- Add an entity to the surface without raising build events.
+-- Used to simulate entities that already exist in a save before mod init.
+function World:add_existing_entity(spec, player_index)
+    local surface = spec.surface
+    local entity = {
+        name = spec.name,
+        position = spec.position,
+        direction = spec.direction or defines.direction.north,
+        force = self.force,
+        surface = surface,
+        unit_number = surface.next_unit,
+        valid = true,
+        active = true,
+        pumped_last_tick = 0,
+        prototype = { type = spec.type or spec.name },
+        last_user = game.players[player_index or 1],
+    }
+    surface.next_unit = surface.next_unit + 1
+    function entity.destroy(opts)
+        if not entity.valid then return end
+        entity.valid = false
+        surface.entities[entity.unit_number] = nil
+        if opts and opts.raise_destroy then
+            mock.raise_event(defines.events.script_raised_destroy, { entity = entity })
+        end
+    end
+    entity.get_fluid_source_tile = function() return spec.input_position or spec.position end
+    surface.entities[entity.unit_number] = entity
+    -- No event raised - entity already exists
     return entity
 end
 

@@ -115,3 +115,32 @@ function event_handlers.TechTrack(event)
         forces.UpdateForceTechYieldBoost(event.research.force.name, event.research.name, event.research.level)
     end
 end
+
+-- Scan all surfaces for existing offshore pumps and register them.
+-- This is used when the mod is added to an existing save that already has pumps placed.
+function event_handlers.scanForExistingPumps()
+    local registered_count = 0
+    local skipped_count = 0
+    for _, surface in pairs(game.surfaces) do
+        local pumps = surface.find_entities_filtered({ type = entities.offshore_pump_prototype_type })
+        for _, entity in pairs(pumps) do
+            if entity.valid and not entities.getTrackedEntity(entity.unit_number) then
+                -- Register this existing pump
+                local pump = entities.initAndRegisterNewPump(entity)
+                if entities.validatePumpPlacement(pump) then
+                    local waterBodyId, _ = waterbody_scan.createWaterBodyFromTileIfNotExists(pump.input_position, pump.surface)
+                    entities.addPumpToWaterBody(waterBodyId, pump)
+                    registered_count = registered_count + 1
+                else
+                    -- Invalid placement - disable the pump but keep it tracked
+                    entities.disablePump(pump)
+                    skipped_count = skipped_count + 1
+                end
+            end
+        end
+    end
+    if registered_count > 0 or skipped_count > 0 then
+        game.print(string.format("[WaterAsAResource] Scanned existing pumps: %d registered, %d disabled (invalid placement)",
+            registered_count, skipped_count))
+    end
+end

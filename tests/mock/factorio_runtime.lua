@@ -291,6 +291,10 @@ function mock.reset()
         script._on_init = handler
     end
 
+    function script.on_configuration_changed(handler)
+        script._on_configuration_changed = handler
+    end
+
     _G.pairs = deterministic_pairs
 
     mock.tick = 0

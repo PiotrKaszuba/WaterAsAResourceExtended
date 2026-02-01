@@ -61,6 +61,9 @@ function control.Init()
 	if control.is_picker_dollies_available() then
 		remote.call('PickerDollies', 'add_blacklist_name', entities.offshore_pump_prototype_type)
 	end
+
+	-- Scan for existing offshore pumps (for saves/scenarios that already have pumps)
+	event_handlers.scanForExistingPumps()
 end
 
 function control.initUpdateBudget(periodic_ticks_per_update)
@@ -105,8 +108,22 @@ function PeriodicUpdate()
 	storage.PeriodicTick = periodicTick + 1
 end
 
+function control.VersionChanged(event)
+	local mod_changed = event.mod_changes["WaterAsAResourceExtended"]
+	if mod_changed then
+		if mod_changed.old_version == nil then
+			-- Mod was just added to an existing save
+			control.Init()
+		elseif utils.version_less_than(mod_changed.old_version, "2.0.0") then
+			-- Migration from older version
+			control.Init()
+		end
+	end
+end
+
 -- SCRIPT EVENTS --
 script.on_init(control.Init)
+script.on_configuration_changed(control.VersionChanged)
 
 script.on_nth_tick(control.periodic_update_ticks, PeriodicUpdate) -- Run the main update - 'small update' - most likely every game tick
 

@@ -592,3 +592,39 @@ function utils.MapMarker.update(marker, position, text, icon)
 		marker.tag.icon = marker.icon
 	end
 end
+
+-- Version comparison utilities
+-- Parses version strings like "1.2.3" and compares them numerically
+-- Handles multi-digit components correctly (e.g., "1.10.0" > "1.9.0")
+
+local function parse_version(version_string)
+	local parts = {}
+	for num in string.gmatch(version_string, "(%d+)") do
+		parts[#parts + 1] = tonumber(num)
+	end
+	return parts
+end
+
+-- Returns true if v1 < v2
+function utils.version_less_than(v1, v2)
+	if not v1 then return true end -- nil treated as "less than any version"
+	if not v2 then return false end
+	local p1, p2 = parse_version(v1), parse_version(v2)
+	local max_len = math.max(#p1, #p2)
+	for i = 1, max_len do
+		local n1, n2 = p1[i] or 0, p2[i] or 0
+		if n1 < n2 then return true end
+		if n1 > n2 then return false end
+	end
+	return false -- equal
+end
+
+-- Returns true if v1 > v2
+function utils.version_greater_than(v1, v2)
+	return utils.version_less_than(v2, v1)
+end
+
+-- Returns true if v1 == v2
+function utils.version_equal(v1, v2)
+	return not utils.version_less_than(v1, v2) and not utils.version_less_than(v2, v1)
+end

@@ -5,7 +5,9 @@ require("modules.forces")
 entities = {}
 
 function entities.initTrackedEntities()
-    storage.TrackedEntities = {} -- unit_number -> "entity_data" = {type = ("pump", "drain"), waterBodyId = int, force = <force_id>} and other fields
+    if storage.TrackedEntities == nil then
+        storage.TrackedEntities = {} -- unit_number -> "entity_data" = {type = ("pump", "drain"), waterBodyId = int, force = <force_id>} and other fields
+    end
 end
 
 function entities.registerTrackedEntity(unit_number, entity_data)
