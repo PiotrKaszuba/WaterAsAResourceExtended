@@ -67,7 +67,7 @@ function waterbodies.getWaterTile(gridKey, surface)
 end
 
 function waterbodies.getMaxWaterBodySize()
-	local val = settings.global["FluidArea-MaxFluidAreaSize"].value
+	local val = settings.global["Waterbody-Max-Size"].value
 	if val == 0 then return math.huge end
 	return val
 end
@@ -800,7 +800,7 @@ waterbodies.EdgeTileNameMap = {
 
 function waterbodies.GetAmountWaterForWaterBodyTileType(tileType, include_multiplier)
 	local multiplier = include_multiplier and waterbodies.WaterBodyTileTypesToAmountWaterMultiplier[tileType] or 1
-	return settings.global[waterbodies.WaterBodyTileTypesToAmountWaterTypes[tileType]].value * multiplier
+	return settings.startup[waterbodies.WaterBodyTileTypesToAmountWaterTypes[tileType]].value * multiplier
 end
 
 function waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
@@ -833,7 +833,7 @@ function waterbodies.GetWaterBodyType(totalArea)
 end
 
 function waterbodies.GetWaterBodyRegen(totalArea, bonusValue)
-	local regenRate = settings.global["FluidArea-RegenRate"].value / 10000
+	local regenRate = settings.global["Waterbody-Regen-Rate"].value / 10000
 	return regenRate * totalArea * bonusValue
 end
 

@@ -204,7 +204,7 @@ local configs = {
 }
 
 local function apply_scan_settings(cfg)
-    settings.global["FluidArea-Additional-Tiles-Per-Second"] = { value = cfg.tiles_per_sec }
+    settings.global["Scan-Tiles-Per-Second"] = { value = cfg.tiles_per_sec }
     settings.global["Update-Budget-Per-Second"] = { value = cfg.update_budget }
 end
 

@@ -56,22 +56,20 @@ function waterbody_update.createMapMarker(waterBody)
     end
 end
 
-function waterbody_update.getLowLevelAlarms()
-    if settings.global["Alarms-Low-Level"].value then
+function waterbody_update.getAlarms()
+    local level = settings.global["Alarm-Depletion-Level"].value
+    if level == "none" then
+        return {}
+    elseif level == "major" then
         return {
-            { 50, "Fired50" }, { 75, "Fired75" }, { 90, "Fired90" }
+            { 50, "Fired50" }, { 90, "Fired90" }, { 99, "Fired99" }
         }
-    end
-    return {}
-end
-
-function waterbody_update.getHighLevelAlarms()
-    if settings.global["Alarms-High-Level"].value then
+    else -- "all"
         return {
+            { 50, "Fired50" }, { 75, "Fired75" }, { 90, "Fired90" },
             { 95, "Fired95" }, { 97, "Fired97" }, { 98, "Fired98" }, { 99, "Fired99" }
         }
     end
-    return {}
 end
 
 function waterbody_update.signalDepletionToPlayer(waterBody)
@@ -88,7 +86,7 @@ function waterbody_update.handleDepletionAlarms(waterBody, percentUsed)
 
     -- Handle alarms
     if not state.Depleted then
-        local alarms = utils.merge_arrays(waterbody_update.getLowLevelAlarms(), waterbody_update.getHighLevelAlarms())
+        local alarms = waterbody_update.getAlarms()
         local do_alarm = false
         for _, alarm in ipairs(alarms) do
             local threshold, flag = table.unpack(alarm)
@@ -254,7 +252,7 @@ function waterbody_update.signalOrphanedToPlayer(waterBody)
 end
 
 function waterbody_update.getRemoveDepletedOrphaned()
-    return settings.global["FluidArea-RemoveDepletedOrphaned"].value
+    return settings.global["Cleanup-Remove-Depleted-Orphaned"].value
 end
 
 function waterbody_update.waterBodyCleanup(waterBody)

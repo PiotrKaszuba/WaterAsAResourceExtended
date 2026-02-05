@@ -32,11 +32,11 @@ function waterbody_scan.createWaterBodyFromTileIfNotExists(position, surface)
 end
 
 function waterbody_scan.getInitialScanAmount()
-	return settings.global["FluidArea-Start-Area"].value
+	return settings.global["Scan-Instant-Tiles"].value
 end
 
 function waterbody_scan.getAdditionalScanAmount()
-	return utils.normalize_update_values_per_second(settings.global["FluidArea-Additional-Tiles-Per-Second"].value, true,
+	return utils.normalize_update_values_per_second(settings.global["Scan-Tiles-Per-Second"].value, true,
 		storage.PeriodicTicksPerScanningUpdate)
 end
 
@@ -716,7 +716,7 @@ function waterbody_scan.signalFinishedScanningToPlayer(water_body)
 end
 
 function waterbody_scan.getScanningLoopPeriod()
-	return settings.global["FluidArea-Scanning-Loop-Period"].value
+	return settings.global["Scan-Status-Period"].value
 end
 
 function waterbody_scan.scanningLoopPeriodic(water_body)

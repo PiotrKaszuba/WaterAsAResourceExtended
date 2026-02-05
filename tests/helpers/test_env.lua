@@ -18,21 +18,18 @@ local modules_to_reset = {
 
 local function load_default_settings()
     local global_defaults = {
-        ["Alarms-Low-Level"] = true,
-        ["Alarms-High-Level"] = true,
+        ["Alarm-Depletion-Level"] = "all",
         ["Alarms-Tile-Message"] = true,
-        ["FluidArea-Start-Area"] = 50,
-        ["FluidArea-Additional-Tiles-Per-Second"] = 1000,
-        ["FluidArea-MaxFluidAreaSize"] = 0,
-        ["FluidArea-Scanning-Loop-Period"] = 20,
-        ["TileFluidAmount-Shallow"] = 50,
-        ["TileFluidAmount-Deep"] = 150,
-        ["FluidArea-RegenRate"] = 100,
+        ["Scan-Instant-Tiles"] = 50,
+        ["Scan-Tiles-Per-Second"] = 1000,
+        ["Scan-Status-Period"] = 20,
+        ["Waterbody-Max-Size"] = 0,
+        ["Waterbody-Regen-Rate"] = 100,
         ["WaterBody-Centroid-Shift-Threshold"] = 0.025,
         ["Visual-Depletion-Start-Percentage"] = 80,
         ["Visual-Depletion-Furthest-First"] = true,
         ["Pumps-Reactivation-LevelPerThousand"] = 990,
-        ["FluidArea-RemoveDepletedOrphaned"] = true,
+        ["Cleanup-Remove-Depleted-Orphaned"] = true,
         ["Map-EnableMarkers"] = true,
         ["Update-Budget-Per-Second"] = 2000,
         ["Split-Max-BBox-Side"] = 32,
@@ -40,6 +37,8 @@ local function load_default_settings()
         ["Split-Finalize-Max-Landfills-Per-Update"] = 100,
     }
     local startup_defaults = {
+        ["TileFluidAmount-Shallow"] = 50,
+        ["TileFluidAmount-Deep"] = 150,
         ["WaterBody-Regen-Scaling"] = 1.5,
     }
 

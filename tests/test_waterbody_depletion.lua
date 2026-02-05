@@ -174,7 +174,7 @@ local function run_test()
     -- Set to 50000 → gives ~8.3 regen per big update
     -- To restore from 250 to 200 (80%), need to recover 50 water
     -- At 8.3 per update: ~6 big updates = 180 ticks
-    settings.global["FluidArea-RegenRate"] = { value = 50000 }
+    settings.global["Waterbody-Regen-Rate"] = { value = 50000 }
     
     -- Need to recalculate water area data to pick up new regen rate
     -- waterbodies is a global after requiring control.lua

@@ -1,4 +1,15 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.3
+Date: 2026.02.05
+  Changes:
+    - Settings cleanup: renamed FluidArea-* settings to clearer Scan-*/Waterbody-*/Cleanup-* prefixes
+    - Merged Alarms-Low-Level and Alarms-High-Level into single Alarm-Depletion-Level dropdown (none/major/all)
+    - Hidden technical settings from GUI: centroid threshold, split algorithm tuning (still accessible via console)
+    - TileFluidAmount-Shallow and TileFluidAmount-Deep are now startup settings (affect game balance)
+    - Improved setting descriptions with clearer explanations
+  Note:
+    - BREAKING: Renamed settings will reset to defaults. Re-configure in Mod Settings after updating.
+---------------------------------------------------------------------------------------------------
 Version: 2.0.2
 Date: 2026.02.01
   Bugfixes:
