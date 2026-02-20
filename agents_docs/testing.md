@@ -10,5 +10,3 @@
     - Currently logging based on prints to standard output
     - Look for messages beginning with "Warning" or "Error"; some tests might inform that it's ok/correct that they've raised particular amount of logs
     - storage.profiling_hits is also used to record amount of times code hits particular place with caller name and scenario name, that is - what happened (modules/utils.lua: utils.profile_hits) - there's no need to look it up or use it commonly; only do in particularly problematic debugging scenarios
-
-- For test development, you can have a look at agents_docs/test_development.md. After preparing more tests or learning something new on that topic you can extend the "Insights and Lessons Learned" section in that doc.
