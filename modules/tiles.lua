@@ -24,9 +24,23 @@ tiles.waterfill_placer_to_water_tile = {
     ["waterfill-placer-deep"] = "deepwater"
 }
 
+function tiles.isWaterfillFeatureEnabled()
+    local setting = settings.startup["Enable-Waterfill"]
+    local setting_enabled = (setting == nil) or setting.value
+    local canal_builder_active = script.active_mods and script.active_mods["CanalBuilderMAV"]
+    return setting_enabled and not canal_builder_active
+end
 
+function tiles.isManagedWaterfillPlacer(entity_name)
+    return tiles.isWaterfillFeatureEnabled() and tiles.waterfill_placer_to_water_tile[entity_name] ~= nil
+end
 
 function tiles.placerWater(placed)
+    if not tiles.isWaterfillFeatureEnabled() then
+        utils.rejectEntityPlacement(placed, "Waterfill is disabled by startup setting or CanalBuilderMAV compatibility")
+        return
+    end
+
     local pos_center = placed.position
     local surface = placed.surface
 

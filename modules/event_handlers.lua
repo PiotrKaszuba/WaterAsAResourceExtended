@@ -51,7 +51,7 @@ function event_handlers.HandleEntity(event, event_type)
     local handlers = nil
 
     -- this must be first because waterfill may also be of prototype type == offshore_pump_prototype_type
-    if tiles.waterfill_placer_to_water_tile[entity.name] then
+    if tiles.isManagedWaterfillPlacer(entity.name) then
         handlers = event_handlers.waterfill_placer_handlers
     elseif entity.prototype.type == entities.offshore_pump_prototype_type then
         handlers = event_handlers.offshore_pump_handlers

@@ -183,6 +183,14 @@ local settings_definitions = {
         setting_type = "runtime-global",
         default_value = true,
         order = "i[map]-a"
+    },
+    -- Compatibility
+    {
+        type = "bool-setting",
+        name = "Enable-Waterfill",
+        setting_type = "startup",
+        default_value = true,
+        order = "j[compat]-a"
     }
 }
 

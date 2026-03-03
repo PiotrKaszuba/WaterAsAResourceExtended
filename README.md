@@ -18,6 +18,12 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 
 ---
 
+> ℹ️ **Compatibility note**
+>
+> If `CanalBuilderMAV` is active, this mod automatically disables its built-in waterfill feature to avoid overlap/conflicts. Tile changes from Canal Builder are still tracked for waterbody depletion/merge/split behavior.
+
+---
+
 ## Core Mechanics
 
 ### Finite Water System
@@ -63,6 +69,7 @@ Reduce water consumption through research. Each level reduces water consumption 
 - **Recipe**: 1 Explosives + 500 Water = 3 Waterfill
 - Places shallow water adjacent to existing water tiles
 - Cannot be placed on dried (depleted) tiles
+- Disabled automatically when `CanalBuilderMAV` is active (compatibility mode)
 
 ## Waterbody Dynamics
 
