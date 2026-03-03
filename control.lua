@@ -19,6 +19,47 @@ function control.is_picker_dollies_available()
 	return (remote and remote.interfaces['PickerDollies']) or false
 end
 
+function control.is_waterfill_feature_enabled()
+	local startup = settings.startup["Enable-Waterfill"]
+	local startup_enabled = (startup == nil) or startup.value
+	local canal_builder_active = script.active_mods and script.active_mods["CanalBuilderMAV"]
+	return startup_enabled and not canal_builder_active
+end
+
+function control.cleanup_disabled_waterfill_artifacts()
+	local removed_entities = 0
+	local removed_items = 0
+
+	for _, surface in pairs(game.surfaces) do
+		for _, placer_name in pairs({ "waterfill-placer", "waterfill-placer-deep" }) do
+			local entities_to_remove = surface.find_entities_filtered({ name = placer_name })
+			for _, entity in pairs(entities_to_remove) do
+				if entity.valid then
+					entity.destroy({ raise_destroy = true })
+					removed_entities = removed_entities + 1
+				end
+			end
+		end
+	end
+
+	for _, player in pairs(game.players) do
+		local removed_from_player = player.remove_item({ name = "waterfill", count = 1000000 })
+		removed_items = removed_items + removed_from_player
+		if player.cursor_stack and player.cursor_stack.valid_for_read and player.cursor_stack.name == "waterfill" then
+			player.cursor_stack.clear()
+			removed_items = removed_items + 1
+		end
+	end
+
+	if removed_entities > 0 or removed_items > 0 then
+		game.print(string.format(
+			"[WaterAsAResource] Waterfill compatibility cleanup: removed %d placer entities and %d waterfill items.",
+			removed_entities,
+			removed_items
+		))
+	end
+end
+
 function control.Init()
 	if storage.PeriodicTick == nil then
 		storage.PeriodicTick = 0
@@ -57,6 +98,10 @@ function control.Init()
 	forces.initPlayerForces()
 
 	split_families.init_storage()
+
+	if not control.is_waterfill_feature_enabled() then
+		control.cleanup_disabled_waterfill_artifacts()
+	end
 
 	if control.is_picker_dollies_available() then
 		remote.call('PickerDollies', 'add_blacklist_name', entities.offshore_pump_prototype_type)
@@ -117,7 +162,14 @@ function control.VersionChanged(event)
 		elseif utils.version_less_than(mod_changed.old_version, "2.0.0") then
 			-- Migration from older version
 			control.Init()
+		elseif utils.version_less_than(mod_changed.old_version, "2.0.4") and not control.is_waterfill_feature_enabled() then
+			-- Compatibility migration: remove stale waterfill placers/items when built-in waterfill is disabled.
+			control.cleanup_disabled_waterfill_artifacts()
 		end
+	end
+
+	if not control.is_waterfill_feature_enabled() then
+		control.cleanup_disabled_waterfill_artifacts()
 	end
 end
 
