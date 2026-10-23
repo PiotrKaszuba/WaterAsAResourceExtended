@@ -48,11 +48,15 @@ event_handlers.waterfill_placer_handlers = {
 
 function event_handlers.HandleEntity(event, event_type)
     local entity = event.entity
+    -- Another mod can consume its placer before our build handler runs.
+    if not entity or (event_type == "built" and not entity.valid) then return end
     local handlers = nil
 
     -- this must be first because waterfill may also be of prototype type == offshore_pump_prototype_type
-    if tiles.isManagedWaterfillPlacer(entity.name) then
-        handlers = event_handlers.waterfill_placer_handlers
+    if tiles.waterfill_placer_to_water_tile[entity.name] then
+        if tiles.isManagedWaterfillPlacer(entity.name) then
+            handlers = event_handlers.waterfill_placer_handlers
+        end
     elseif entity.prototype.type == entities.offshore_pump_prototype_type then
         handlers = event_handlers.offshore_pump_handlers
     end

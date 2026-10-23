@@ -20,7 +20,9 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 
 > ℹ️ **Compatibility note**
 >
-> If `CanalBuilderMAV` is active, this mod automatically disables its built-in waterfill feature to avoid overlap/conflicts. Tile changes from Canal Builder are still tracked for waterbody depletion/merge/split behavior.
+> The startup setting **Compatibility - Enable built-in waterfill** controls this mod's waterfill. If `CanalBuilderMAV` is active, built-in waterfill is disabled automatically to avoid duplicate prototypes. This only gates the built-in waterfill; Canal Builder 3.0.0 changes tiles without raising tile events, so those changes are not automatically tracked for depletion, merging or splitting.
+>
+> Disabling built-in waterfill removes its technology, recipe, item and placer prototypes. Factorio removes instances of omitted prototypes when loading the save. There is no conversion or refund of existing built-in waterfill items.
 
 ---
 

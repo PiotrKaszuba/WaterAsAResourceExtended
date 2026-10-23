@@ -37,6 +37,7 @@ local function load_default_settings()
         ["Split-Finalize-Max-Landfills-Per-Update"] = 100,
     }
     local startup_defaults = {
+        ["Enable-Waterfill"] = true,
         ["TileFluidAmount-Shallow"] = 50,
         ["TileFluidAmount-Deep"] = 150,
         ["WaterBody-Regen-Scaling"] = 1.5,

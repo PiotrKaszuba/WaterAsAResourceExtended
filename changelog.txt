@@ -1,13 +1,13 @@
 ---------------------------------------------------------------------------------------------------
 Version: 2.0.4
-Date: 2026.03.03
+Date: 2026.10.24
   Changes:
     - Added startup setting Enable-Waterfill (default: true)
     - Built-in waterfill prototypes now load only when Enable-Waterfill is enabled and CanalBuilderMAV is not active
     - Runtime handling now only processes built-in waterfill placers when the feature is enabled
-    - Added compatibility/migration cleanup for stale built-in waterfill placers/items when compatibility mode disables built-in waterfill
-    - Added compatibility documentation note for CanalBuilderMAV
----------------------------------------------------------------------------------------------------
+    - Ignore unavailable or externally managed waterfill placers instead of treating them as pumps
+    - CanalBuilderMAV compatibility only gates built-in waterfill; its silent tile changes are not automatically tracked
+    - Disabling built-in waterfill removes its prototypes and existing built-in items without conversion or refund
 ---------------------------------------------------------------------------------------------------
 Version: 2.0.3
 Date: 2026.02.05
