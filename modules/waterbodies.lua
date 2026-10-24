@@ -837,6 +837,13 @@ function waterbodies.GetWaterBodyRegen(totalArea, bonusValue)
 	return regenRate * totalArea * bonusValue
 end
 
+function waterbodies.refreshRegeneration()
+	for _, waterBody in pairs(waterbodies.getValidWaterBodies()) do
+		local area = waterBody.waterAreaData
+		area.RegenAmount = waterbodies.GetWaterBodyRegen(area.TotalArea, area.BonusValue)
+	end
+end
+
 function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 	local area_data = waterBody.waterAreaData
 

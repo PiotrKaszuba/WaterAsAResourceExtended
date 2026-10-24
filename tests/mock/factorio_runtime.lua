@@ -255,6 +255,7 @@ function mock.reset()
             on_robot_built_tile = 9,
             script_raised_set_tiles = 10,
             on_research_finished = 11,
+            on_runtime_mod_setting_changed = 12,
         },
         direction = { north = 0, east = 2, south = 4, west = 6 },
     }

@@ -137,3 +137,8 @@ script.on_event({ defines.events.on_player_built_tile, defines.events.on_robot_b
 script.on_event({ defines.events.script_raised_set_tiles }, event_handlers.handleScriptTileEvents)
 
 script.on_event(defines.events.on_research_finished, event_handlers.TechTrack)
+script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
+	if event.setting == "Waterbody-Regen-Rate" then
+		waterbodies.refreshRegeneration()
+	end
+end)
