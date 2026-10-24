@@ -85,8 +85,9 @@ local function drain(result, batch)
         while tiles.getTileEventQueue().size > 0 do
             local before = os.clock()
             local processed = tiles.processTileEventQueue(batch, { budget = 1000000 })
-            max_call = math.max(max_call, os.clock() - before)
-            batches[#batches + 1] = os.clock() - before
+            local elapsed = os.clock() - before
+            max_call = math.max(max_call, elapsed)
+            batches[#batches + 1] = elapsed
             assert(processed > 0 and processed <= batch)
             calls = calls + 1
             assert(calls < 100000, "bounded queue drain")
@@ -95,6 +96,7 @@ local function drain(result, batch)
     result.drain_calls, result.max_drain_call_s = calls, max_call
     distribution(result, "drain_batch", batches)
     if storage.PendingTileChanges then assert(next(storage.PendingTileChanges) == nil, "pending index must be cleaned") end
+    return batches
 end
 
 M.cases = {
@@ -205,18 +207,20 @@ function M.run(name)
                 end
             end)
         end
-        drain(result, 32)
+        local all_batches = drain(result, 32)
         -- Batch enough real operations to exceed the native clock's resolution.
         for _ = 1, 15 do
             local batch = {}
             measure(batch, "enqueue_s", enqueue)
-            drain(batch, 32)
+            local batches = drain(batch, 32)
+            for _, elapsed in ipairs(batches) do all_batches[#all_batches + 1] = elapsed end
             result.enqueue_s = result.enqueue_s + batch.enqueue_s
             result.drain_s = result.drain_s + batch.drain_s
             result.max_drain_call_s = math.max(result.max_drain_call_s, batch.max_drain_call_s)
         end
         result.events = 8192 * 16
         result.drain_calls = 256 * 16
+        distribution(result, "drain_batch", all_batches)
     elseif name == "shoreline_brush" then
         local world, surface, body = ready(48)
         body.waterBodyStateData.WaterUsed = body.waterAreaData.AmountWtr * 0.4
@@ -304,7 +308,7 @@ function M.run(name)
             end
         end
         measure(result, "enqueue_s", function() world:build_tiles(surface, positions, "landfill") end)
-        local changed, examined, max_call = 0, 0, 0
+        local changed, examined, max_call = 0, nil, 0
         local calls = {}
         measure(result, "visual_s", function()
             -- Finite requests while events are pending: models a delayed queue,
@@ -312,9 +316,11 @@ function M.run(name)
             for _ = 1, area * 2 do
                 local start = os.clock()
                 local n, attempts = waterbody_depletion.getTilesDepleting(body, drying, 1)
-                max_call = math.max(max_call, os.clock() - start)
-                calls[#calls + 1] = os.clock() - start
-                changed, examined = changed + n, examined + (attempts or n)
+                local elapsed = os.clock() - start
+                max_call = math.max(max_call, elapsed)
+                calls[#calls + 1] = elapsed
+                changed = changed + n
+                if attempts then examined = (examined or 0) + attempts end
             end
         end)
         distribution(result, "visual_request", calls)
