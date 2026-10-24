@@ -25,3 +25,9 @@ The default development branch intentionally retains the two failing diagnostics
 
 Actual Factorio 2.0 event ordering, native tile costs and average/tail performance
 still require engine acceptance. No release or community claim is implied.
+
+The [measured performance report](performance/PERFORMANCE_REPORT.md) includes
+shared main/branch workloads, paired test-only bypasses, fresh-process controls,
+registration plus consumption costs, identical-terrain controls and function
+profiles. The experimental split-search shortcut in the profiler is not part
+of this branch's production implementation.

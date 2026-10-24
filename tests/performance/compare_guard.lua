@@ -3,7 +3,7 @@
 local modes = require("tests.performance.guard_mode")
 local workloads = require("tests.performance.workloads")
 local repeats = tonumber(arg[1]) or 7
-local cases = { "visual_16384", "queue_unique_8192", "queue_repeated_8192",
+local cases = { "pumps_1024_many_lakes", "visual_16384", "queue_unique_8192", "queue_repeated_8192",
     "pending_reload_8192", "pending_dense_16384", "pending_drying_4096", "mixed_backlog_scan" }
 local normal_print = print
 print = function() end

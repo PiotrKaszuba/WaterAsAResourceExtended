@@ -1,0 +1,44 @@
+{
+  "started_utc": "2026-10-24T21:06:34Z",
+  "platform": "Windows-10-10.0.26200-SP0",
+  "processor": "Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+  "lua": "D:/path_programs/lua/lua.exe",
+  "shared_sha256": {
+    "tests/performance/workloads.lua": "fba42ee3da0f65407f68e01e44a8596839d4126e66d323e3a768112f4276c9c2",
+    "tests/performance/run.lua": "4d962681b23d42445daaace51a32ae102635c5631f886eb14199d79fa3cbafa1"
+  },
+  "repeats": 2,
+  "rounds": 2,
+  "paired": 5,
+  "main": {
+    "path": "D:\\Piotr\\Factorio mods\\WaterAsAResourceExtended_2.0.0",
+    "commit": "32578bbbf16ffef380696c99f339f7720dc0254d"
+  },
+  "guard": {
+    "path": "D:\\Piotr\\Factorio mods\\catch-up-2026-10-20\\water-visual-guard-worktree",
+    "commit": "9543cd1ba53a78c24b4aaaad815373e188b5e5d1"
+  },
+  "finished_utc": "2026-10-24T21:27:27Z",
+  "benchmark_source_sha256": {
+    "tests/performance/compare_checkouts.py": "17f132992b825ea1d2f2d963dfd988a0c318ad51b274fe6a799d98bcf1cda2d9",
+    "tests/performance/compare_controls.py": "ba61c0e65025c4f2c7a0eeaf06bd414084bfbf267139078724dc756b833e3d94",
+    "tests/performance/compare_guard.lua": "11e93d1c64ba4276e561a440d5adfa35b2e2491c0cd4ba2bb4ffc5da923763e3",
+    "tests/performance/compare_preserved.lua": "f890612ade9274e23be135046c52b5a70bf4929ae0aef2514569e70eef0cbb82",
+    "tests/performance/guard_mode.lua": "01c5731dedc107b74cd602a669d9c5831408e302dc45458a1c2f0169d0112b04",
+    "tests/performance/preserved_fixture.lua": "9f5f2815be9a1cc65c8c7a92a120c643bc0eae7d74c669415af509a709948ed0",
+    "tests/performance/profile_drain.lua": "b3e2476dba1e52f8b7f6d6112de2c3c91be76f46e2a9cdcb5f993fc9106e7355",
+    "tests/performance/run.lua": "4d962681b23d42445daaace51a32ae102635c5631f886eb14199d79fa3cbafa1",
+    "tests/performance/run_attribution.py": "87f78ab869c671a7d172d64adfff43673fd0625dbe4b450cc21849400bb76f5e",
+    "tests/performance/run_disabled.lua": "3a26d5ef0b4dce641d906aae1d936cebbd10db6a4929c638502f6a79203b619b",
+    "tests/performance/summarize.py": "4c621a81a5c584db258726bcba194d590522613b13ddf0ff4c6c993ba926919e",
+    "tests/performance/workloads.lua": "fba42ee3da0f65407f68e01e44a8596839d4126e66d323e3a768112f4276c9c2"
+  },
+  "lua_version": "5.2.4",
+  "additional_controls": {
+    "fresh_process": "controls/protocol.json",
+    "identical_terrain_measured_pairs": 3,
+    "profile_repetitions": 1,
+    "profile_timing": "instrumented; use counts for attribution"
+  },
+  "revision_note": "Main/guard commits identify the compared production revisions. Exact benchmark sources, including added control/profile tools, are identified by the hashes above; report/documentation and extra regression coverage are committed afterward."
+}
