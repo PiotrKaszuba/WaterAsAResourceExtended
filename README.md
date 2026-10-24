@@ -64,6 +64,16 @@ Reduce water consumption through research. Each level reduces water consumption 
 - Places shallow water adjacent to existing water tiles
 - Cannot be placed on dried (depleted) tiles
 
+**Enable Waterfill** is a startup setting in this mod's settings, enabled by default.
+Disabling it removes the built-in waterfill technology, recipe, item and placer.
+Existing waterfill items can be removed without conversion or refund. Ordinary
+tile-change tracking remains enabled for depletion, merging and splitting.
+
+**CanalBuilderMAV is incompatible.** It changes terrain without raising tile-change
+events, so avoiding duplicate waterfill prototypes alone would not keep waterbody
+accounting synchronized. Future waterfill integrations must notify this mod of
+tile changes; disabling built-in waterfill does not provide that integration.
+
 ## Waterbody Dynamics
 
 ### Merging

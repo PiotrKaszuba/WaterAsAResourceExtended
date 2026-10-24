@@ -1,4 +1,11 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.4
+Date: 2026.10.24
+  Changes:
+    - Added Enable Waterfill, a startup setting enabled by default, to control the built-in waterfill technology, recipe, item and placer.
+    - Disabling built-in waterfill can remove existing waterfill items without conversion or refund; ordinary tile-change tracking stays enabled.
+    - Declared CanalBuilderMAV incompatible because its silent terrain changes bypass waterbody accounting.
+---------------------------------------------------------------------------------------------------
 Version: 2.0.3
 Date: 2026.02.05
   Changes:

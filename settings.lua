@@ -176,6 +176,14 @@ local settings_definitions = {
         hidden = true,
         order = "h[splits]-c"
     },
+    -- Waterfill
+    {
+        type = "bool-setting",
+        name = "Enable-Waterfill",
+        setting_type = "startup",
+        default_value = true,
+        order = "j[waterfill]-a"
+    },
     -- Map
     {
         type = "bool-setting",

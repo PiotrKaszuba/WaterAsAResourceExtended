@@ -12,6 +12,7 @@
 
 		"? aai-industry >= 0.6.10",
 
+		"! CanalBuilderMAV",
 		"! offshore-burner",
 		"! BurnerOffshorePump",
 		"! P-U-M-P-S",

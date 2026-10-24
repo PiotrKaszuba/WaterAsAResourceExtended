@@ -1,5 +1,7 @@
 require("prototypes.technology")
-require("prototypes.waterfill")
+if settings.startup["Enable-Waterfill"].value then
+    require("prototypes.waterfill")
+end
 require("util")
 
 local lakeshallow = table.deepcopy(data.raw["tile"]["sand-3"])
