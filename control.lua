@@ -59,12 +59,9 @@ function control.Init()
 	split_families.init_storage()
 	waterbodies.getRegenerationMask(true)
 
-	if control.is_picker_dollies_available() then
-		remote.call('PickerDollies', 'add_blacklist_name', entities.offshore_pump_prototype_type)
-	end
-
 	-- Scan for existing offshore pumps (for saves/scenarios that already have pumps)
 	event_handlers.scanForExistingPumps()
+	entities.blacklistTrackedPumps()
 end
 
 function control.initUpdateBudget(periodic_ticks_per_update)
@@ -120,6 +117,8 @@ function control.VersionChanged(event)
 			control.Init()
 		end
 	end
+	event_handlers.scanForExistingPumps()
+	entities.blacklistTrackedPumps()
 end
 
 -- SCRIPT EVENTS --
@@ -128,7 +127,11 @@ script.on_configuration_changed(control.VersionChanged)
 
 script.on_nth_tick(control.periodic_update_ticks, PeriodicUpdate) -- Run the main update - 'small update' - most likely every game tick
 
-script.on_event({ defines.events.on_built_entity, defines.events.on_robot_built_entity }, event_handlers.BuiltEntity)
+script.on_event({ defines.events.on_built_entity, defines.events.on_robot_built_entity,
+	defines.events.script_raised_built, defines.events.script_raised_revive }, event_handlers.BuiltEntity)
+script.on_event(defines.events.on_entity_cloned, function(event)
+	event_handlers.BuiltEntity({ entity = event.destination })
+end)
 script.on_event(
 { defines.events.on_player_mined_entity, defines.events.script_raised_destroy, defines.events.on_robot_mined_entity,
 	defines.events.on_entity_died }, event_handlers.DestroyedEntity)

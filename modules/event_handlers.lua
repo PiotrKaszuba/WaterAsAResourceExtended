@@ -49,6 +49,7 @@ event_handlers.waterfill_placer_handlers = {
 
 function event_handlers.HandleEntity(event, event_type)
     local entity = event.entity
+    if not entity or (event_type == "built" and not entity.valid) then return end
     local handlers = nil
 
     -- this must be first because waterfill may also be of prototype type == offshore_pump_prototype_type

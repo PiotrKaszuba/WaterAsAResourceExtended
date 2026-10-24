@@ -256,6 +256,9 @@ function mock.reset()
             script_raised_set_tiles = 10,
             on_research_finished = 11,
             on_runtime_mod_setting_changed = 12,
+            script_raised_built = 13,
+            script_raised_revive = 14,
+            on_entity_cloned = 15,
         },
         direction = { north = 0, east = 2, south = 4, west = 6 },
     }

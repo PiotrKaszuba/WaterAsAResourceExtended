@@ -57,7 +57,24 @@ function entities.initAndRegisterNewPump(entity)
         ["disabled"] = false,
     }
     entities.registerTrackedEntity(pump_data.unit_number, pump_data)
+    entities.blacklistPumpMovement(entity)
     return pump_data
+end
+
+function entities.blacklistPumpMovement(entity)
+    if remote.interfaces["PickerDollies"] then
+        remote.call("PickerDollies", "add_blacklist_name", entity.name)
+    end
+end
+
+function entities.blacklistTrackedPumps()
+    local names = {}
+    for _, pump in pairs(storage.TrackedEntities) do
+        if pump.entity.valid and not names[pump.entity.name] then
+            entities.blacklistPumpMovement(pump.entity)
+            names[pump.entity.name] = true
+        end
+    end
 end
 
 function entities.addPumpToWaterBody(waterBodyId, pump_data)
