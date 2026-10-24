@@ -222,6 +222,9 @@ function tiles.reduceTileFromWaterBody(waterBody, originalTileName, position, su
     -- 6. Mark for water amount recalculation
     waterBody.waterBodyStateData.ToCalculate = true
     waterBody.waterBodyStateData.ToUpdate = true
+    -- Splitting can snapshot this body's depletion immediately. Its capacity
+    -- must already reflect this removal, including within a multi-tile brush.
+    waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 
     -- 7. Check if water body becomes empty
     if waterbodies.isWaterBodyEmpty(waterBody) then

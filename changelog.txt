@@ -2,6 +2,7 @@
 Version: 2.0.4
 Date: 2026.10.24
   Changes:
+    - Refresh remaining lake capacity before landfill splitting snapshots its depletion, preventing reserve gains from stale capacity in multi-tile brushes.
     - Track announced script-built, revived and cloned pumps once, and refresh managed pump-name Dolly blacklists on configuration changes.
     - Added default-on Nauvis-only management with admission/tile-event gates and one-time configuration reconciliation; excluded tracked pumps are released without a new ownership ledger.
     - Recognize supported water offshore pumps regardless of burner/electric energy source, leaving non-water and unmapped custom sources unmanaged; removed the offshore-burner conflict.
