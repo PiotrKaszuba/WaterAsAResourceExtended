@@ -2,6 +2,7 @@
 Version: 2.0.4
 Date: 2026.10.24
   Changes:
+    - Changed new-game normal/deep water capacity defaults to 200/2,000; extra-shallow and muddy water retain their 0.5/0.25 multipliers. Existing saved settings and tracked lakes are not rescaled.
     - Added a seven-digit regeneration-by-size setting (default 1111111); existing lakes update when edited, and malformed values warn and fall back to all enabled.
     - Initialize missing depletion bins before pending drying work, preventing the reported newBinset crash while retaining drying/restoration progress.
     - Remove stale pump tracking without trying to disable an invalid entity.

@@ -23,9 +23,22 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 ### Finite Water System
 - **Waterbody Tracking**: Connected water tiles form "waterbodies" with unique IDs, scanned asynchronously when pumps are placed
 - **Per-Pump Usage**: Each pump's actual fluid extraction is tracked individually using Factorio 2.0's `pumped_last_tick` API
-- **Water Tile Capacity**: 
-  - Shallow water: 50L per tile (configurable)
-  - Deep water: 150L per tile (configurable)
+- **Water Tile Capacity**: Startup settings default to 200 for normal water and
+  2,000 for deep water. Extra-shallow water holds half the normal amount and muddy
+  water holds one quarter, preserving their existing capacity multipliers.
+
+  | Tile | Default capacity | Assumed depth |
+  |------|-----------------:|--------------:|
+  | Normal water, including green water | 200 | 20 cm |
+  | Extra-shallow water, including built-in waterfill | 100 | 10 cm |
+  | Muddy water | 50 | 5 cm |
+  | Deep water, including green deep water | 2,000 | 2 m |
+
+  These are depth assumptions chosen for this mod: treating a tile as 1 m² gives
+  `1 m² × 0.2 m × 1,000 L/m³ = 200 L`, and a 2 m depth gives 2,000 L.
+  They are not official Factorio water depths or fluid-unit conversions.
+  Existing saved startup choices are retained; this default change does not
+  rescale already tracked lakes. Keep existing values for an unchanged game.
 
 ### Visual Depletion
 - Water tiles "dry out" as the waterbody depletes (starting at 80% depletion, configurable)
