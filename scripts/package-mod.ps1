@@ -54,7 +54,6 @@ $FilesToInclude = @(
 # Directories to include
 $DirsToInclude = @(
     "modules",
-    "shared",
     "prototypes",
     "locale",
     "graphics"

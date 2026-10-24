@@ -25,7 +25,7 @@ utils.DryWaterTiles = {
 utils.WaterAndDryTiles = { ["lake-shallow"] = true, ["lake-deep"] = true }
 utils.WetToDryTileMap = {}
 utils.DryToWetTileMap = {}
-for _, tile in ipairs(require("shared.water_tiles")) do
+for _, tile in ipairs(require("modules.water_tiles")) do
 	utils.DryWaterTiles[tile.dry] = true
 	utils.WaterAndDryTiles[tile.wet] = true
 	utils.WaterAndDryTiles[tile.dry] = true

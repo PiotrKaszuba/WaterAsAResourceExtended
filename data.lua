@@ -18,7 +18,7 @@ data:extend({
 })
 
 local dryNames = { "lake-shallow", "lake-deep" }
-for _, identity in ipairs(require("shared.water_tiles")) do
+for _, identity in ipairs(require("modules.water_tiles")) do
     local tile = table.deepcopy(data.raw.tile[identity.appearance])
     tile.name = identity.dry
     tile.localised_name = { "tile-name." .. identity.appearance }

@@ -63,8 +63,8 @@ local function check_data_stage(enabled)
         required[name] = true
         if name == "prototypes.waterfill" then
             assert(loadfile("prototypes/waterfill.lua", "t", fixture))()
-        elseif name == "shared.water_tiles" then
-            return assert(loadfile("shared/water_tiles.lua", "t", {}))()
+        elseif name == "modules.water_tiles" then
+            return assert(loadfile("modules/water_tiles.lua", "t", {}))()
         end
     end
     assert(loadfile("data.lua", "t", fixture))()
@@ -83,7 +83,7 @@ local function check_data_stage(enabled)
     t.ok(data_fixture.raw.tile["lake-deep"] ~= nil, "deep dry terrain remains defined")
     local allowed = {}
     for _, name in ipairs(data_fixture.raw.item.landfill.place_as_tile.tile_condition) do allowed[name] = true end
-    for _, identity in ipairs(require("shared.water_tiles")) do
+    for _, identity in ipairs(require("modules.water_tiles")) do
         t.ok(data_fixture.raw.tile[identity.dry] ~= nil, "typed dry terrain is defined: " .. identity.wet)
         t.eq(allowed[identity.dry], true, "landfill supports typed dry terrain: " .. identity.wet)
     end
