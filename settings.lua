@@ -83,6 +83,14 @@ local settings_definitions = {
         order = "d[waterbody]-b"
     },
     {
+        type = "string-setting",
+        name = "Waterbody-Regen-Enabled-By-Size",
+        setting_type = "runtime-global",
+        default_value = "1111111",
+        allow_blank = false,
+        order = "d[waterbody]-b2"
+    },
+    {
         type = "double-setting",
         name = "WaterBody-Regen-Scaling",
         setting_type = "startup",

@@ -25,6 +25,7 @@ local function load_default_settings()
         ["Scan-Status-Period"] = 20,
         ["Waterbody-Max-Size"] = 0,
         ["Waterbody-Regen-Rate"] = 100,
+        ["Waterbody-Regen-Enabled-By-Size"] = "1111111",
         ["WaterBody-Centroid-Shift-Threshold"] = 0.025,
         ["Visual-Depletion-Start-Percentage"] = 80,
         ["Visual-Depletion-Furthest-First"] = true,

@@ -57,6 +57,7 @@ function control.Init()
 	forces.initPlayerForces()
 
 	split_families.init_storage()
+	waterbodies.getRegenerationMask(true)
 
 	if control.is_picker_dollies_available() then
 		remote.call('PickerDollies', 'add_blacklist_name', entities.offshore_pump_prototype_type)
@@ -138,7 +139,8 @@ script.on_event({ defines.events.script_raised_set_tiles }, event_handlers.handl
 
 script.on_event(defines.events.on_research_finished, event_handlers.TechTrack)
 script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
-	if event.setting == "Waterbody-Regen-Rate" then
+	if event.setting == "Waterbody-Regen-Rate" or event.setting == "Waterbody-Regen-Enabled-By-Size" then
+		if event.setting == "Waterbody-Regen-Enabled-By-Size" then waterbodies.getRegenerationMask(true) end
 		waterbodies.refreshRegeneration()
 	end
 end)

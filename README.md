@@ -38,6 +38,11 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
   - Best regeneration at 75% depleted (150% of base rate)
   - Reduced regeneration at 0% depleted (75% rate) and 100% depleted (50% rate)
 - Configurable base regeneration rate
+- **Regeneration enabled by size** accepts seven 0/1 digits in this order:
+  Puddle, Well, Pond, Lake, Great Lake, Sea, Ocean. Default `1111111` enables all;
+  `0000001` enables oceans only and `0000011` enables seas and oceans.
+  Invalid strings fall back to `1111111` with a warning. While scanning, the
+  currently calculated size applies; it may change as more tiles are discovered.
 
 ### Pump Behavior
 - Pumps automatically deactivate when their waterbody reaches 100% depletion

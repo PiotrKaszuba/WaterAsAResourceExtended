@@ -825,7 +825,8 @@ function waterbodies.CalculateWaterBodyTotalAreaAndWater(waterBody)
 end
 
 function waterbodies.GetWaterBodyType(totalArea)
-	for waterBodyType, thresholdArea in pairs(waterbodies.WaterBodyTypeThresholdArea) do
+	for waterBodyType = 0, 6 do
+		local thresholdArea = waterbodies.WaterBodyTypeThresholdArea[waterBodyType]
 		if totalArea < thresholdArea then
 			return waterBodyType
 		end
@@ -833,8 +834,20 @@ function waterbodies.GetWaterBodyType(totalArea)
 end
 
 function waterbodies.GetWaterBodyRegen(totalArea, bonusValue)
+	local mask = waterbodies.getRegenerationMask()
+	local waterBodyType = waterbodies.GetWaterBodyType(totalArea)
+	if mask:sub(waterBodyType + 1, waterBodyType + 1) == "0" then return 0 end
 	local regenRate = settings.global["Waterbody-Regen-Rate"].value / 10000
 	return regenRate * totalArea * bonusValue
+end
+
+function waterbodies.getRegenerationMask(warn)
+	local mask = settings.global["Waterbody-Regen-Enabled-By-Size"].value:match("^%s*(.-)%s*$")
+	if #mask == 7 and mask:match("^[01]+$") then return mask end
+	if warn then
+		game.print("[WaterAsAResource] Regeneration by size requires seven 0/1 digits (Puddle to Ocean); using 1111111 until corrected.")
+	end
+	return "1111111"
 end
 
 function waterbodies.refreshRegeneration()
