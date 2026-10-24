@@ -78,6 +78,7 @@ FILES_TO_INCLUDE=(
 
 DIRS_TO_INCLUDE=(
   "modules"
+  "shared"
   "prototypes"
   "locale"
   "graphics"
