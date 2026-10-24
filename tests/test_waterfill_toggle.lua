@@ -32,7 +32,10 @@ local function check_data_stage(enabled)
             ["dry-dirt"] = { type = "tile" },
             ["water-shallow"] = { collision_mask = { layers = {} } },
         },
-        item = { landfill = { subgroup = "terrain", order = "a" } },
+        item = { landfill = { subgroup = "terrain", order = "a", place_as_tile = {
+            condition = { layers = { ground_tile = true, object = true } },
+            tile_condition = { "water", "deepwater", "custom-water" },
+        } } },
     } }
     function data_fixture:extend(values)
         for _, value in ipairs(values) do
@@ -50,6 +53,7 @@ local function check_data_stage(enabled)
     local fixture = {
         settings = { startup = startup },
         math = math,
+        ipairs = ipairs,
         -- A generic switch must not inspect which other mods are present.
         mods = setmetatable({}, { __index = function() error("unexpected mod detection") end }),
         table = { deepcopy = deepcopy },
@@ -59,6 +63,8 @@ local function check_data_stage(enabled)
         required[name] = true
         if name == "prototypes.waterfill" then
             assert(loadfile("prototypes/waterfill.lua", "t", fixture))()
+        elseif name == "shared.water_tiles" then
+            return assert(loadfile("shared/water_tiles.lua", "t", {}))()
         end
     end
     assert(loadfile("data.lua", "t", fixture))()
@@ -75,6 +81,15 @@ local function check_data_stage(enabled)
     t.eq(required["prototypes.technology"], true, "yield research remains loaded")
     t.ok(data_fixture.raw.tile["lake-shallow"] ~= nil, "shallow dry terrain remains defined")
     t.ok(data_fixture.raw.tile["lake-deep"] ~= nil, "deep dry terrain remains defined")
+    local allowed = {}
+    for _, name in ipairs(data_fixture.raw.item.landfill.place_as_tile.tile_condition) do allowed[name] = true end
+    for _, identity in ipairs(require("shared.water_tiles")) do
+        t.ok(data_fixture.raw.tile[identity.dry] ~= nil, "typed dry terrain is defined: " .. identity.wet)
+        t.eq(allowed[identity.dry], true, "landfill supports typed dry terrain: " .. identity.wet)
+    end
+    t.eq(allowed["custom-water"], true, "landfill keeps another mod's whitelist entry")
+    t.eq(data_fixture.raw.item.landfill.place_as_tile.condition.layers.object, true, "landfill keeps unrelated collision restrictions")
+    t.eq(data_fixture.raw.item.landfill.place_as_tile.condition.layers.ground_tile, nil, "landfill can reach whitelisted dry ground")
 end
 
 local function check_tile_tracking(enabled)

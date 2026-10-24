@@ -259,6 +259,8 @@ function mock.reset()
             script_raised_built = 13,
             script_raised_revive = 14,
             on_entity_cloned = 15,
+            on_player_mined_tile = 16,
+            on_robot_mined_tile = 17,
         },
         direction = { north = 0, east = 2, south = 4, west = 6 },
     }

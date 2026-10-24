@@ -45,8 +45,8 @@ local function run_test()
     t.eq(body.gridsData.newBinset, binset, "existing binset reused")
     t.eq(body.waterBodyStateData.DriedTiles, 2, "all water tiles counted once")
     t.eq(next(body.gridsData.waterGridWithData), nil, "water grid exhausted")
-    t.eq(surface.get_tile({ x = 0, y = 0 }).name, "lake-shallow", "first surface tile dried")
-    t.eq(surface.get_tile({ x = 1, y = 0 }).name, "lake-shallow", "second surface tile dried")
+    t.eq(surface.get_tile({ x = 0, y = 0 }).name, utils.WetToDryTileMap.water, "first surface tile dried")
+    t.eq(surface.get_tile({ x = 1, y = 0 }).name, utils.WetToDryTileMap.water, "second surface tile dried")
 
     -- With no usable centroid yet, the existing water-grid fallback must still
     -- make progress instead of returning early or calling dynamic_bins on nil.

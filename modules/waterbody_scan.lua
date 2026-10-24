@@ -390,8 +390,10 @@ function waterbody_scan.processWaterTile(
 	end
 
 	if is_dry_tile then
-		original_tile_name = utils.LazyTables.get(gridKey, OrphanedDryTilesOriginalName[surfaceName],
-			lazyOrphanedDryTilesOriginalName[surfaceName])
+		original_tile_name = utils.DryToWetTileMap[tile_name] or
+			utils.LazyTables.get(gridKey, OrphanedDryTilesOriginalName[surfaceName],
+				lazyOrphanedDryTilesOriginalName[surfaceName])
+		if type(original_tile_name) == "table" then original_tile_name = original_tile_name.originalName end
 		if original_tile_name == nil then
 			utils.profile_hits("processWaterTile", "Orphaned dry tile is not in the table!")
 			game.print("Testing: Orphaned dry tile is not in the table!")
@@ -402,6 +404,12 @@ function waterbody_scan.processWaterTile(
 	if waterBodyTileType ~= nil then
 		-- inherit depletion level from the original waterbody (if any) BEFORE assignment as it will remove possibility to read it
 		local tile_percentage_water_used = getWaterTilePercentageWaterUsed(gridKey, surfaceName)
+		if is_dry_tile and utils.DryToWetTileMap[tile_name] and
+			(tile_waterBodyId == nil or tile_waterBodyId == -1) then
+			-- A newly exposed bed adds capacity, not water. Existing invalid-body
+			-- references still carry their own depletion fraction for ordinary splits.
+			tile_percentage_water_used = 100
+		end
 		local new_water_body_id = waterBodyId
 		-- assignTileToWaterBody
 		if not is_tile_assigned_to_water_body then

@@ -154,6 +154,8 @@ script.on_event(
 script.on_event({ defines.events.script_raised_teleported }, event_handlers.TeleportedEntity)
 script.on_event({ defines.events.on_player_built_tile, defines.events.on_robot_built_tile },
 	event_handlers.handlePlayerTileEvents)
+script.on_event({ defines.events.on_player_mined_tile, defines.events.on_robot_mined_tile },
+	event_handlers.handleMinedTileEvents)
 script.on_event({ defines.events.script_raised_set_tiles }, event_handlers.handleScriptTileEvents)
 
 script.on_event(defines.events.on_research_finished, event_handlers.TechTrack)

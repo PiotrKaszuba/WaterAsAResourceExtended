@@ -82,6 +82,8 @@ function tiles.processTileEventQueue(maxEvents, updateBudget)
                 tiles.processLandfillEvent(event, updateBudget)
             elseif event.type == "waterfill" then
                 tiles.processWaterfillEvent(event, updateBudget)
+            elseif event.type == "restore" then
+                tiles.processRestorationEvent(event, updateBudget)
             end
         end
         processedCount = processedCount + 1
@@ -90,11 +92,63 @@ function tiles.processTileEventQueue(maxEvents, updateBudget)
     return processedCount
 end
 
+-- Old saves used two ambiguous dry names. Resolve their wet identity before
+-- reclaiming removes the grid/orphan data; typed dry names resolve directly.
+function tiles.getOriginalWaterTileName(tileName, position, surface)
+    if utils.IsWaterTile(tileName) then return tileName end
+    local original = utils.DryToWetTileMap[tileName]
+    if original then return original end
+    waterbodies.initSurface(surface.name)
+    local key = hot_utils.GridKey(position)
+    local body = waterbodies.getWaterBody(waterbodies.getWaterTile(key, surface))
+    if body and body.valid then
+        local grids = body.gridsData
+        local tile = utils.LazyTables.get(key, grids.driedTilesGridWithData, grids.lazyDriedTilesGridWithData)
+            or utils.LazyTables.get(key, grids.waterGridWithData, grids.lazyWaterGridWithData)
+        if tile then original = tile.originalName end
+    end
+    if not original then
+        original = utils.LazyTables.get(key, storage.OrphanedDryTilesOriginalName[surface.name],
+            storage.lazyOrphanedDryTilesOriginalName[surface.name])
+        if type(original) == "table" then original = original.originalName end
+    end
+    return original
+end
+
+-- Mining is not paid waterfill. Exposed terrain is empty capacity, represented
+-- by a self-describing dry tile even when no waterbody survives to remember it.
+function tiles.handleMinedTiles(tileArray, surface)
+    if not tileArray or not surface or not utils.isManagedSurface(surface) then return end
+    local dryChanges = {}
+    for _, event in ipairs(tileArray) do
+        if event.old_tile and event.old_tile.name == "landfill" then
+            local position = utils.fixPositionToLeftTopCorner(event.position)
+            local name = surface.get_tile(position).name
+            if utils.IsWaterOrDryTile(name) then
+                local original = tiles.getOriginalWaterTileName(name, position, surface)
+                local dry = original and utils.WetToDryTileMap[original]
+                if dry then
+                    if dry ~= name then
+                        dryChanges[#dryChanges + 1] = { name = dry, position = position }
+                    end
+                    tiles.addTileEvent("restore", position, surface, { tileName = dry })
+                end
+            end
+        end
+    end
+    if #dryChanges > 0 then
+        -- Do not change ownership here: a preceding landfill event can still be
+        -- queued. FIFO accounting removes the old tile before adding empty area.
+        surface.set_tiles(dryChanges, false, false, false, false)
+    end
+end
+
 function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
     if not tileArray or not surface then return end
     if not utils.isManagedSurface(surface) then return end
 
     local surfaceName = surface.name
+    waterbodies.initSurface(surfaceName)
 
     for _, tile_event in pairs(tileArray) do
         local position = tile_event.position
@@ -111,10 +165,14 @@ function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
             "Warning: script_raised_set_tiles with no old tile name. Problems may arise if landfill was placed not on water or waterfill was placed on water or dry (depleted) tile.")
         end
 
-        if utils.IsDryTile(new_name) then
-            utils.profile_hits("handleTileEventsInternal", "new dry tile")
-            game.print("Testing: handleTileEventsInternal got dry tile - IT SHOULD NOT HAPPEN!")
-        elseif utils.IsDryTile(old_name) then
+        local originalWaterName = old_name
+        if utils.IsDryTile(old_name) then
+            originalWaterName = tiles.getOriginalWaterTileName(old_name, position, surface)
+            if new_name == "landfill" and originalWaterName then
+                -- The engine stores the dry bed beneath landfill. Give legacy
+                -- beds an exact identity without retaining covered-tile history.
+                surface.set_hidden_tile(position, utils.WetToDryTileMap[originalWaterName])
+            end
             -- if something else than dry tile is placed on dry tile:
             -- we can for sure remove it from OrphanedDryTilesOriginalName
             local gridKey = hot_utils.GridKey(position)
@@ -122,9 +180,9 @@ function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
                 storage.lazyOrphanedDryTilesOriginalName[surfaceName])
         end
 
-        if new_name == "landfill" and ((old_name and utils.IsWaterTile(old_name)) or (not old_name)) then
+        if new_name == "landfill" and ((old_name and utils.IsWaterOrDryTile(old_name)) or (not old_name)) then
             tiles.addTileEvent("landfill", position, surface, {
-                originalTileName = old_name,
+                originalTileName = originalWaterName,
                 tileName = new_name,
             })
         elseif utils.IsWaterTile(new_name) and ((old_name and not utils.IsWaterTile(old_name)) or (not old_name)) then
@@ -134,6 +192,12 @@ function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
             })
         end
     end
+end
+
+function tiles.processRestorationEvent(tileEvent, updateBudget)
+    -- A later placement may already have covered this position again.
+    if not utils.IsDryTile(tileEvent.surface.get_tile(tileEvent.position).name) then return end
+    tiles.processWaterfillEvent(tileEvent, updateBudget)
 end
 
 function tiles.processWaterfillEvent(tileEvent, updateBudget)

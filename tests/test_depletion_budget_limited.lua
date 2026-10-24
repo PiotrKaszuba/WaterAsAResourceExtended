@@ -230,7 +230,7 @@ local function run_test()
     
     local total_dry_on_surface = 0
     for _, rect in ipairs(rects) do
-        local dry_count = count_surface_tiles_rect(surface, rect, "lake-shallow")
+        local dry_count = count_surface_tiles_rect(surface, rect, utils.WetToDryTileMap.water)
         total_dry_on_surface = total_dry_on_surface + dry_count
     end
     

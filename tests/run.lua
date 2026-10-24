@@ -1,11 +1,13 @@
 local t = require("tests.helpers.test_assert")
 
 local tests = {}
-for file in io.popen("ls tests"):lines() do
+local discover = package.config:sub(1, 1) == "\\" and "dir /b tests\\test_*.lua" or "ls tests"
+for file in io.popen(discover):lines() do
     if file:match("^test_.*%.lua$") and file ~= "run.lua" then
         tests[#tests + 1] = file
     end
 end
+table.sort(tests)
 
 local function sep(char)
     print(string.rep(char, 30))

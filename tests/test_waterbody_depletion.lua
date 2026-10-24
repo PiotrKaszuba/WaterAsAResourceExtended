@@ -119,7 +119,7 @@ local function run_test()
     t.ok(dried_tiles >= 1, "at least 1 tile dried after crossing 80%")
     
     -- Check surface tiles match
-    local dry_on_surface = count_surface_tiles(surface, water_rect, "lake-shallow")
+    local dry_on_surface = count_surface_tiles(surface, water_rect, utils.WetToDryTileMap.water)
     local wet_on_surface = count_surface_tiles(surface, water_rect, "water")
     t.print(string.format("Surface: %d dry, %d wet", dry_on_surface, wet_on_surface))
     t.eq(dry_on_surface, dried_tiles, "dry tiles on surface matches DriedTiles counter")
@@ -151,7 +151,7 @@ local function run_test()
     t.ok(state.Depleted, "waterbody is marked as Depleted")
     
     -- All tiles should be dry on surface
-    dry_on_surface = count_surface_tiles(surface, water_rect, "lake-shallow")
+    dry_on_surface = count_surface_tiles(surface, water_rect, utils.WetToDryTileMap.water)
     wet_on_surface = count_surface_tiles(surface, water_rect, "water")
     t.eq(dry_on_surface, 5, "all 5 tiles are lake-shallow on surface")
     t.eq(wet_on_surface, 0, "no water tiles remain on surface")
@@ -210,7 +210,7 @@ local function run_test()
     if percent_used < 80 then
         t.eq(dried_tiles, 0, "all tiles restored when below 80%")
         
-        dry_on_surface = count_surface_tiles(surface, water_rect, "lake-shallow")
+        dry_on_surface = count_surface_tiles(surface, water_rect, utils.WetToDryTileMap.water)
         wet_on_surface = count_surface_tiles(surface, water_rect, "water")
         t.eq(wet_on_surface, 5, "all 5 tiles are water on surface after restoration")
         t.eq(dry_on_surface, 0, "no dry tiles on surface after restoration")

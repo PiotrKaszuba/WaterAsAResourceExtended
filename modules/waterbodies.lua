@@ -789,14 +789,7 @@ waterbodies.WaterTileToWaterBodyTileType = {
 	["deepwater-green"] = "DeepWater",
 }
 
-waterbodies.EdgeTileNameMap = {
-	["water"] = "lake-shallow",
-	["water-green"] = "lake-shallow",
-	["water-shallow"] = "lake-shallow",
-	["water-mud"] = "lake-shallow",
-	["deepwater"] = "lake-deep",
-	["deepwater-green"] = "lake-deep",
-}
+waterbodies.EdgeTileNameMap = utils.WetToDryTileMap
 
 function waterbodies.GetAmountWaterForWaterBodyTileType(tileType, include_multiplier)
 	local multiplier = include_multiplier and waterbodies.WaterBodyTileTypesToAmountWaterMultiplier[tileType] or 1

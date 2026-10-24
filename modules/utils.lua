@@ -22,26 +22,16 @@ utils.DryWaterTiles = {
 	["lake-deep"] = true,
 }
 
-utils.WaterAndDryTiles = {
-	["water"] = true,
-	["deepwater"] = true,
-	["water-green"] = true,
-	["water-shallow"] = true,
-	["water-mud"] = true,
-	["deepwater-green"] = true,
-	["lake-shallow"] = true,
-	["lake-deep"] = true,
-}
-
--- Mapping from a wet water tile to its "dry" equivalent
-utils.WetToDryTileMap = {
-	["water"] = "lake-shallow",
-	["water-green"] = "lake-shallow",
-	["water-shallow"] = "lake-shallow",
-	["water-mud"] = "lake-shallow",
-	["deepwater"] = "lake-deep",
-	["deepwater-green"] = "lake-deep",
-}
+utils.WaterAndDryTiles = { ["lake-shallow"] = true, ["lake-deep"] = true }
+utils.WetToDryTileMap = {}
+utils.DryToWetTileMap = {}
+for _, tile in ipairs(require("shared.water_tiles")) do
+	utils.DryWaterTiles[tile.dry] = true
+	utils.WaterAndDryTiles[tile.wet] = true
+	utils.WaterAndDryTiles[tile.dry] = true
+	utils.WetToDryTileMap[tile.wet] = tile.dry
+	utils.DryToWetTileMap[tile.dry] = tile.wet
+end
 
 function utils.getDryTileForWetTile(wetTileName)
 	return utils.WetToDryTileMap[wetTileName]

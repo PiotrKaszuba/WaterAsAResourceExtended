@@ -45,6 +45,17 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 - Depletion spreads from the edges toward the waterbody's center (centroid)
 - Custom tile types are used for depleted areas to avoid conflicts with other mods.
 
+### Landfill and Depleted Beds
+- Ordinary landfill can cover wet water tiles and depleted beds. Covered positions
+  leave the lake's capacity and connectivity; a strip of landfill can split a lake.
+- Landfill remains removable. Mining it exposes an **empty bed**, adding capacity
+  but no water. Water lost when landfill was placed is not refunded by removing it.
+- Reopening a connection can merge lakes. Existing water is shared across the
+  combined area, so some empty beds may become wet again without creating water.
+- Keep landfill beneath buildings you want protected from reflooding. Unfilled
+  beds, including beds exposed by mining landfill, can regenerate and flood again.
+- Built-in waterfill still cannot be placed directly on a depleted bed.
+
 ### Regeneration
 - Waterbodies slowly regenerate water over time
 - Non-linear scaling for strategic resource management:

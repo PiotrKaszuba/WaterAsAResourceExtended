@@ -59,6 +59,16 @@ end
 local World = {}
 World.__index = World
 
+local mineable_tiles = {
+    landfill = true, ["stone-path"] = true, concrete = true,
+    ["refined-concrete"] = true, ["hazard-concrete-left"] = true,
+    ["hazard-concrete-right"] = true,
+}
+
+local function is_foundation(name)
+    return name == "landfill"
+end
+
 local function new_surface(name, default_tile, chunk_settings)
     chunk_settings = chunk_settings or {}
     local chunks_enabled = not not chunk_settings.enabled
@@ -68,6 +78,8 @@ local function new_surface(name, default_tile, chunk_settings)
         name = name,
         index = nil,
         tiles = {},
+        hidden_tiles = {},
+        double_hidden_tiles = {},
         entities = {},
         chart_tags = {},
         next_unit = 1,
@@ -143,7 +155,28 @@ local function new_surface(name, default_tile, chunk_settings)
         end
         local key = grid_key(position)
         local tile_name = surface.tiles[key] or surface.default_tile
-        return { name = tile_name, position = position, valid = true }
+        return {
+            name = tile_name, position = position, valid = true,
+            hidden_tile = surface.hidden_tiles[key],
+            double_hidden_tile = surface.double_hidden_tiles[key],
+        }
+    end
+
+    function surface.get_hidden_tile(position)
+        return surface.hidden_tiles[grid_key(position)]
+    end
+
+    function surface.set_hidden_tile(position, name)
+        surface.hidden_tiles[grid_key(position)] = name
+    end
+
+    function surface.get_double_hidden_tile(position)
+        return surface.double_hidden_tiles[grid_key(position)]
+    end
+
+    function surface.set_double_hidden_tile(position, name)
+        local key = grid_key(position)
+        if surface.hidden_tiles[key] then surface.double_hidden_tiles[key] = name end
     end
 
     function surface.set_tiles(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
@@ -191,7 +224,25 @@ local function new_surface(name, default_tile, chunk_settings)
             local aligned_x, aligned_y = align_tile_coordinates(tile_position.x, tile_position.y)
             local aligned_position = copy_position(aligned_x, aligned_y)
             local key = grid_key(aligned_position)
-            surface.tiles[key] = tile.name
+            local old_name = surface.tiles[key] or surface.default_tile
+            local new_name = assert(tile.name, "set_tiles requires the resulting tile name")
+            -- Match the 2.0 LuaSurface.set_tiles mineable/foundation layer rules.
+            -- Collision correction and entity removal remain outside this mock.
+            if not mineable_tiles[new_name] then
+                surface.hidden_tiles[key], surface.double_hidden_tiles[key] = nil, nil
+            elseif not mineable_tiles[old_name] or is_foundation(old_name) then
+                if not is_foundation(new_name) and is_foundation(old_name)
+                    and surface.hidden_tiles[key] then
+                    surface.double_hidden_tiles[key] = surface.hidden_tiles[key]
+                end
+                if not (is_foundation(new_name) and is_foundation(old_name)) then
+                    surface.hidden_tiles[key] = old_name
+                end
+            elseif is_foundation(new_name) and is_foundation(surface.hidden_tiles[key]) then
+                surface.hidden_tiles[key] = surface.double_hidden_tiles[key]
+                surface.double_hidden_tiles[key] = nil
+            end
+            surface.tiles[key] = new_name
             if event_tiles then
                 event_tiles[#event_tiles + 1] = {
                     name = tile.name,
@@ -593,21 +644,59 @@ function World:waterfill(surface, position, variant)
 end
 
 function World:landfill_rectangle(surface, top_left, width, height)
-    local tiles = {}
+    local positions = {}
     for dx = 0, width - 1 do
         for dy = 0, height - 1 do
             local pos = { x = top_left.x + dx, y = top_left.y + dy }
-            local old_name = surface.get_tile(pos).name
-            tiles[#tiles + 1] = { old_tile = { name = old_name }, position = pos } -- array[OldTileAndPosition]
+            positions[#positions + 1] = pos
         end
     end
-    surface:set_tiles(tiles)
-    mock.raise_event(defines.events.on_player_built_tile, {
+    return self:build_tiles(surface, positions, "landfill")
+end
+
+function World:build_tiles(surface, positions, tile_name, by_robot)
+    local changes, old_tiles = {}, {}
+    for _, position in ipairs(positions) do
+        local old_name = surface.get_tile(position).name
+        if old_name ~= tile_name then
+            changes[#changes + 1] = { name = tile_name, position = position }
+            old_tiles[#old_tiles + 1] = { old_tile = { name = old_name }, position = position }
+        end
+    end
+    if #changes == 0 then return 0 end
+    surface.set_tiles(changes)
+    mock.raise_event(by_robot and defines.events.on_robot_built_tile or defines.events.on_player_built_tile, {
         player_index = 1,
+        robot = by_robot and { valid = true, force = self.force, surface = surface } or nil,
         surface_index = surface.index,
-        tile = { name = "landfill" },
-        tiles = tiles,
+        tile = { name = tile_name },
+        tiles = old_tiles,
+        tick = mock.tick,
     })
+    return #changes
+end
+
+function World:mine_tiles(surface, positions, by_robot)
+    local mined = {}
+    for _, position in ipairs(positions) do
+        local tile = surface.get_tile(position)
+        local key = grid_key(position)
+        local hidden = surface.hidden_tiles[key]
+        if mineable_tiles[tile.name] and hidden then
+            mined[#mined + 1] = { old_tile = { name = tile.name }, position = position }
+            -- Mining reveals, rather than placing, the underlying layer.
+            surface.tiles[key] = hidden
+            surface.hidden_tiles[key] = surface.double_hidden_tiles[key]
+            surface.double_hidden_tiles[key] = nil
+        end
+    end
+    if #mined == 0 then return 0 end
+    mock.raise_event(by_robot and defines.events.on_robot_mined_tile or defines.events.on_player_mined_tile, {
+        player_index = by_robot and nil or 1,
+        robot = by_robot and { valid = true, force = self.force, surface = surface } or nil,
+        surface_index = surface.index, tiles = mined, tick = mock.tick,
+    })
+    return #mined
 end
 
 function World:build_entity(spec, player_index, require_item_name)
