@@ -1,0 +1,12 @@
+{
+  "rounds": 3,
+  "repetitions": 2,
+  "warmups_per_process": 1,
+  "cases": [
+    "pumps_1024_many_lakes",
+    "visual_16384",
+    "scan_65536",
+    "queue_unique_8192"
+  ],
+  "rotation": "main/on/off; on/off/main; off/main/on"
+}

@@ -32,17 +32,17 @@ event routes and production accounting. It covers:
 - Three sibling lakes created by two cuts, then reopened and merged without
   reserve growth.
 - Queued partial brush removal, low work budgets and reload. Visual work is tested
-  after these edits drain; interleaving before that point is deferred below.
+  after these edits drain; interleaving before that point has separate diagnostics below.
 - A newer paid waterfill winning over an older queued restoration.
 - Repeated cover/uncover cycles, independent pavement removal, failed mining,
   repeated robot tile-proxy entity events, and ignored surfaces.
 
-## Deferred diagnostics
+## Pending-terrain diagnostics
 
-Queued terrain protection is deliberately deferred. The default suite does not
+Queued terrain protection is enabled on development. The default suite does not
 claim that every interleaving of visual work and pending terrain edits is safe.
-Opt-in diagnostics live in `tests/deferred/` and are not discovered by the default
-runner. They are expected to fail until that separate work is implemented:
+Additional diagnostics retain their historical `tests/deferred/` paths and are
+not discovered by the default runner. Both should pass with the merged guard:
 
 ```text
 lua tests/deferred/test_pending_landfill_visual_race.lua
@@ -51,7 +51,7 @@ lua tests/deferred/test_mining_visual_interleaving.lua
 
 The first checks pending landfill being overwritten by visual drying. The
 second follows landfill removal through a later scan, exposing 50 recreated
-water units. The optional guard branch additionally has a backlog test checking
+water units on the pre-guard baseline. The default suite has a backlog test checking
 that affected terrain remains covered while unaffected visual work continues;
 its lookup measurement catches an unbounded sweep in a guard implementation.
 

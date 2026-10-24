@@ -236,16 +236,18 @@ automatic pump placement and fuel/power/depletion with Enhanced Offshore Pumps.
 Runtime pump registration includes announced script builds/revives and clone destinations;
 each pump's actual extraction is read from `pumped_last_tick`.
 
-### Deferred terrain-event safeguard
+### Pending terrain-event safeguard
 
-The local branch `codex/pending-tile-visual-guard` preserves optional protection
-against visual work overtaking queued terrain accounting. It is deliberately not
-enabled on development. Its per-surface/position event counts and bounded candidate
-attempts need further performance and real-engine assessment.
+The pending-event visual guard is enabled on development. Per-surface/position
+event counts prevent physical drying/reflooding and associated grid transfers
+from overtaking queued terrain accounting. Candidate attempts remain bounded by
+the existing visual work quota. Regeneration amounts, extraction and ordinary
+topology/accounting processing retain their existing behavior.
 
-Two opt-in diagnostics in `tests/deferred/` reproduce the known development-side
-race and are expected to fail there. They pass with the optional guard. The default
-suite excludes them explicitly; passing defaults do not certify every interleaving.
+Two separately runnable diagnostics in `tests/deferred/` reproduce the race on
+the pre-guard baseline and pass on current development. Their historical paths
+are retained. See [feature scope and verification](tests/PENDING_VISUAL_GUARD.md).
+Passing mocks do not certify every native engine interleaving.
 
 ### Performance testing
 
@@ -255,7 +257,8 @@ including 262,144-tile lakes, 1,024 pumps across 64 lakes, large visual backlogs
 construction bursts and split/reopen settlement. It records phase/cycle CPU times,
 scan-slice and tick distributions, queue latency and correctness counters.
 Run `lua tests/performance/run.lua 7` separately from the fast correctness suite.
-The optional guard branch also contains paired comparisons and a measured report.
+Paired comparisons and a [measured report](tests/performance/PERFORMANCE_REPORT.md)
+record the guard's direct cost and its effects on existing terrain processing.
 Mock timings do not measure native Factorio API costs or predict game UPS.
 
 Scanning, topology work and visual work use budgeted queues/lazy data structures.

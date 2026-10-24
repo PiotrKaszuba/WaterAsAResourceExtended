@@ -84,6 +84,7 @@ end
 
 function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles)
     local gridsData = waterBody.gridsData
+    local pendingChanges = storage.PendingTileChanges and storage.PendingTileChanges[waterBody.surface.name]
     local driedTilesGridWithData = gridsData.driedTilesGridWithData
     local waterGridWithData = gridsData.waterGridWithData
     
@@ -97,6 +98,7 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
 
     local tiles = {}
     local num_tiles_processed = 0
+    local candidatesExamined = 0
 
     if isDepleting then
         local lazyWaterGridWithData = gridsData.lazyWaterGridWithData
@@ -143,7 +145,8 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
         local gridKey, tile_data, cur_table = nil, nil, nil
         local next_gridKey, next_tile_data, next_table = nil, nil, nil
         local just_exhausted_num_available_tiles = true
-        while num_tiles_processed < num_tiles do
+        while num_tiles_processed < num_tiles and candidatesExamined < num_tiles do
+            candidatesExamined = candidatesExamined + 1
             -- check if we can continue
             -- when depleting we get the tile from the binset
             -- if not possible then we default to grabbing tiles from water grid
@@ -175,7 +178,7 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
                 tile_data = lazy_tables_get(gridKey, waterGridWithData, lazyWaterGridWithData)
             end
 
-            if tile_data then
+            if tile_data and not (pendingChanges and pendingChanges[gridKey]) then
                 num_tiles_processed = num_tiles_processed + 1
                 dryTileName = getDryTileForWetTile(tile_data.name)
                 -- when depleting we change the current name to the dry name
@@ -205,7 +208,8 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
         local gridKey, tile_data, cur_table = nil, nil, nil
         local next_gridKey, next_tile_data, next_table = nil, nil, nil
         local just_exhausted_driedStack_joint_size = true
-        while num_tiles_processed < num_tiles do
+        while num_tiles_processed < num_tiles and candidatesExamined < num_tiles do
+            candidatesExamined = candidatesExamined + 1
             -- check if we can continue
             -- when restoring we get the tile from the dried stack
             -- if not possible then we default to grabbing tiles from dried tiles grid
@@ -237,7 +241,7 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
                 tile_data = lazy_tables_get(gridKey, driedTilesGridWithData, lazyDriedTilesGridWithData)
             end
 
-            if tile_data then
+            if tile_data and not (pendingChanges and pendingChanges[gridKey]) then
                 num_tiles_processed = num_tiles_processed + 1
                 tile_data.name = tile_data.originalName
                 tiles[num_tiles_processed] = { name = tile_data.name, position = tile_data.position }
@@ -261,7 +265,7 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
     else
         state.DriedTiles = state.DriedTiles - num_tiles_processed
     end
-    return num_tiles_processed
+    return num_tiles_processed, candidatesExamined
 end
 
 function waterbody_depletion.getVisualDepletionStartPercentage()
