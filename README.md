@@ -121,6 +121,8 @@ capacities, three waterfill add 300 lake water, including when extending a partl
 depleted lake: `ceil(300 / 0.25) = 1,200` water consumed. Recipe productivity is
 disabled. Custom capacity settings automatically change the recipe cost.
 
+**Balance warning:** higher waterfill efficiency or stronger yield research can
+turn relocation into water generation and trivialize finite-water gameplay.
 This efficiency compares crafted waterfill with fluid consumed by its recipe.
 Yield research separately reduces lake depletion when pumping that fluid. The
 default 25% keeps the full pump–craft–place cycle lossy with the default finite
@@ -130,6 +132,21 @@ at level 6, 50% adds about 74 more lake water than pumping its input removes, an
 cap to 9 or above, or enabling infinite research and completing level 9, allows
 reserve gains even with 25% efficiency. Other mods changing recipe output or
 water accounting can also change this balance.
+
+For a completed yield level `L`, pumping removes `0.85^L` lake water per fluid
+unit. A conservative no-generation condition is `efficiency <= 100 * 0.85^L` percent
+(rounding the recipe input upward can only increase its cost):
+
+| Completed yield level | Lake depletion per pumped unit | Conservative whole-percent efficiency ceiling | Default 25% |
+| --- | ---: | ---: | --- |
+| 6 (default cap) | 0.37715 | 37% | Loses water |
+| 8 | 0.27249 | 27% | Loses water |
+| 9 | 0.23162 | 23% | Can generate water |
+
+At default tile capacities, a 25% batch adds 300 water while its 1,200-water
+input removes about 452.58 at level 6 (net loss 152.58). At level 9 it removes
+about 277.94 (net gain 22.06). These comparisons exclude natural regeneration,
+other water-production recipes and changes made by other mods.
 
 **Enable Waterfill** is a startup setting in this mod's settings, enabled by default.
 Disabling it removes the built-in waterfill technology, recipe, item and placer.
