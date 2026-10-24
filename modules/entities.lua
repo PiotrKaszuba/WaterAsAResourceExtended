@@ -184,7 +184,6 @@ function entities.updatePumpStates()
     for unit_number, pump_data in pairs(storage.TrackedEntities) do
         if pump_data.type == "pump" then
             if not pump_data.entity.valid then
-                entities.disablePump(pump_data)
                 entities.removePumpFromWaterBody(unit_number, pump_data.waterBodyId)
                 to_remove[unit_number] = true
             else
