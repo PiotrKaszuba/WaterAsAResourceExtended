@@ -22,7 +22,7 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 
 ### Finite Water System
 - **Waterbody Tracking**: Connected water tiles form "waterbodies" with unique IDs, scanned asynchronously when pumps are placed
-- **Per-Pump Usage**: Each pump's actual fluid extraction is tracked individually using Factorio 2.0's `pumped_last_tick` API
+- **Per-Pump Usage**: Each pump depletes its lake according to the water it actually extracts.
 - **Water Tile Capacity**: Startup settings default to 200 for normal water and
   2,000 for deep water. Extra-shallow water holds half the normal amount and muddy
   water holds one quarter, preserving their existing capacity multipliers.
@@ -78,16 +78,13 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
   untracked excluded pumps are not activated or disabled by this mod.
 - Pumps remain non-movable with Picker/Even Pickier Dollies. The blacklist uses
   prototype names, so it can also restrict that pump type on ignored surfaces.
-- Announced script builds/revives and cloned pumps are registered through the
-  same checks as ordinary builds; repeated notifications do not duplicate usage.
 
 - Burner and electric offshore pumps on supported water tiles use the same
   per-pump extraction accounting. Non-water sources and custom water tiles
   without a drying/restoration mapping are left unmanaged. Ordinary pipeline
   pumps are not treated as waterbody extractors.
-- Enhanced Offshore Pumps (`offshore-burner`) uses vanilla-derived offshore-pump
-  prototypes and no runtime adapter. Full fuel/power/depletion acceptance with
-  its Factorio 2.0 release remains a release-validation check.
+- Enhanced Offshore Pumps (`offshore-burner`) uses the same finite-water accounting
+  for its burner and electric offshore water pumps.
 - Pumps automatically deactivate when their waterbody reaches 100% depletion
 - Pumps reactivate when water returns above threshold (default: 99% depletion)
 - Water usage is multiplied by the force's technology bonus
@@ -112,8 +109,8 @@ ignores the finite maximum. The existing science requirements and costs are reta
 | 6 | 37.7% usage; default final level | + Space | 2k |
 | 7+ (if enabled) | -15% usage per additional level | + Space | 4k, 8k, ... |
 
-Changing either research setting refreshes cached force bonuses from completed
-research when the save loads with the new startup configuration. Lowering the cap
+Changing either research setting updates your bonuses when the save loads with
+the new settings. Lowering the cap
 limits the applied bonus too; it does not refund science. Removed tiers may lose
 their saved progress, so use a backup before lowering the cap. Research already
 completed beyond level 6 starts applying its actual bonus if infinite research is
@@ -164,10 +161,8 @@ Disabling it removes the built-in waterfill technology, recipe, item and placer.
 Existing waterfill items can be removed without conversion or refund. Ordinary
 tile-change tracking remains enabled for depletion, merging and splitting.
 
-**CanalBuilderMAV is incompatible.** It changes terrain without raising tile-change
-events, so avoiding duplicate waterfill prototypes alone would not keep waterbody
-accounting synchronized. Future waterfill integrations must notify this mod of
-tile changes; disabling built-in waterfill does not provide that integration.
+**CanalBuilderMAV is incompatible.** Its terrain changes bypass finite-water
+accounting. Disabling built-in waterfill does not make the combination compatible.
 
 ## Waterbody Dynamics
 
@@ -191,9 +186,13 @@ Configurable notifications at various depletion levels:
 
 ## Performance Features
 
-- **Update Budget System**: Configurable operations per second (default: 2000) prevents lag spikes
-- **Async Scanning**: Initial waterbody scans spread over time (configurable tiles/second)
-- **Lazy Data Migration**: Large data operations spread across multiple game ticks
+- **Update Budget System**: Configurable operations per second (default: 2000) helps limit lag spikes.
+- **Async Scanning**: Initial waterbody scans spread over time (configurable tiles/second).
+- **Lazy Data Migration**: Large data operations spread across multiple game ticks.
+
+The update budget and scanning speed settings control how much work the mod does
+over time. Lower values reduce the work per update but make lake scans and terrain
+changes take longer to finish.
 
 ## Multi-Surface & Multi-Force Support
 
@@ -216,3 +215,47 @@ From "Water As A Resource": updated, refactored, and extended for Factorio >= 2.
 Some of the original graphics are still used under the MIT License.
 
 Waterfill icon is borrowed from Waterfill by untraceablesmurf under MIT License, found on Factorio Mod Portal: https://mods.factorio.com/mod/Waterfill_v17 or Github: https://github.com/un-smurf/waterfill.
+
+<!-- PORTAL-DESCRIPTION-END: copy everything above this line to the mod portal. -->
+
+---
+
+## Development
+
+This section is repository documentation and is not part of the mod-portal description.
+
+### Tests and engine acceptance
+
+Run `lua tests/run.lua` from the mod directory. See [test coverage and limitations](tests/README.md).
+The suite uses a mock Factorio world and exercises event handlers, accounting,
+scanning, splits/merges, visual work and queued-state reload together. It does not
+certify native collision handling, real robot scheduling or actual saved-game loading.
+
+Factorio 2.0 acceptance remains necessary before release, including the exact ZIP,
+automatic pump placement and fuel/power/depletion with Enhanced Offshore Pumps.
+Runtime pump registration includes announced script builds/revives and clone destinations;
+each pump's actual extraction is read from `pumped_last_tick`.
+
+### Deferred terrain-event safeguard
+
+The local branch `codex/pending-tile-visual-guard` preserves optional protection
+against visual work overtaking queued terrain accounting. It is deliberately not
+enabled on development. Its per-surface/position event counts and bounded candidate
+attempts need further performance and real-engine assessment.
+
+Two opt-in diagnostics in `tests/deferred/` reproduce the known development-side
+race and are expected to fail there. They pass with the optional guard. The default
+suite excludes them explicitly; passing defaults do not certify every interleaving.
+
+### Performance testing
+
+The dedicated scan-performance suite has six configurations. Mock callbacks are
+timed automatically, and some test wrappers report their statistics. Correctness
+tests are not all standardized performance benchmarks; direct function calls and
+native Factorio API costs require separate measurement.
+
+Scanning, topology work and visual work use budgeted queues/lazy data structures.
+This spreads work across updates, with queue latency as a trade-off. A pending-position
+hash lookup does not make split/merge processing constant-time. Guard-versus-eager
+comparisons should include quiet operation, dense overlap and construction bursts,
+measuring callback peaks and queue drain as well as average throughput.

@@ -31,8 +31,8 @@ event routes and production accounting. It covers:
   pump registration; historical depletion must not be erased by a fresh scan.
 - Three sibling lakes created by two cuts, then reopened and merged without
   reserve growth.
-- Queued partial brush removal, low work budgets, pending drying/restoration and
-  reload; covered coordinates must never reappear in the visual water layer.
+- Queued partial brush removal, low work budgets and reload. Visual work is tested
+  after these edits drain; interleaving before that point is deferred below.
 - A newer paid waterfill winning over an older queued restoration.
 - Repeated cover/uncover cycles, independent pavement removal, failed mining,
   repeated robot tile-proxy entity events, and ignored surfaces.
