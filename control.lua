@@ -119,6 +119,7 @@ function control.VersionChanged(event)
 	end
 	event_handlers.scanForExistingPumps()
 	entities.blacklistTrackedPumps()
+	forces.refreshYieldBoosts()
 end
 
 -- SCRIPT EVENTS --

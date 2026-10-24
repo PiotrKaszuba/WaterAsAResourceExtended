@@ -12,12 +12,8 @@ Technology Unlock Test
 Tests that water_usage_multiplier is correctly updated when technologies are researched,
 and verifies the multiplier affects water consumption calculations.
 
-Tests all 10 technology levels with precise expected values.
+Tests 10 completed technology levels with true infinite research enabled.
 Expected behavior: Each level reduces water usage by 15% (multiplier = 0.85^level).
-
-POTENTIAL BUGS IN forces.lua:
-1. Formula uses 0.15 instead of 0.85 for infinite tech (levels 6+)
-2. Formula uses research_level instead of boostLevel, risking negative exponents
 ]]
 
 -- ========================================
@@ -97,7 +93,7 @@ local function test_tech_level(world, wbody, pump, tech_level, pump_flow, ticks_
     
     -- Complete research (skip for level 0 = no tech)
     if tech_level > 0 then
-        local tech_name = string.format("waar-yield-boost-%d", tech_level)
+        local tech_name = string.format("waar-yield-boost-%d", math.min(tech_level, 6))
         world:complete_research(tech_name, tech_level)
     end
     
@@ -184,6 +180,8 @@ local function run_test()
     -- ========================================
     t.print("=== SETUP ===")
     local world, surface = test_env.create_world()
+    settings.startup["Enable-Infinite-Yield-Research"].value = true
+    world.force.technologies["waar-yield-boost-6"].prototype.max_level = "infinite"
     
     -- Create large water body (100x10 = 1000 tiles = 50,000 water)
     -- Large enough to not deplete during all 10 tech level tests

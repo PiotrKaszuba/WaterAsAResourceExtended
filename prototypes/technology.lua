@@ -1,7 +1,6 @@
 local waar_yield_boost_icon = "__WaterAsAResourceExtended__/graphics/technology/waar-yield-regen-boost-1.png"
 
-data:extend(
-  {
+local technologies = {
     {
       type = "technology",
       name = "waar-yield-boost-1",
@@ -176,4 +175,15 @@ data:extend(
       order = "e-l-f"
     }
 
-  })
+  }
+
+local infinite = settings.startup["Enable-Infinite-Yield-Research"].value
+local max_level = settings.startup["Yield-Boost-Max-Level"].value
+local enabled_technologies = {}
+for level, technology in ipairs(technologies) do
+  if infinite or level <= max_level then
+    if level == 6 then technology.max_level = infinite and "infinite" or max_level end
+    enabled_technologies[#enabled_technologies + 1] = technology
+  end
+end
+data:extend(enabled_technologies)

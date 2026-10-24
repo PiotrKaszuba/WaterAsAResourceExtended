@@ -184,6 +184,23 @@ local settings_definitions = {
         hidden = true,
         order = "h[splits]-c"
     },
+    -- Yield research
+    {
+        type = "int-setting",
+        name = "Yield-Boost-Max-Level",
+        setting_type = "startup",
+        default_value = 6,
+        minimum_value = 1,
+        maximum_value = 100,
+        order = "k[research]-a"
+    },
+    {
+        type = "bool-setting",
+        name = "Enable-Infinite-Yield-Research",
+        setting_type = "startup",
+        default_value = false,
+        order = "k[research]-b"
+    },
     -- Waterfill
     {
         type = "bool-setting",

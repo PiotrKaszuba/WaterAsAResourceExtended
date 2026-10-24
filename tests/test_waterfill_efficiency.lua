@@ -56,14 +56,14 @@ end
 local _, default_cost = load_recipe(definitions["TileFluidAmount-Shallow"].default_value, definition.default_value)
 t.eq(default_cost, 1200, "default batch consumes 1200 water")
 local multiplier = forces.GetTechYieldBoost("waar-yield-boost-6", 6)
-t.ok(math.abs(multiplier - 0.85 ^ 6) < 1e-12, "current maximum yield effect is level 6")
-t.eq(forces.GetTechYieldBoost("waar-yield-boost-6", 100), multiplier, "later repeat levels currently retain the same effect")
-t.ok(default_cost * multiplier > 300, "default recipe loses reserve water even with current maximum yield bonus")
+t.ok(math.abs(multiplier - 0.85 ^ 6) < 1e-12, "default finite maximum yield effect is level 6")
+t.eq(forces.GetTechYieldBoost("waar-yield-boost-6", 100), multiplier, "default finite cap limits higher completed research levels")
+t.ok(default_cost * multiplier > 300, "default recipe loses reserve water even with default maximum yield bonus")
 local _, safe_cost = load_recipe(200, 37)
 local _, unsafe_cost = load_recipe(200, 38)
 t.ok(safe_cost * multiplier >= 300, "37 percent is conservative at default capacities with current research")
 t.ok(unsafe_cost * multiplier < 300, "38 percent can gain reserves at default capacities with current research")
-t.ok(default_cost * 0.85 ^ 9 < 300, "a genuine future level-9 bonus would require reassessing the default")
+t.ok(default_cost * 0.85 ^ 9 < 300, "raising the finite cap or enabling infinite research can allow gains at level 9")
 
 local world, surface = env.create_world()
 settings.startup["TileFluidAmount-Shallow"].value = definitions["TileFluidAmount-Shallow"].default_value

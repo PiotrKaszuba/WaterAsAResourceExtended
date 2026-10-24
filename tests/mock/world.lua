@@ -339,7 +339,18 @@ function World.new(options)
             options.chunk_generation_delay, 0.5),
     }, World)
     -- setup default force and player
-    local force = { name = "player", valid = true, index = 1 }
+    local force = { name = "player", valid = true, index = 1, technologies = {} }
+    local infinite_yield = settings.startup["Enable-Infinite-Yield-Research"].value
+    local yield_cap = settings.startup["Yield-Boost-Max-Level"].value
+    for level = 1, 6 do
+        if infinite_yield or level <= yield_cap then
+            local name = "waar-yield-boost-" .. level
+            force.technologies[name] = {
+                name = name, level = level, researched = false, force = force,
+                prototype = { max_level = level == 6 and (infinite_yield and "infinite" or yield_cap) or level },
+            }
+        end
+    end
     force.print = mock.make_printer("force", force.name)
 
     local function resolve_surface(surface_ref)
@@ -683,11 +694,12 @@ function World:set_pump_flow(entity, amount)
 end
 
 function World:complete_research(tech_name, level)
-    local research = {
-        name = tech_name,
-        level = level or 1,
-        force = self.force,
-    }
+    local research = assert(self.force.technologies[tech_name], "unknown technology: " .. tech_name)
+    local completed_level = level or research.level
+    local max_level = research.prototype.max_level
+    assert(max_level == "infinite" or completed_level <= max_level, "research exceeds configured maximum")
+    research.researched = max_level ~= "infinite" and completed_level == max_level
+    research.level = research.researched and completed_level or completed_level + 1
     mock.raise_event(defines.events.on_research_finished, { research = research })
 end
 
