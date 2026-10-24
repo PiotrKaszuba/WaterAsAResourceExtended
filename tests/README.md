@@ -62,6 +62,10 @@ existing whole-waterbody visual model.
 
 ## Limits
 
+For larger repeatable workloads, CPU phase/cycle timings and tick/scan-slice
+distributions, see [performance/README.md](performance/README.md). Run this suite
+separately from the fast regressions; it includes mid/late-game stress scales.
+
 The mock reproduces the documented Factorio 2.0 tile-layer rules and event
 payloads used by these tests. It does not reproduce engine collision correction,
 entity destruction, real robot scheduling or native save serialization.
