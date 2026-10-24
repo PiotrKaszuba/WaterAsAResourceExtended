@@ -2,6 +2,7 @@
 Version: 2.0.4
 Date: 2026.10.24
   Changes:
+    - Initialize missing depletion bins before pending drying work, preventing the reported newBinset crash while retaining drying/restoration progress.
     - Remove stale pump tracking without trying to disable an invalid entity.
     - Regeneration setting changes now update already tracked waterbodies; existing cached values are refreshed on the next setting change, without an upgrade-time migration.
     - Added Enable Waterfill, a startup setting enabled by default, to control the built-in waterfill technology, recipe, item and placer.

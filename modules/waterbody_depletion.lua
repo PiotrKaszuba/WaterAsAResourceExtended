@@ -103,7 +103,13 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
         local getDryTileForWetTile = utils.getDryTileForWetTile
         -- prepare binsets to have enough tiles
         local newBinset = gridsData.newBinset
-        local binset_total = newBinset.total
+        if newBinset == nil then
+            waterbodies.ensureAndUpdateBinset(waterBody)
+            newBinset = gridsData.newBinset
+        end
+        -- During partial updates a centroid may not exist yet. The water-grid
+        -- fallback below can still dry tiles without a binset.
+        local binset_total = newBinset and newBinset.total or 0
 
         local min_count, extra_count_ratio = waterbody_depletion.getMinBinsetCountAndExtraCountRatio()
 
@@ -112,7 +118,7 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
         local quality_missing_count = quality_count - binset_total
         local missing_count = num_tiles - binset_total
 
-        if quality_missing_count > 0 then
+        if newBinset and quality_missing_count > 0 then
             -- request new binset update - but it might not grant all tiles we would like
             -- try twice then get tiles from source
             
@@ -124,10 +130,14 @@ function waterbody_depletion.getTilesDepleting(waterBody, isDepleting, num_tiles
             end
         end
 
-        binset_total = newBinset.total
+        binset_total = newBinset and newBinset.total or 0
         local to_pop_tiles = math.min(num_tiles, binset_total)
 
-        local item_datas, _, num_available_tiles = dynamic_bins.batch_pop(newBinset, to_pop_tiles)
+        local item_datas, num_available_tiles = {}, 0
+        if newBinset then
+            local popped_tiles, _, popped_count = dynamic_bins.batch_pop(newBinset, to_pop_tiles)
+            item_datas, num_available_tiles = popped_tiles, popped_count
+        end
         
         local dryTileName = nil
         local gridKey, tile_data, cur_table = nil, nil, nil
