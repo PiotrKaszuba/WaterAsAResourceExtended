@@ -100,7 +100,8 @@ if (-not $NoZip) {
         Remove-Item -Path $ZipPath -Force
     }
     
-    [System.IO.Compression.ZipFile]::CreateFromDirectory($OutputDir, $ZipPath)
+    [System.IO.Compression.ZipFile]::CreateFromDirectory(
+        $OutputDir, $ZipPath, [System.IO.Compression.CompressionLevel]::Optimal, $true)
     
     $zipSize = (Get-Item $ZipPath).Length / 1KB
     Write-Host "  Created: $ZipPath ($([math]::Round($zipSize, 2)) KB)" -ForegroundColor Gray
