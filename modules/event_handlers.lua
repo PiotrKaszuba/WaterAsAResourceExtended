@@ -22,6 +22,7 @@ function event_handlers.signalAttachedToWaterBody(waterBody)
 end
 
 function event_handlers.BuiltPump(entity)
+    if not entities.shouldHandlePump(entity) or entities.getTrackedEntity(entity.unit_number) then return end
     local pump = entities.initAndRegisterNewPump(entity)
 
     if not entities.validatePumpPlacement(pump) then
@@ -124,7 +125,7 @@ function event_handlers.scanForExistingPumps()
     for _, surface in pairs(game.surfaces) do
         local pumps = surface.find_entities_filtered({ type = entities.offshore_pump_prototype_type })
         for _, entity in pairs(pumps) do
-            if entity.valid and not entities.getTrackedEntity(entity.unit_number) then
+            if entities.shouldHandlePump(entity) and not entities.getTrackedEntity(entity.unit_number) then
                 -- Register this existing pump
                 local pump = entities.initAndRegisterNewPump(entity)
                 if entities.validatePumpPlacement(pump) then

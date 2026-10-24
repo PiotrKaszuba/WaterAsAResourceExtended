@@ -58,6 +58,14 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
   currently calculated size applies; it may change as more tiles are discovered.
 
 ### Pump Behavior
+
+- Burner and electric offshore pumps on supported water tiles use the same
+  per-pump extraction accounting. Non-water sources and custom water tiles
+  without a drying/restoration mapping are left unmanaged. Ordinary pipeline
+  pumps are not treated as waterbody extractors.
+- Enhanced Offshore Pumps (`offshore-burner`) uses vanilla-derived offshore-pump
+  prototypes and no runtime adapter. Full fuel/power/depletion acceptance with
+  its Factorio 2.0 release remains a release-validation check.
 - Pumps automatically deactivate when their waterbody reaches 100% depletion
 - Pumps reactivate when water returns above threshold (default: 99% depletion)
 - Water usage is multiplied by the force's technology bonus

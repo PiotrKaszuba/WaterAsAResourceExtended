@@ -1,5 +1,18 @@
 local mock = require("tests.mock.factorio_runtime")
 
+local source_fluids = {
+    water = "water", ["water-green"] = "water", deepwater = "water",
+    ["deepwater-green"] = "water", ["water-shallow"] = "water", ["water-mud"] = "water",
+    lava = "lava", ["oil-ocean-deep"] = "heavy-oil",
+}
+
+local function set_pump_source_methods(entity, spec, surface)
+    entity.get_fluid_source_tile = function() return spec.input_position or spec.position end
+    entity.get_fluid_source_fluid = function()
+        return spec.source_fluid or source_fluids[surface.get_tile(entity.get_fluid_source_tile()).name]
+    end
+end
+
 -- same implementation as hot_utils.GridKey to avoid extra dependency
 local function grid_key(pos)
     return pos.x * 10000000 + pos.y
@@ -619,7 +632,7 @@ function World:build_entity(spec, player_index, require_item_name)
         end
     end
 
-    entity.get_fluid_source_tile = function() return spec.input_position or spec.position end
+    set_pump_source_methods(entity, spec, surface)
     surface.entities[entity.unit_number] = entity
     mock.raise_event(defines.events.on_built_entity, { entity = entity })
     return entity
@@ -651,7 +664,7 @@ function World:add_existing_entity(spec, player_index)
             mock.raise_event(defines.events.script_raised_destroy, { entity = entity })
         end
     end
-    entity.get_fluid_source_tile = function() return spec.input_position or spec.position end
+    set_pump_source_methods(entity, spec, surface)
     surface.entities[entity.unit_number] = entity
     -- No event raised - entity already exists
     return entity

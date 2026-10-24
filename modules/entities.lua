@@ -25,6 +25,19 @@ end
 entities.offshore_pump_prototype_type = "offshore-pump"
 entities.offshore_drain_prototype_type = "offshore-drain"
 
+function entities.shouldHandlePump(entity)
+    if not entity.valid or entity.prototype.type ~= entities.offshore_pump_prototype_type then return false end
+    if entity.name == "waterfill-placer" or entity.name == "waterfill-placer-deep" then return false end
+    local source = entity.get_fluid_source_tile()
+    local tile = source and entity.surface.get_tile(source)
+    if tile and utils.DryWaterTiles[tile.name] then return true end
+    local fluid = entity.get_fluid_source_fluid()
+    if fluid and fluid ~= "water" then return false end
+    -- Unknown water tiles require their own drying/restoration mapping. A pump
+    -- with no fluid source still goes through the existing placement validation.
+    return fluid == nil or (tile and utils.WaterTiles[tile.name]) == true
+end
+
 function entities.initAndRegisterNewPump(entity)
     -- "pump_data"
     local pump_data = {
@@ -107,6 +120,7 @@ function entities.DestroyedPump(entity)
 end
 
 function entities.TeleportedPump(entity)
+    if not entities.getTrackedEntity(entity.unit_number) and not entities.shouldHandlePump(entity) then return end
     -- it shouldn't happen - issue a warning and disable the pump
     utils.profile_hits("entities.TeleportedPump", "a pump was teleported")
     game.print("Warning: a pump was teleported")
