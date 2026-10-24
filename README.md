@@ -67,6 +67,8 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
   untracked excluded pumps are not activated or disabled by this mod.
 - Pumps remain non-movable with Picker/Even Pickier Dollies. The blacklist uses
   prototype names, so it can also restrict that pump type on ignored surfaces.
+- Announced script builds/revives and cloned pumps are registered through the
+  same checks as ordinary builds; repeated notifications do not duplicate usage.
 
 - Burner and electric offshore pumps on supported water tiles use the same
   per-pump extraction accounting. Non-water sources and custom water tiles
