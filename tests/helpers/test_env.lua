@@ -41,6 +41,7 @@ local function load_default_settings()
         ["Yield-Boost-Max-Level"] = 6,
         ["Enable-Infinite-Yield-Research"] = false,
         ["Enable-Waterfill"] = true,
+        ["Waterbody-Nauvis-Only"] = true,
         ["TileFluidAmount-Shallow"] = 50,
         ["TileFluidAmount-Deep"] = 150,
         ["WaterBody-Regen-Scaling"] = 1.5,

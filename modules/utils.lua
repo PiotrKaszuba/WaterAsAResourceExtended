@@ -1,5 +1,11 @@
 utils = {}
 
+function utils.isManagedSurface(surface)
+	local setting = settings.startup["Waterbody-Nauvis-Only"]
+	local nauvis_only = setting == nil or setting.value
+	return not nauvis_only or surface.name == "nauvis"
+end
+
 
 -- Water tile lookup table for fast O(1) checking
 utils.WaterTiles = {

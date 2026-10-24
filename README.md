@@ -59,6 +59,15 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 
 ### Pump Behavior
 
+- **Manage only Nauvis** is enabled by default. Disable this startup setting to
+  manage supported water sources on other surfaces. Non-water fluids remain
+  unmanaged either way; this is not finite lava/oil or full Space Age support.
+- Changing scope releases previously tracked excluded pumps once and stops their
+  waterbody updates. Previously dried terrain is left as it is. New and already
+  untracked excluded pumps are not activated or disabled by this mod.
+- Pumps remain non-movable with Picker/Even Pickier Dollies. The blacklist uses
+  prototype names, so it can also restrict that pump type on ignored surfaces.
+
 - Burner and electric offshore pumps on supported water tiles use the same
   per-pump extraction accounting. Non-water sources and custom water tiles
   without a drying/restoration mapping are left unmanaged. Ordinary pipeline

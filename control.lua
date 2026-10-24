@@ -106,6 +106,20 @@ function PeriodicUpdate()
 	storage.PeriodicTick = periodicTick + 1
 end
 
+function control.reconcileSurfaceScope()
+	entities.releaseUnmanagedPumps()
+	for _, waterBody in pairs(waterbodies.getValidWaterBodies()) do
+		if not utils.isManagedSurface(waterBody.surface) then waterbodies.removeWaterBody(waterBody) end
+	end
+	local queue = tiles.getTileEventQueue()
+	local retained = utils.Queue.new()
+	while queue.size > 0 do
+		local event = utils.Queue.dequeue(queue)
+		if utils.isManagedSurface(event.surface) then utils.Queue.enqueue(retained, event) end
+	end
+	storage.TileEventQueue = retained
+end
+
 function control.VersionChanged(event)
 	local mod_changed = event.mod_changes["WaterAsAResourceExtended"]
 	if mod_changed then
@@ -117,6 +131,7 @@ function control.VersionChanged(event)
 			control.Init()
 		end
 	end
+	control.reconcileSurfaceScope()
 	event_handlers.scanForExistingPumps()
 	entities.blacklistTrackedPumps()
 	forces.refreshYieldBoosts()

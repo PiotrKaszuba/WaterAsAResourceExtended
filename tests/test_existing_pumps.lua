@@ -43,6 +43,7 @@ local function load_default_settings()
         ["Split-Finalize-Max-Landfills-Per-Update"] = 100,
     }
     local startup_defaults = {
+        ["Waterbody-Nauvis-Only"] = true,
         ["Yield-Boost-Max-Level"] = 6,
         ["Enable-Infinite-Yield-Research"] = false,
         ["TileFluidAmount-Shallow"] = 50,

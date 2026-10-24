@@ -92,6 +92,7 @@ end
 
 function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
     if not tileArray or not surface then return end
+    if not utils.isManagedSurface(surface) then return end
 
     local surfaceName = surface.name
 

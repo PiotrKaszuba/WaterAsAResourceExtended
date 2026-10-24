@@ -27,6 +27,7 @@ entities.offshore_drain_prototype_type = "offshore-drain"
 
 function entities.shouldHandlePump(entity)
     if not entity.valid or entity.prototype.type ~= entities.offshore_pump_prototype_type then return false end
+    if not utils.isManagedSurface(entity.surface) then return false end
     if entity.name == "waterfill-placer" or entity.name == "waterfill-placer-deep" then return false end
     local source = entity.get_fluid_source_tile()
     local tile = source and entity.surface.get_tile(source)
@@ -73,6 +74,18 @@ function entities.blacklistTrackedPumps()
         if pump.entity.valid and not names[pump.entity.name] then
             entities.blacklistPumpMovement(pump.entity)
             names[pump.entity.name] = true
+        end
+    end
+end
+
+function entities.releaseUnmanagedPumps()
+    for unit_number, pump in pairs(storage.TrackedEntities) do
+        if pump.type == "pump" and (not pump.entity.valid or not entities.shouldHandlePump(pump.entity)) then
+            -- This mod already controls tracked pumps' script activation. Release
+            -- that control once; normal fuel/power/circuit restrictions still apply.
+            if pump.entity.valid then pump.entity.active = true end
+            entities.removePumpFromWaterBody(unit_number, pump.waterBodyId)
+            entities.removeTrackedEntity(unit_number)
         end
     end
 end

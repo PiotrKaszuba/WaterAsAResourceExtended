@@ -65,6 +65,13 @@ local settings_definitions = {
     },
     -- Waterbody
     {
+        type = "bool-setting",
+        name = "Waterbody-Nauvis-Only",
+        setting_type = "startup",
+        default_value = true,
+        order = "d[waterbody]-0"
+    },
+    {
         type = "int-setting",
         name = "Waterbody-Max-Size",
         setting_type = "runtime-global",
