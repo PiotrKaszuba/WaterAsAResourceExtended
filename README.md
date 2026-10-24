@@ -65,7 +65,9 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 ## Technology Tree
 
 ### Yield Boost Research
-Reduce water consumption through research. Each level reduces water consumption of offshore pumps by 15% (multiplicative).
+Reduce water consumption through research. Each level through level 6 reduces
+water removed from lakes by 15% (multiplicative), while pumps output the same fluid.
+The later repeat levels currently retain the level-6 bonus rather than improving it.
 
 | Tier | Effect | Science Packs | Cost |
 |------|--------|---------------|------|
@@ -74,13 +76,31 @@ Reduce water consumption through research. Each level reduces water consumption 
 | 3 | 61.4% usage | + Logistic | 300 |
 | 4 | 52.2% usage | + Chemical | 400 |
 | 5 | 44.4% usage | + Utility | 500 |
-| 6+ | -15% each | + Space | 1k, 2k, ... |
+| 6+ | 37.7% usage; unchanged by later repeats | + Space | 1k, 2k, ... |
 
 ### Waterfill Technology
 - **Prerequisites**: Landfill, Explosives
-- **Recipe**: 1 Explosives + 500 Water = 3 Waterfill
-- Places shallow water adjacent to existing water tiles
+- **Recipe at default settings**: 1 Explosives + 1,200 Water = 3 Waterfill
+- Places extra-shallow water adjacent to existing water tiles (100 water per tile at default capacities)
 - Cannot be placed on dried (depleted) tiles
+
+**Waterfill - Relocation efficiency (%)** is a startup setting, default 25%,
+with a range of 1–100%. The recipe's water cost is rounded up from the total
+capacity its three resulting tiles add, divided by the efficiency. At default
+capacities, three waterfill add 300 lake water, including when extending a partly
+depleted lake: `ceil(300 / 0.25) = 1,200` water consumed. Recipe productivity is
+disabled. Custom capacity settings automatically change the recipe cost.
+
+This efficiency compares crafted waterfill with fluid consumed by its recipe.
+Yield research separately reduces lake depletion when pumping that fluid. The
+default 25% keeps the full pump–craft–place cycle lossy with the current maximum
+yield bonus. Values of 38–100% can allow net reserve gains after research; at the
+current maximum bonus, 50% adds about 74 more lake water than pumping its input
+removes, and 100% adds about 187 more per batch at default capacities. If repeat
+research gains are extended beyond the current level-6 effect, this balance must
+be checked again: a genuine level-9 bonus would already exceed the default's
+protection. Other mods changing recipe output or water accounting can also
+change this balance.
 
 **Enable Waterfill** is a startup setting in this mod's settings, enabled by default.
 Disabling it removes the built-in waterfill technology, recipe, item and placer.

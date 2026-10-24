@@ -36,21 +36,27 @@ local waterfill_tech = {
 }
 
 -- recipe
+local waterfill_output_count = 3
+-- The placer creates water-shallow, which holds half the normal-water capacity.
+local waterfill_tile_capacity = settings.startup["TileFluidAmount-Shallow"].value * 0.5
+local waterfill_efficiency = settings.startup["Waterfill-Efficiency"].value / 100
+local waterfill_water_cost = math.ceil(waterfill_output_count * waterfill_tile_capacity / waterfill_efficiency)
 local waterfill_recipe = {
     type = "recipe",
     name = "waterfill-recipe",
     energy_required = 1,
     enabled = false,
     category = "crafting-with-fluid",
+    allow_productivity = false,
     ingredients = {
         {
             type = "item",
             name = "explosives",
             amount = 1,
         },
-        { type = "fluid", name = "water", amount = 500 },
+        { type = "fluid", name = "water", amount = waterfill_water_cost },
     },
-    results = { { type = "item", name = "waterfill", amount = 3 } }
+    results = { { type = "item", name = "waterfill", amount = waterfill_output_count } }
 }
 
 -- item

@@ -192,6 +192,15 @@ local settings_definitions = {
         default_value = true,
         order = "j[waterfill]-a"
     },
+    {
+        type = "int-setting",
+        name = "Waterfill-Efficiency",
+        setting_type = "startup",
+        default_value = 25,
+        minimum_value = 1,
+        maximum_value = 100,
+        order = "j[waterfill]-b"
+    },
     -- Map
     {
         type = "bool-setting",

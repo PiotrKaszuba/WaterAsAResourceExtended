@@ -40,8 +40,16 @@ local function check_data_stage(enabled)
             self.raw[value.type][value.name] = value
         end
     end
+    local startup = {}
+    for name, definition in pairs(definitions) do
+        if definition.setting_type == "startup" then
+            startup[name] = { value = definition.default_value }
+        end
+    end
+    startup["Enable-Waterfill"].value = enabled
     local fixture = {
-        settings = { startup = { ["Enable-Waterfill"] = { value = enabled } } },
+        settings = { startup = startup },
+        math = math,
         -- A generic switch must not inspect which other mods are present.
         mods = setmetatable({}, { __index = function() error("unexpected mod detection") end }),
         table = { deepcopy = deepcopy },
