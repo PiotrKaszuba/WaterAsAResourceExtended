@@ -204,6 +204,10 @@ function waterbody_split.checkIfWaterBodyGotSplit(waterBodyId, split_position, s
 	-- as well as from all the water pumps that are present in the water body
 	-- handle the drained water so that none can exploit it for free water
 
+	-- A large queued brush may hide every seed beyond the bounded search.
+	-- Later removals will expose surviving terrain; there is no successor to
+	-- create yet, so retain this body and its remaining accounting for now.
+	if #connected_tile_sets == 0 then return end
 	local got_split = #connected_tile_sets > 1 or #adjacent_border_land_tiles > 0
 	local is_potential_split = any_hit_cap or #adjacent_border_land_tiles > 0
 
