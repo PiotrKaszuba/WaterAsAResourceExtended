@@ -249,10 +249,14 @@ suite excludes them explicitly; passing defaults do not certify every interleavi
 
 ### Performance testing
 
-The dedicated scan-performance suite has six configurations. Mock callbacks are
-timed automatically, and some test wrappers report their statistics. Correctness
-tests are not all standardized performance benchmarks; direct function calls and
-native Factorio API costs require separate measurement.
+The original scan-performance suite has six configurations. A separate
+[performance workload suite](tests/performance/README.md) adds 19 repeatable cases,
+including 262,144-tile lakes, 1,024 pumps across 64 lakes, large visual backlogs,
+construction bursts and split/reopen settlement. It records phase/cycle CPU times,
+scan-slice and tick distributions, queue latency and correctness counters.
+Run `lua tests/performance/run.lua 7` separately from the fast correctness suite.
+The optional guard branch also contains paired comparisons and a measured report.
+Mock timings do not measure native Factorio API costs or predict game UPS.
 
 Scanning, topology work and visual work use budgeted queues/lazy data structures.
 This spreads work across updates, with queue latency as a trade-off. A pending-position

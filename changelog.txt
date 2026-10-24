@@ -2,6 +2,8 @@
 Version: 2.0.4
 Date: 2026.10.24
   Changes:
+    - Avoid a crash when repeated drying work finds an empty visual bin.
+    - Avoid selecting a split successor before a large queued landfill brush exposes any surviving wet/dry seed.
     - Refresh remaining lake capacity before landfill splitting snapshots its depletion, preventing reserve gains from stale capacity in multi-tile brushes.
     - Allow landfill on depleted beds and track player/robot landfill removal as empty capacity, adding no water. Distinct dry identities retain original water types with the same appearances; legacy dry tiles remain supported.
     - Track announced script-built, revived and cloned pumps once, and refresh managed pump-name Dolly blacklists on configuration changes.
