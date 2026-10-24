@@ -602,7 +602,7 @@ end
 -- from a moving pointer (ascending order).
 function dynamic_bins.batch_pop(dynamicBins, k, only_backfill, deduplicate_hash_function)
 	local item_datas, ring_indices = {}, {}
-	if k <= 0 then return item_datas, ring_indices end
+	if k <= 0 then return item_datas, ring_indices, 0 end
 	local out = 0
 	local inBins = dynamicBins.inBins
 	-- drain backfill first
