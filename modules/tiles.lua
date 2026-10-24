@@ -6,6 +6,7 @@ require("modules.waterbody_split")
 require("modules.split_families")
 require("modules.entities")
 require("modules.waterbody_merge")
+local pending_tile_events = require("modules.pending_tile_events")
 
 tiles = {}
 
@@ -13,6 +14,11 @@ function tiles.initTileEventQueue()
     if storage.TileEventQueue == nil then
         storage.TileEventQueue = utils.Queue.new()
     end
+    pending_tile_events.ensure(storage.TileEventQueue)
+end
+
+function tiles.rebuildPendingTileChanges()
+    pending_tile_events.rebuild(storage.TileEventQueue)
 end
 
 function tiles.getTileEventQueue()
@@ -68,11 +74,14 @@ end
 
 function tiles.addTileEvent(eventType, position, surface, tileData)
     -- assume position is left-top corner already
-    utils.Queue.enqueue(storage.TileEventQueue, tiles.initTileEvent(eventType, position, surface, tileData))
+    pending_tile_events.ensure(storage.TileEventQueue)
+    local event = tiles.initTileEvent(eventType, position, surface, tileData)
+    if utils.Queue.enqueue(storage.TileEventQueue, event) then pending_tile_events.add(event) end
 end
 
 function tiles.processTileEventQueue(maxEvents, updateBudget)
     local queue = tiles.getTileEventQueue()
+    pending_tile_events.ensure(queue)
     local processedCount = 0
 
     while not utils.Queue.is_empty(queue) and processedCount < maxEvents and updateBudget.budget > 0 do
@@ -85,6 +94,7 @@ function tiles.processTileEventQueue(maxEvents, updateBudget)
             elseif event.type == "restore" then
                 tiles.processRestorationEvent(event, updateBudget)
             end
+            pending_tile_events.finish(event)
         end
         processedCount = processedCount + 1
     end

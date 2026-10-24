@@ -605,7 +605,7 @@ function waterbody_update.processToDryTilesFirst(updateBudget, update_budget_per
         if quota <= 0 then goto continue end
 
         local is_depleting = to_dry > 0
-        local processed = waterbody_depletion.getTilesDepleting(waterBody, is_depleting, quota)
+        local processed, examined = waterbody_depletion.getTilesDepleting(waterBody, is_depleting, quota)
 
         -- Update ToDryTiles (subtract for depleting, add for restoring)
         if is_depleting then
@@ -614,7 +614,7 @@ function waterbody_update.processToDryTilesFirst(updateBudget, update_budget_per
             state.ToDryTiles = to_dry + processed
         end
 
-        updateBudget.budget = updateBudget.budget - (processed * update_budget_per_tile)
+        updateBudget.budget = updateBudget.budget - (examined * update_budget_per_tile)
 
         ::continue::
     end

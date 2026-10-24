@@ -118,6 +118,7 @@ function control.reconcileSurfaceScope()
 		if utils.isManagedSurface(event.surface) then utils.Queue.enqueue(retained, event) end
 	end
 	storage.TileEventQueue = retained
+	tiles.rebuildPendingTileChanges()
 end
 
 function control.VersionChanged(event)
