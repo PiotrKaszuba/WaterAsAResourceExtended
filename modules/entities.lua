@@ -83,7 +83,7 @@ function entities.releaseUnmanagedPumps()
         if pump.type == "pump" and (not pump.entity.valid or not entities.shouldHandlePump(pump.entity)) then
             -- This mod already controls tracked pumps' script activation. Release
             -- that control once; normal fuel/power/circuit restrictions still apply.
-            if pump.entity.valid then pump.entity.active = true end
+            if pump.entity.valid then pump.entity.disabled_by_script = false end
             entities.removePumpFromWaterBody(unit_number, pump.waterBodyId)
             entities.removeTrackedEntity(unit_number)
         end
@@ -164,7 +164,7 @@ function entities.TeleportedPump(entity)
 end
 
 function entities.deactivatePump(pump_data)
-    pump_data.entity.active = false
+    pump_data.entity.disabled_by_script = true
 end
 
 function entities.disablePump(pump_data)
@@ -178,7 +178,7 @@ function entities.activatePump(pump_data)
     if pump_data.disabled then
         return
     end
-    pump_data.entity.active = true
+    pump_data.entity.disabled_by_script = false
 end
 
 function entities.enablePump(pump_data)

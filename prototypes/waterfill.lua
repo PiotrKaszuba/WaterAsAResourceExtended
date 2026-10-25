@@ -46,7 +46,7 @@ local waterfill_recipe = {
     name = "waterfill-recipe",
     energy_required = 1,
     enabled = false,
-    category = "crafting-with-fluid",
+    categories = { "crafting-with-fluid" },
     allow_productivity = false,
     ingredients = {
         {
