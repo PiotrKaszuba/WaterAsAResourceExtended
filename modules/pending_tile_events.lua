@@ -1,6 +1,11 @@
 -- Derived bookkeeping for queued edits only, not history of covered terrain.
 local pending = {}
 
+function pending.has(surfaceName, gridKey)
+    local positions = storage.PendingTileChanges and storage.PendingTileChanges[surfaceName]
+    return positions ~= nil and positions[gridKey] ~= nil
+end
+
 function pending.add(event)
     local surface = event.surface.name
     local bySurface = storage.PendingTileChanges[surface]
