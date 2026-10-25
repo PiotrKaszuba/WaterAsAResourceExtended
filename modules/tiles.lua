@@ -176,6 +176,11 @@ function tiles.handleTileEventsInternal(tileArray, surface, placed_name)
         end
 
         local originalWaterName = old_name
+        -- Native script_raised_set_tiles supplies new tiles, without old_tile.
+        -- Resolve the capacity class before the queued removal deletes metadata.
+        if new_name == "landfill" and not originalWaterName then
+            originalWaterName = tiles.getOriginalWaterTileName(nil, position, surface)
+        end
         if utils.IsDryTile(old_name) then
             originalWaterName = tiles.getOriginalWaterTileName(old_name, position, surface)
             if new_name == "landfill" and originalWaterName then

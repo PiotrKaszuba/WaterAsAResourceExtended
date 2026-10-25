@@ -2,6 +2,7 @@
 Version: 2.0.4
 Date: 2026.10.24
   Changes:
+    - Recover tracked water-tile identity for script landfill events without an old tile name, so their capacity is removed correctly.
     - Preserve landfill during queued terrain accounting by skipping pending positions in visual drying/reflooding, with bounded visual work.
     - Avoid a crash when repeated drying work finds an empty visual bin.
     - Avoid selecting a split successor before a large queued landfill brush exposes any surviving wet/dry seed.
