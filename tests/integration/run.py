@@ -154,12 +154,12 @@ def main() -> int:
     try:
         version = subprocess.check_output([str(binary), "--version"], text=True, timeout=30)
         match = re.search(r"Version:\s*(\d+\.\d+\.\d+)", version)
-        if not match or not match[1].startswith("2.0."):
-            raise RuntimeError(f"This suite requires Factorio 2.0; binary reports {version.strip()}")
+        if not match or not match[1].startswith("2.1."):
+            raise RuntimeError(f"This suite requires Factorio 2.1; binary reports {version.strip()}")
         report["engine"] = match[1]
         info = archive_info(archive)
-        if info["name"] != "WaterAsAResourceExtended" or info["factorio_version"] != "2.0":
-            raise ValueError("Expected a WaterAsAResourceExtended Factorio 2.0 candidate")
+        if info["name"] != "WaterAsAResourceExtended" or info["factorio_version"] != "2.1":
+            raise ValueError("Expected a WaterAsAResourceExtended Factorio 2.1 candidate")
         report["mod_version"] = info["version"]
         report["sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
         report["source_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()

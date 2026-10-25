@@ -7,6 +7,20 @@ local source_fluids = {
 }
 
 local function set_pump_source_methods(entity, spec, surface)
+    -- 2.1 active is a derived read-only property, not the script's stop flag.
+    entity.disabled_by_script = false
+    setmetatable(entity, {
+        __index = function(value, key)
+            if key == "active" then
+                return not (value.disabled_by_script or value.disabled_by_control_behavior
+                    or value.disabled_by_recipe or value.frozen or value.to_be_deconstructed)
+            end
+        end,
+        __newindex = function(value, key, item)
+            assert(key ~= "active", "LuaEntity.active is read-only in Factorio 2.1")
+            rawset(value, key, item)
+        end,
+    })
     entity.get_fluid_source_tile = function() return spec.input_position or spec.position end
     entity.get_fluid_source_fluid = function()
         return spec.source_fluid or source_fluids[surface.get_tile(entity.get_fluid_source_tile()).name]
@@ -717,7 +731,6 @@ function World:build_entity(spec, player_index, require_item_name)
         surface = surface,
         unit_number = surface.next_unit,
         valid = true,
-        active = true,
         pumped_last_tick = 0,
         prototype = { type = spec.type or spec.name },
         last_user = game.players[player_index or 1],
@@ -750,7 +763,6 @@ function World:add_existing_entity(spec, player_index)
         surface = surface,
         unit_number = surface.next_unit,
         valid = true,
-        active = true,
         pumped_last_tick = 0,
         prototype = { type = spec.type or spec.name },
         last_user = game.players[player_index or 1],

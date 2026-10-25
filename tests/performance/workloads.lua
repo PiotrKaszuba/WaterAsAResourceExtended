@@ -139,7 +139,7 @@ function M.run(name)
                 -- A mix of active, idle and inactive pumps, without draining the
                 -- fixture completely during this direct hot-path measurement.
                 pump.entity.pumped_last_tick = i % 3 == 0 and 0.01 or 0
-                if i % 4 == 0 then pump.entity.active = false end
+                if i % 4 == 0 then pump.entity.disabled_by_script = true end
             end
         end
         assert(bodies == 64 and pumps == 1024)

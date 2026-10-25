@@ -1,17 +1,17 @@
-# Native Factorio 2.0 acceptance
+# Native Factorio 2.1 acceptance
 
 Small, deterministic trials of engine behavior that the mock suite cannot prove.
 The mock suite (`lua tests/run.lua`) and larger performance workloads remain
 independently runnable. This suite does not import or replace their mock world.
-See [the recorded native acceptance result](RESULTS.md) for the tested artifact
-and the findings from the first complete run.
+The [2.0 acceptance record](RESULTS.md) is historical evidence for `v2.0.4`;
+2.1 results are recorded separately when completed.
 
 ## Run
 
-Requires Python 3.11+ and an actual Factorio **2.0.77** installation. No Python
-packages or RCON client are required. The runner rejects a 2.1 binary.
+Requires Python 3.11+ and an actual Factorio **2.1.23** installation. No Python
+packages or RCON client are required. The runner rejects a non-2.1 binary.
 Set `FACTORIO_BIN`, pass `--factorio-bin`, or use the installed Windows Steam path
-when it already contains 2.0. The runner never switches Steam branches.
+when it already contains 2.1. The runner never switches Steam branches.
 
 From the repository root, PowerShell builds and tests the candidate ZIP:
 
@@ -22,13 +22,13 @@ From the repository root, PowerShell builds and tests the candidate ZIP:
 To test an existing exact artifact, without rebuilding it:
 
 ```text
-python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.0.4.zip
+python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.1.0.zip
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario landfill
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario resume --timeout 120
 ```
 
 Use the ZIP's actual version in the path. A local manifest override is preserved;
-testing an archive named 2.0.0 does not prepare or certify a final 2.0.4 artifact.
+testing a differently versioned archive does not certify the intended final artifact.
 Rebuild and rerun after finalizing release metadata or changing production code.
 
 ## Five profiles

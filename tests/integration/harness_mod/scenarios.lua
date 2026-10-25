@@ -47,7 +47,7 @@ function S.pumping(H)
         H.check(view.finished and #view.raw.bodies == 3, "All three native pump lakes finish normal scans")
         local pump = storage.pumps[1]
         H.check(storage.extracted[1] > 0, "Vanilla pump actually extracts into its output buffer",
-            { active = pump.active, status = pump.status, fluid = pump.fluidbox[1] })
+            { active = pump.active, status = pump.status, fluid = pump.get_fluid(1) })
         H.near(view.remaining, storage.blocked, 0.01, "Blocked output stops reserve consumption")
         H.near(storage.extracted[2], 0, 0, "Burner pump without fuel extracts nothing")
         H.near(storage.extracted[3], 0, 0, "Electric pump without power extracts nothing")
