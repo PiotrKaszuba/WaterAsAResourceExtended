@@ -2,6 +2,8 @@
 
 **Turns water into a finite resource in Factorio 2.0+**
 
+Version 2.1.0 targets Factorio 2.1. Use version 2.0.4 for Factorio 2.0.
+
 Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually shrink as they're consumed, and water slowly regenerates over time. Research technologies to reduce water consumption, use waterfill to extend water sources, and manage your water supply strategically.
 
 ---
@@ -193,14 +195,15 @@ This section is repository documentation and is not part of the mod-portal descr
 
 Run `lua tests/run.lua` from the mod directory. See [test coverage and limitations](tests/README.md).
 Run `./scripts/test-integration.ps1` for the separate
-[native Factorio 2.0 acceptance suite](tests/integration/README.md), which builds
+[native Factorio 2.1 acceptance suite](tests/integration/README.md), which builds
 and tests the actual candidate ZIP in isolated profiles.
-The suite uses a mock Factorio world and exercises event handlers, accounting,
+The separate mock suite uses a mock Factorio world and exercises event handlers, accounting,
 scanning, splits/merges, visual work and queued-state reload together. It does not
 certify native collision handling, real robot scheduling or actual saved-game loading.
 
-Factorio 2.0 acceptance remains necessary before release, including the exact ZIP,
-automatic pump placement and fuel/power/depletion with Enhanced Offshore Pumps.
+Native acceptance targets the exact ZIP and includes a retained 2.0.4 save upgrade,
+settings/research persistence, robot terrain operations, and explicit actual-partner
+profiles. See the [2.1 evidence and boundaries](tests/integration/RESULTS-2.1.md).
 Runtime pump registration includes announced script builds/revives and clone destinations;
 each pump's actual extraction is read from `pumped_last_tick`.
 

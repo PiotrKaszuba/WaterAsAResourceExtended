@@ -10,7 +10,7 @@
 	"dependencies": [
 		"base >= 2.1.23",
 
-		"? aai-industry >= 0.6.10",
+		"? aai-industry >= 0.7.5",
 
 		"! CanalBuilderMAV",
 		"! BurnerOffshorePump",
