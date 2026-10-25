@@ -95,13 +95,25 @@ if (-not $NoZip) {
     
     # Compress using .NET to ensure proper zip structure
     Add-Type -AssemblyName System.IO.Compression.FileSystem
+    Add-Type -AssemblyName System.IO.Compression
     
     if (Test-Path $ZipPath) {
         Remove-Item -Path $ZipPath -Force
     }
     
-    [System.IO.Compression.ZipFile]::CreateFromDirectory(
-        $OutputDir, $ZipPath, [System.IO.Compression.CompressionLevel]::Optimal, $true)
+    # .NET Framework's CreateFromDirectory can write backslashes, which Linux
+    # Factorio and portal tools do not treat as ZIP directory separators.
+    $archive = [System.IO.Compression.ZipFile]::Open($ZipPath, [System.IO.Compression.ZipArchiveMode]::Create)
+    try {
+        Get-ChildItem -LiteralPath $OutputDir -Recurse -File | Sort-Object FullName | ForEach-Object {
+            $relative = $_.FullName.Substring($OutputDir.Length + 1).Replace('\', '/')
+            $entryName = "${ModName}_${Version}/$relative"
+            [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
+                $archive, $_.FullName, $entryName, [System.IO.Compression.CompressionLevel]::Optimal) | Out-Null
+        }
+    } finally {
+        $archive.Dispose()
+    }
     
     $zipSize = (Get-Item $ZipPath).Length / 1KB
     Write-Host "  Created: $ZipPath ($([math]::Round($zipSize, 2)) KB)" -ForegroundColor Gray
