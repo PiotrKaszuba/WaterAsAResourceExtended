@@ -80,7 +80,7 @@ foreach ($dir in $DirsToInclude) {
         Copy-Item -Path $sourcePath -Destination $destPath -Recurse
         
         # Remove Thumbs.db files from copied directories
-        Get-ChildItem -Path $destPath -Filter "Thumbs.db" -Recurse | Remove-Item -Force
+        Get-ChildItem -Path $destPath -Filter "Thumbs.db" -Recurse -Force | Remove-Item -Force
         
         $fileCount = (Get-ChildItem -Path $destPath -File -Recurse).Count
         Write-Host "  + $dir/ ($fileCount files)" -ForegroundColor Gray
