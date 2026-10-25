@@ -11,7 +11,8 @@ ZIP SHA-256: `e5ce762578e3882e540bb1a91b2b303bb6a50f1e8a2c738c8a1633e2759c9c6c`.
 
 The saved lake has 512 tiles, three pumps, partial depletion and active visual
 work, with 128 announced landfill edits queued. The original continuation settled
-to 384 tiles / 76,800 capacity and no pending entries. Historical phase results
+to 384 tiles / 76,800 capacity and no pending entries. The upgrade test also
+compares its settled reserve with that original 2.0 continuation. Historical phase results
 are included; phase 1 was emitted shortly after the save request, not at precisely
 the saved tick. Do not require identical cross-engine tick timing.
 

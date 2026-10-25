@@ -73,6 +73,13 @@ def serve_until_result(binary: Path, args: list[str], log: Path, result: Path,
 def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
              timeout: int, partner_mods: list[Path]) -> dict:
     output.mkdir()
+    fixture = None
+    if case == "upgrade":
+        origin = ROOT / "tests/integration/fixtures/2.0.4"
+        fixture = json.loads((origin / "provenance.json").read_text(encoding="utf-8"))
+        original = origin / "water-acceptance-checkpoint.zip"
+        if hashlib.sha256(original.read_bytes()).hexdigest() != fixture["save_sha256"]:
+            raise ValueError("Old-engine fixture checksum mismatch")
     mods, user = output / "mods", output / "user-data"
     mods.mkdir()
     user.mkdir()
@@ -93,7 +100,8 @@ def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
     setting_overrides = {"Enable-Waterfill": False} if case == "prototypes-disabled" else {}
     scenario = "prototypes" if case == "prototypes-disabled" else case
     (harness / "config.lua").write_text(
-        "return {scenario=" + json.dumps(scenario) + ", target_version=" + json.dumps(info["version"]) + ", settings={"
+        "return {scenario=" + json.dumps(scenario) + ", target_version=" + json.dumps(info["version"])
+        + ", reference_remaining=" + (str(fixture["expected_settled_remaining"]) if fixture else "nil") + ", settings={"
         + ",".join(f"[{json.dumps(k)}]={json.dumps(v)}" for k, v in setting_overrides.items())
         + "}}\n", encoding="utf-8")
     (mods / "mod-list.json").write_text(json.dumps({"mods": [
@@ -107,13 +115,7 @@ def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
                                        "peaceful_mode": True}), encoding="utf-8")
     common = ["--mod-directory", str(mods), "--config", str(config), "--disable-audio"]
     save = output / "initial.zip"
-    fixture = None
     if case == "upgrade":
-        origin = ROOT / "tests/integration/fixtures/2.0.4"
-        fixture = json.loads((origin / "provenance.json").read_text(encoding="utf-8"))
-        original = origin / "water-acceptance-checkpoint.zip"
-        if hashlib.sha256(original.read_bytes()).hexdigest() != fixture["save_sha256"]:
-            raise ValueError("Old-engine fixture checksum mismatch")
         shutil.copy2(original, save)
     else:
         invoke(binary, common + ["--create", str(save), "--map-gen-settings", str(map_settings)],

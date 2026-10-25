@@ -1,5 +1,6 @@
 local W = require("world")
 local persistence = require("persistence")
+local config = require("config")
 local S = {}
 
 function S.prototypes(H)
@@ -224,6 +225,8 @@ function S.upgrade(H)
         H.near(view.remaining, storage.upgrade_complete.bodies[1].remaining
             - storage.upgrade_complete.bodies[1].uncollected, 0.01,
             "Converted-save reload retains settled water reserves")
+        H.near(view.remaining, config.reference_remaining, 0.01,
+            "Converted-save settled reserve matches the original 2.0 continuation")
         H.near(view.raw.queued, 0, 0, "Converted-save reload retains the empty queue")
         H.near(view.raw.pending, 0, 0, "Converted-save reload retains the empty pending index")
         H.check(W.all_tiles(game.surfaces.nauvis, storage.edits, "landfill"),
