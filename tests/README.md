@@ -11,6 +11,11 @@ or Lua runtime error makes the runner exit unsuccessfully.
 
 ## Landfill regressions
 
+`test_landfill_scan_ownership.lua` covers queued landfill reached by a second
+scan or its edge discovery, before removal accounting runs. Wet/dry covers
+must lose exactly one tile of capacity and remain landfilled through subsequent
+drying and restoration. The reduced case requires neither mining nor a merge.
+
 `test_landfill_conservation.lua` is independent of tile mining and the typed dry
 palette. It catches stale capacity being used for the next brush reduction or
 for a split parent's inherited depletion percentage. Single, sequential and

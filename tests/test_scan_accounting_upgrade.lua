@@ -1,7 +1,11 @@
 local env = require("tests.helpers.test_env")
 local t = require("tests.helpers.test_assert")
 t.start()
-for _, old_version in ipairs({ "2.0.4", "2.1.0" }) do
+for _, route in ipairs({
+    { "2.0.4", "2.0.5" }, { "2.0.4", "2.1.1" }, { "2.1.0", "2.1.1" },
+}) do
+    local old_version, new_version = route[1], route[2]
+    local label = old_version .. " -> " .. new_version
     local world, surface = env.create_world()
     settings.global["Waterbody-Regen-Rate"].value = 0
     settings.global["Map-EnableMarkers"].value = false
@@ -21,20 +25,34 @@ for _, old_version in ipairs({ "2.0.4", "2.1.0" }) do
     body.searchData.totalArea = 96
     body.waterBodyShapeData.TileCount = 99
     body.waterBodyShapeData.SumX = 0
+    local repair, calls = waterbodies.repairScanAccounting, 0
+    waterbodies.repairScanAccounting = function() calls = calls + 1; return repair() end
     control.VersionChanged({ mod_changes = { WaterAsAResourceExtended = {
-        old_version = old_version, new_version = "2.1.1" } } })
-    t.eq(body.waterBodyStateData.DriedTiles, 100, old_version .. ": repairs dry count from membership")
-    t.eq(body.searchData.totalArea, 100, old_version .. ": repairs discovered area")
-    t.eq(body.waterBodyShapeData.TileCount, 100, old_version .. ": repairs geometry count")
-    t.eq(body.waterBodyShapeData.SumX, 450, old_version .. ": repairs centroid sum")
-    t.eq(waterbodies.calculateRemainingWater(body), remaining, old_version .. ": repair adds no water")
-    t.eq(storage.TileEventQueue.size, 1, old_version .. ": pending accounting remains ordered")
+        old_version = old_version, new_version = new_version } } })
+    waterbodies.repairScanAccounting = repair
+    t.eq(calls, 1, label .. ": runs the affected-version repair exactly once")
+    t.eq(body.waterBodyStateData.DriedTiles, 100, label .. ": repairs dry count from membership")
+    t.eq(body.searchData.totalArea, 100, label .. ": repairs discovered area")
+    t.eq(body.waterBodyShapeData.TileCount, 100, label .. ": repairs geometry count")
+    t.eq(body.waterBodyShapeData.SumX, 450, label .. ": repairs centroid sum")
+    t.eq(waterbodies.calculateRemainingWater(body), remaining, label .. ": repair adds no water")
+    t.eq(storage.TileEventQueue.size, 1, label .. ": pending accounting remains ordered")
     env.run_ticks(300)
     body = waterbodies.getWaterBody(waterbodies.getWaterTile(hot_utils.GridKey({ x = 0, y = 0 }), surface))
     assert(body and body.valid, "the surviving lake must remain tracked")
-    t.eq(body.waterBodyStateData.DriedTiles, 99, old_version .. ": pending cover removes exactly one dry member")
-    t.eq(body.waterBodyShapeData.TileCount, 99, old_version .. ": pending cover removes one geometry member")
-    t.eq(body.waterBodyStateData.ToDryTiles, 0, old_version .. ": impossible visual work does not recur")
-    t.eq(surface.get_tile({ x = 9, y = 9 }).name, "landfill", old_version .. ": repair does not alter covered terrain")
+    t.eq(body.waterBodyStateData.DriedTiles, 99, label .. ": pending cover removes exactly one dry member")
+    t.eq(body.waterBodyShapeData.TileCount, 99, label .. ": pending cover removes one geometry member")
+    t.eq(body.waterBodyStateData.ToDryTiles, 0, label .. ": impossible visual work does not recur")
+    t.eq(surface.get_tile({ x = 9, y = 9 }).name, "landfill", label .. ": repair does not alter covered terrain")
+end
+-- A corrected 2.0.5 save must not pay for or repeat the repair on the 2.1 port.
+do
+    env.create_world()
+    local repair, calls = waterbodies.repairScanAccounting, 0
+    waterbodies.repairScanAccounting = function() calls = calls + 1; return repair() end
+    control.VersionChanged({ mod_changes = { WaterAsAResourceExtended = {
+        old_version = "2.0.5", new_version = "2.1.1" } } })
+    waterbodies.repairScanAccounting = repair
+    t.eq(calls, 0, "2.0.5 -> 2.1.1 skips the already-applied repair")
 end
 t.finish("Scan accounting upgrade")

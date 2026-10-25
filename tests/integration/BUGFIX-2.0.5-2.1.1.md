@@ -22,9 +22,14 @@ portal upload was performed for these versions.
 5. **Write portable ZIP paths on Windows.** Explicit forward-slash entries fix
    the .NET Framework packaging issue discovered by Linux engine loading.
 
-The 2.0 fixes were committed separately on `release/2.0.5`, then cherry-picked
-into `factorio-2.1` while preserving its pump/API adaptation. Shared scan,
-waterbody and pending-index source files are byte-identical across the branches.
+Historical preparation used independent 2.0 and 2.1 branches with cherry-picked
+fixes. The 2026-10-26 history cleanup makes the corrected 2.0.5 branch the shared
+ancestor of rebuilt 2.1 support; those fixes and this combined evidence now
+originate once in active ancestry. The original tested commits remain archived,
+and the dated results below still describe their original candidate ZIPs.
+Shared scan, waterbody and pending-index source files remain byte-identical.
+See [history cleanup](../HISTORY-REBUILD-2026-10-26.md) for the new lineage and
+fresh rebuilt-artifact verification; do not substitute its hash for these results.
 
 ## Acceptance evidence
 

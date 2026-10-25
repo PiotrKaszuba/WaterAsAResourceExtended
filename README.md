@@ -2,6 +2,13 @@
 
 **Turns water into a finite resource in Factorio 2.0+**
 
+| Game version | Mod version to use |
+| --- | --- |
+| Factorio 2.0 | 2.0.5 |
+| Factorio 2.1 | 2.1.1 |
+
+Version 2.1.1 supersedes 2.1.0.
+
 Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually shrink as they're consumed, and water slowly regenerates over time. Research technologies to reduce water consumption, use waterfill to extend water sources, and manage your water supply strategically.
 
 ---
@@ -195,7 +202,7 @@ Run `lua tests/run.lua` from the mod directory. See [test coverage and limitatio
 Run `./scripts/test-integration.ps1` for the separate
 [native Factorio 2.0 acceptance suite](tests/integration/README.md), which builds
 and tests the actual candidate ZIP in isolated profiles.
-The suite uses a mock Factorio world and exercises event handlers, accounting,
+The separate mock suite uses a mock Factorio world and exercises event handlers, accounting,
 scanning, splits/merges, visual work and queued-state reload together. It does not
 certify native collision handling, real robot scheduling or actual saved-game loading.
 
@@ -220,7 +227,7 @@ Passing mocks do not certify every native engine interleaving.
 ### Performance testing
 
 The original scan-performance suite has six configurations. A separate
-[performance workload suite](tests/performance/README.md) adds 19 repeatable cases,
+[performance workload suite](tests/performance/README.md) adds 22 repeatable cases,
 including 262,144-tile lakes, 1,024 pumps across 64 lakes, large visual backlogs,
 construction bursts and split/reopen settlement. It records phase/cycle CPU times,
 scan-slice and tick distributions, queue latency and correctness counters.
@@ -234,3 +241,11 @@ This spreads work across updates, with queue latency as a trade-off. A pending-p
 hash lookup does not make split/merge processing constant-time. Guard-versus-eager
 comparisons should include quiet operation, dense overlap and construction bursts,
 measuring callback peaks and queue drain as well as average throughput.
+
+### Maintained release history
+
+Shared fixes, regression/performance sources and combined release evidence live
+on the 2.0.5 maintenance baseline. The rebuilt 2.1 lineage inherits that baseline
+and adds only its API adaptation, engine-specific coverage and release guidance.
+The original 2.1 history and published `v2.1.0` remain available. See
+[history cleanup and provenance](tests/HISTORY-REBUILD-2026-10-26.md).
