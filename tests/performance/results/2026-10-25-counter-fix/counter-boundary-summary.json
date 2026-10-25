@@ -1,0 +1,2836 @@
+[
+  {
+    "case": "scan_65536",
+    "metric": "scan_s",
+    "baseline": {
+      "median": 3.107,
+      "min": 2.89,
+      "max": 4.295,
+      "samples": [
+        4.295,
+        3.107,
+        3.354,
+        2.89,
+        3.012
+      ]
+    },
+    "fixed": {
+      "median": 3.125,
+      "min": 2.972,
+      "max": 3.643,
+      "samples": [
+        3.205,
+        3.643,
+        3.125,
+        3.061,
+        2.972
+      ]
+    },
+    "delta_percent": 0.5793369810106253
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_scan_slice_count",
+    "baseline": {
+      "median": 12.0,
+      "min": 12.0,
+      "max": 12.0,
+      "samples": [
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0
+      ]
+    },
+    "fixed": {
+      "median": 12.0,
+      "min": 12.0,
+      "max": 12.0,
+      "samples": [
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_scan_slice_max_s",
+    "baseline": {
+      "median": 0.885,
+      "min": 0.78,
+      "max": 1.531,
+      "samples": [
+        1.531,
+        0.908,
+        0.885,
+        0.78,
+        0.837
+      ]
+    },
+    "fixed": {
+      "median": 0.845,
+      "min": 0.778,
+      "max": 1.324,
+      "samples": [
+        0.835,
+        1.324,
+        0.845,
+        0.847,
+        0.778
+      ]
+    },
+    "delta_percent": -4.519774011299438
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_scan_slice_mean_s",
+    "baseline": {
+      "median": 0.257833333,
+      "min": 0.239833333,
+      "max": 0.35675,
+      "samples": [
+        0.35675,
+        0.257833333,
+        0.2785,
+        0.239833333,
+        0.249916667
+      ]
+    },
+    "fixed": {
+      "median": 0.2595,
+      "min": 0.246583333,
+      "max": 0.302416667,
+      "samples": [
+        0.266166667,
+        0.302416667,
+        0.2595,
+        0.254083333,
+        0.246583333
+      ]
+    },
+    "delta_percent": 0.6464125412364741
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_scan_slice_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_scan_slice_p95_s",
+    "baseline": {
+      "median": 0.885,
+      "min": 0.78,
+      "max": 1.531,
+      "samples": [
+        1.531,
+        0.908,
+        0.885,
+        0.78,
+        0.837
+      ]
+    },
+    "fixed": {
+      "median": 0.845,
+      "min": 0.778,
+      "max": 1.324,
+      "samples": [
+        0.835,
+        1.324,
+        0.845,
+        0.847,
+        0.778
+      ]
+    },
+    "delta_percent": -4.519774011299438
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_scan_slice_p99_s",
+    "baseline": {
+      "median": 0.885,
+      "min": 0.78,
+      "max": 1.531,
+      "samples": [
+        1.531,
+        0.908,
+        0.885,
+        0.78,
+        0.837
+      ]
+    },
+    "fixed": {
+      "median": 0.845,
+      "min": 0.778,
+      "max": 1.324,
+      "samples": [
+        0.835,
+        1.324,
+        0.845,
+        0.847,
+        0.778
+      ]
+    },
+    "delta_percent": -4.519774011299438
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_tick_count",
+    "baseline": {
+      "median": 121.0,
+      "min": 121.0,
+      "max": 121.0,
+      "samples": [
+        121.0,
+        121.0,
+        121.0,
+        121.0,
+        121.0
+      ]
+    },
+    "fixed": {
+      "median": 121.0,
+      "min": 121.0,
+      "max": 121.0,
+      "samples": [
+        121.0,
+        121.0,
+        121.0,
+        121.0,
+        121.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_tick_max_s",
+    "baseline": {
+      "median": 0.885,
+      "min": 0.78,
+      "max": 1.531,
+      "samples": [
+        1.531,
+        0.908,
+        0.885,
+        0.78,
+        0.837
+      ]
+    },
+    "fixed": {
+      "median": 0.845,
+      "min": 0.778,
+      "max": 1.324,
+      "samples": [
+        0.835,
+        1.324,
+        0.845,
+        0.847,
+        0.778
+      ]
+    },
+    "delta_percent": -4.519774011299438
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_tick_mean_s",
+    "baseline": {
+      "median": 0.025669421,
+      "min": 0.023884298,
+      "max": 0.035487603,
+      "samples": [
+        0.035487603,
+        0.025669421,
+        0.027719008,
+        0.023884298,
+        0.024892562
+      ]
+    },
+    "fixed": {
+      "median": 0.025826446,
+      "min": 0.024561983,
+      "max": 0.030107438,
+      "samples": [
+        0.026487603,
+        0.030107438,
+        0.025826446,
+        0.025297521,
+        0.024561983
+      ]
+    },
+    "delta_percent": 0.6117200695722635
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_tick_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_tick_p95_s",
+    "baseline": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.001
+      ]
+    },
+    "fixed": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.001
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "scan_65536",
+    "metric": "scan_s_tick_p99_s",
+    "baseline": {
+      "median": 0.804,
+      "min": 0.758,
+      "max": 1.03,
+      "samples": [
+        1.03,
+        0.804,
+        0.848,
+        0.76,
+        0.758
+      ]
+    },
+    "fixed": {
+      "median": 0.793,
+      "min": 0.767,
+      "max": 0.838,
+      "samples": [
+        0.793,
+        0.793,
+        0.838,
+        0.789,
+        0.767
+      ]
+    },
+    "delta_percent": -1.3681592039801016
+  },
+  {
+    "case": "scan_65536",
+    "metric": "ticks",
+    "baseline": {
+      "median": 121.0,
+      "min": 121.0,
+      "max": 121.0,
+      "samples": [
+        121.0,
+        121.0,
+        121.0,
+        121.0,
+        121.0
+      ]
+    },
+    "fixed": {
+      "median": 121.0,
+      "min": 121.0,
+      "max": 121.0,
+      "samples": [
+        121.0,
+        121.0,
+        121.0,
+        121.0,
+        121.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "scan_65536",
+    "metric": "tiles",
+    "baseline": {
+      "median": 65536.0,
+      "min": 65536.0,
+      "max": 65536.0,
+      "samples": [
+        65536.0,
+        65536.0,
+        65536.0,
+        65536.0,
+        65536.0
+      ]
+    },
+    "fixed": {
+      "median": 65536.0,
+      "min": 65536.0,
+      "max": 65536.0,
+      "samples": [
+        65536.0,
+        65536.0,
+        65536.0,
+        65536.0,
+        65536.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s",
+    "baseline": {
+      "median": 13.081,
+      "min": 12.994,
+      "max": 13.802,
+      "samples": [
+        12.994,
+        13.802,
+        13.081
+      ]
+    },
+    "fixed": {
+      "median": 12.795,
+      "min": 10.213,
+      "max": 13.011,
+      "samples": [
+        12.795,
+        13.011,
+        10.213
+      ]
+    },
+    "delta_percent": -2.1863771882883576
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_scan_slice_count",
+    "baseline": {
+      "median": 16.0,
+      "min": 16.0,
+      "max": 16.0,
+      "samples": [
+        16.0,
+        16.0,
+        16.0
+      ]
+    },
+    "fixed": {
+      "median": 16.0,
+      "min": 16.0,
+      "max": 16.0,
+      "samples": [
+        16.0,
+        16.0,
+        16.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_scan_slice_max_s",
+    "baseline": {
+      "median": 1.027,
+      "min": 1.02,
+      "max": 1.096,
+      "samples": [
+        1.02,
+        1.096,
+        1.027
+      ]
+    },
+    "fixed": {
+      "median": 1.022,
+      "min": 0.971,
+      "max": 1.094,
+      "samples": [
+        1.022,
+        1.094,
+        0.971
+      ]
+    },
+    "delta_percent": -0.4868549172346581
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_scan_slice_mean_s",
+    "baseline": {
+      "median": 0.8168125,
+      "min": 0.8114375,
+      "max": 0.8618125,
+      "samples": [
+        0.8114375,
+        0.8618125,
+        0.8168125
+      ]
+    },
+    "fixed": {
+      "median": 0.799,
+      "min": 0.63775,
+      "max": 0.8125625,
+      "samples": [
+        0.799,
+        0.8125625,
+        0.63775
+      ]
+    },
+    "delta_percent": -2.1807330323666663
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_scan_slice_p50_s",
+    "baseline": {
+      "median": 0.802,
+      "min": 0.762,
+      "max": 0.864,
+      "samples": [
+        0.762,
+        0.864,
+        0.802
+      ]
+    },
+    "fixed": {
+      "median": 0.772,
+      "min": 0.653,
+      "max": 0.773,
+      "samples": [
+        0.772,
+        0.773,
+        0.653
+      ]
+    },
+    "delta_percent": -3.7406483790523692
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_scan_slice_p95_s",
+    "baseline": {
+      "median": 1.027,
+      "min": 1.02,
+      "max": 1.096,
+      "samples": [
+        1.02,
+        1.096,
+        1.027
+      ]
+    },
+    "fixed": {
+      "median": 1.022,
+      "min": 0.971,
+      "max": 1.094,
+      "samples": [
+        1.022,
+        1.094,
+        0.971
+      ]
+    },
+    "delta_percent": -0.4868549172346581
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_scan_slice_p99_s",
+    "baseline": {
+      "median": 1.027,
+      "min": 1.02,
+      "max": 1.096,
+      "samples": [
+        1.02,
+        1.096,
+        1.027
+      ]
+    },
+    "fixed": {
+      "median": 1.022,
+      "min": 0.971,
+      "max": 1.094,
+      "samples": [
+        1.022,
+        1.094,
+        0.971
+      ]
+    },
+    "delta_percent": -0.4868549172346581
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_tick_count",
+    "baseline": {
+      "median": 152.0,
+      "min": 152.0,
+      "max": 152.0,
+      "samples": [
+        152.0,
+        152.0,
+        152.0
+      ]
+    },
+    "fixed": {
+      "median": 152.0,
+      "min": 152.0,
+      "max": 152.0,
+      "samples": [
+        152.0,
+        152.0,
+        152.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_tick_max_s",
+    "baseline": {
+      "median": 1.027,
+      "min": 1.02,
+      "max": 1.096,
+      "samples": [
+        1.02,
+        1.096,
+        1.027
+      ]
+    },
+    "fixed": {
+      "median": 1.022,
+      "min": 0.971,
+      "max": 1.094,
+      "samples": [
+        1.022,
+        1.094,
+        0.971
+      ]
+    },
+    "delta_percent": -0.4868549172346581
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_tick_mean_s",
+    "baseline": {
+      "median": 0.086059211,
+      "min": 0.085486842,
+      "max": 0.090802632,
+      "samples": [
+        0.085486842,
+        0.090802632,
+        0.086059211
+      ]
+    },
+    "fixed": {
+      "median": 0.084171053,
+      "min": 0.067184211,
+      "max": 0.085598684,
+      "samples": [
+        0.084171053,
+        0.085598684,
+        0.067184211
+      ]
+    },
+    "delta_percent": -2.1940219740104294
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_tick_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_tick_p95_s",
+    "baseline": {
+      "median": 0.81,
+      "min": 0.763,
+      "max": 0.867,
+      "samples": [
+        0.763,
+        0.867,
+        0.81
+      ]
+    },
+    "fixed": {
+      "median": 0.773,
+      "min": 0.666,
+      "max": 0.778,
+      "samples": [
+        0.773,
+        0.778,
+        0.666
+      ]
+    },
+    "delta_percent": -4.5679012345679055
+  },
+  {
+    "case": "scan_262144",
+    "metric": "scan_s_tick_p99_s",
+    "baseline": {
+      "median": 0.995,
+      "min": 0.967,
+      "max": 1.002,
+      "samples": [
+        1.002,
+        0.995,
+        0.967
+      ]
+    },
+    "fixed": {
+      "median": 0.943,
+      "min": 0.746,
+      "max": 0.949,
+      "samples": [
+        0.943,
+        0.949,
+        0.746
+      ]
+    },
+    "delta_percent": -5.2261306532663365
+  },
+  {
+    "case": "scan_262144",
+    "metric": "ticks",
+    "baseline": {
+      "median": 152.0,
+      "min": 152.0,
+      "max": 152.0,
+      "samples": [
+        152.0,
+        152.0,
+        152.0
+      ]
+    },
+    "fixed": {
+      "median": 152.0,
+      "min": 152.0,
+      "max": 152.0,
+      "samples": [
+        152.0,
+        152.0,
+        152.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "scan_262144",
+    "metric": "tiles",
+    "baseline": {
+      "median": 262144.0,
+      "min": 262144.0,
+      "max": 262144.0,
+      "samples": [
+        262144.0,
+        262144.0,
+        262144.0
+      ]
+    },
+    "fixed": {
+      "median": 262144.0,
+      "min": 262144.0,
+      "max": 262144.0,
+      "samples": [
+        262144.0,
+        262144.0,
+        262144.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "counter_gap",
+    "baseline": {
+      "median": 6058.0,
+      "min": 6058.0,
+      "max": 6058.0,
+      "samples": [
+        6058.0,
+        6058.0,
+        6058.0,
+        6058.0,
+        6058.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": -100.0
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "lifecycle_s",
+    "baseline": {
+      "median": 0.808,
+      "min": 0.794,
+      "max": 0.901,
+      "samples": [
+        0.901,
+        0.794,
+        0.876,
+        0.808,
+        0.806
+      ]
+    },
+    "fixed": {
+      "median": 0.746,
+      "min": 0.715,
+      "max": 0.78,
+      "samples": [
+        0.748,
+        0.78,
+        0.746,
+        0.715,
+        0.742
+      ]
+    },
+    "delta_percent": -7.67326732673268
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "lifecycle_s_scan_slice_count",
+    "baseline": {
+      "median": 490.0,
+      "min": 490.0,
+      "max": 490.0,
+      "samples": [
+        490.0,
+        490.0,
+        490.0,
+        490.0,
+        490.0
+      ]
+    },
+    "fixed": {
+      "median": 490.0,
+      "min": 490.0,
+      "max": 490.0,
+      "samples": [
+        490.0,
+        490.0,
+        490.0,
+        490.0,
+        490.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "lifecycle_s_scan_slice_max_s",
+    "baseline": {
+      "median": 0.515,
+      "min": 0.489,
+      "max": 0.572,
+      "samples": [
+        0.572,
+        0.515,
+        0.56,
+        0.503,
+        0.489
+      ]
+    },
+    "fixed": {
+      "median": 0.318,
+      "min": 0.301,
+      "max": 0.334,
+      "samples": [
+        0.314,
+        0.334,
+        0.321,
+        0.301,
+        0.318
+      ]
+    },
+    "delta_percent": -38.25242718446602
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "lifecycle_s_scan_slice_mean_s",
+    "baseline": {
+      "median": 0.001053061,
+      "min": 0.000997959,
+      "max": 0.00117551,
+      "samples": [
+        0.00117551,
+        0.001053061,
+        0.00114898,
+        0.001030612,
+        0.000997959
+      ]
+    },
+    "fixed": {
+      "median": 0.000959184,
+      "min": 0.000953061,
+      "max": 0.001022449,
+      "samples": [
+        0.000995918,
+        0.001022449,
+        0.000955102,
+        0.000953061,
+        0.000959184
+      ]
+    },
+    "delta_percent": -8.914678257005072
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "lifecycle_s_scan_slice_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "lifecycle_s_scan_slice_p95_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "lifecycle_s_scan_slice_p99_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "merges",
+    "baseline": {
+      "median": 7.0,
+      "min": 7.0,
+      "max": 7.0,
+      "samples": [
+        7.0,
+        7.0,
+        7.0,
+        7.0,
+        7.0
+      ]
+    },
+    "fixed": {
+      "median": 7.0,
+      "min": 7.0,
+      "max": 7.0,
+      "samples": [
+        7.0,
+        7.0,
+        7.0,
+        7.0,
+        7.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "ticks",
+    "baseline": {
+      "median": 4896.0,
+      "min": 4896.0,
+      "max": 4896.0,
+      "samples": [
+        4896.0,
+        4896.0,
+        4896.0,
+        4896.0,
+        4896.0
+      ]
+    },
+    "fixed": {
+      "median": 4896.0,
+      "min": 4896.0,
+      "max": 4896.0,
+      "samples": [
+        4896.0,
+        4896.0,
+        4896.0,
+        4896.0,
+        4896.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "dry_merge_16384",
+    "metric": "visual_work_left",
+    "baseline": {
+      "median": 4444.0,
+      "min": 4444.0,
+      "max": 4444.0,
+      "samples": [
+        4444.0,
+        4444.0,
+        4444.0,
+        4444.0,
+        4444.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": -100.0
+  },
+  {
+    "case": "visual_16384",
+    "metric": "changed",
+    "baseline": {
+      "median": 131072.0,
+      "min": 131072.0,
+      "max": 131072.0,
+      "samples": [
+        131072.0,
+        131072.0,
+        131072.0
+      ]
+    },
+    "fixed": {
+      "median": 131072.0,
+      "min": 131072.0,
+      "max": 131072.0,
+      "samples": [
+        131072.0,
+        131072.0,
+        131072.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "visual_16384",
+    "metric": "dry_cycle_count",
+    "baseline": {
+      "median": 4.0,
+      "min": 4.0,
+      "max": 4.0,
+      "samples": [
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "fixed": {
+      "median": 4.0,
+      "min": 4.0,
+      "max": 4.0,
+      "samples": [
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "visual_16384",
+    "metric": "dry_cycle_max_s",
+    "baseline": {
+      "median": 0.127,
+      "min": 0.11,
+      "max": 0.128,
+      "samples": [
+        0.127,
+        0.128,
+        0.11
+      ]
+    },
+    "fixed": {
+      "median": 0.118,
+      "min": 0.106,
+      "max": 0.122,
+      "samples": [
+        0.118,
+        0.122,
+        0.106
+      ]
+    },
+    "delta_percent": -7.086614173228356
+  },
+  {
+    "case": "visual_16384",
+    "metric": "dry_cycle_mean_s",
+    "baseline": {
+      "median": 0.1,
+      "min": 0.09725,
+      "max": 0.1075,
+      "samples": [
+        0.1075,
+        0.1,
+        0.09725
+      ]
+    },
+    "fixed": {
+      "median": 0.10025,
+      "min": 0.097,
+      "max": 0.104,
+      "samples": [
+        0.10025,
+        0.104,
+        0.097
+      ]
+    },
+    "delta_percent": 0.24999999999999467
+  },
+  {
+    "case": "visual_16384",
+    "metric": "dry_cycle_p50_s",
+    "baseline": {
+      "median": 0.1,
+      "min": 0.099,
+      "max": 0.1,
+      "samples": [
+        0.1,
+        0.1,
+        0.099
+      ]
+    },
+    "fixed": {
+      "median": 0.1,
+      "min": 0.1,
+      "max": 0.103,
+      "samples": [
+        0.1,
+        0.103,
+        0.1
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "visual_16384",
+    "metric": "dry_cycle_p95_s",
+    "baseline": {
+      "median": 0.127,
+      "min": 0.11,
+      "max": 0.128,
+      "samples": [
+        0.127,
+        0.128,
+        0.11
+      ]
+    },
+    "fixed": {
+      "median": 0.118,
+      "min": 0.106,
+      "max": 0.122,
+      "samples": [
+        0.118,
+        0.122,
+        0.106
+      ]
+    },
+    "delta_percent": -7.086614173228356
+  },
+  {
+    "case": "visual_16384",
+    "metric": "dry_cycle_p99_s",
+    "baseline": {
+      "median": 0.127,
+      "min": 0.11,
+      "max": 0.128,
+      "samples": [
+        0.127,
+        0.128,
+        0.11
+      ]
+    },
+    "fixed": {
+      "median": 0.118,
+      "min": 0.106,
+      "max": 0.122,
+      "samples": [
+        0.118,
+        0.122,
+        0.106
+      ]
+    },
+    "delta_percent": -7.086614173228356
+  },
+  {
+    "case": "visual_16384",
+    "metric": "restore_cycle_count",
+    "baseline": {
+      "median": 4.0,
+      "min": 4.0,
+      "max": 4.0,
+      "samples": [
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "fixed": {
+      "median": 4.0,
+      "min": 4.0,
+      "max": 4.0,
+      "samples": [
+        4.0,
+        4.0,
+        4.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "visual_16384",
+    "metric": "restore_cycle_max_s",
+    "baseline": {
+      "median": 0.052,
+      "min": 0.051,
+      "max": 0.055,
+      "samples": [
+        0.051,
+        0.052,
+        0.055
+      ]
+    },
+    "fixed": {
+      "median": 0.054,
+      "min": 0.042,
+      "max": 0.056,
+      "samples": [
+        0.056,
+        0.042,
+        0.054
+      ]
+    },
+    "delta_percent": 3.8461538461538547
+  },
+  {
+    "case": "visual_16384",
+    "metric": "restore_cycle_mean_s",
+    "baseline": {
+      "median": 0.04575,
+      "min": 0.042,
+      "max": 0.04675,
+      "samples": [
+        0.04575,
+        0.042,
+        0.04675
+      ]
+    },
+    "fixed": {
+      "median": 0.042,
+      "min": 0.03925,
+      "max": 0.0455,
+      "samples": [
+        0.042,
+        0.03925,
+        0.0455
+      ]
+    },
+    "delta_percent": -8.196721311475397
+  },
+  {
+    "case": "visual_16384",
+    "metric": "restore_cycle_p50_s",
+    "baseline": {
+      "median": 0.042,
+      "min": 0.041,
+      "max": 0.044,
+      "samples": [
+        0.044,
+        0.041,
+        0.042
+      ]
+    },
+    "fixed": {
+      "median": 0.039,
+      "min": 0.037,
+      "max": 0.039,
+      "samples": [
+        0.037,
+        0.039,
+        0.039
+      ]
+    },
+    "delta_percent": -7.142857142857151
+  },
+  {
+    "case": "visual_16384",
+    "metric": "restore_cycle_p95_s",
+    "baseline": {
+      "median": 0.052,
+      "min": 0.051,
+      "max": 0.055,
+      "samples": [
+        0.051,
+        0.052,
+        0.055
+      ]
+    },
+    "fixed": {
+      "median": 0.054,
+      "min": 0.042,
+      "max": 0.056,
+      "samples": [
+        0.056,
+        0.042,
+        0.054
+      ]
+    },
+    "delta_percent": 3.8461538461538547
+  },
+  {
+    "case": "visual_16384",
+    "metric": "restore_cycle_p99_s",
+    "baseline": {
+      "median": 0.052,
+      "min": 0.051,
+      "max": 0.055,
+      "samples": [
+        0.051,
+        0.052,
+        0.055
+      ]
+    },
+    "fixed": {
+      "median": 0.054,
+      "min": 0.042,
+      "max": 0.056,
+      "samples": [
+        0.056,
+        0.042,
+        0.054
+      ]
+    },
+    "delta_percent": 3.8461538461538547
+  },
+  {
+    "case": "visual_16384",
+    "metric": "visual_s",
+    "baseline": {
+      "median": 0.576,
+      "min": 0.568,
+      "max": 0.613,
+      "samples": [
+        0.613,
+        0.568,
+        0.576
+      ]
+    },
+    "fixed": {
+      "median": 0.57,
+      "min": 0.569,
+      "max": 0.573,
+      "samples": [
+        0.569,
+        0.573,
+        0.57
+      ]
+    },
+    "delta_percent": -1.041666666666663
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s",
+    "baseline": {
+      "median": 0.091,
+      "min": 0.085,
+      "max": 0.1,
+      "samples": [
+        0.1,
+        0.095,
+        0.089,
+        0.091,
+        0.085
+      ]
+    },
+    "fixed": {
+      "median": 0.097,
+      "min": 0.088,
+      "max": 0.107,
+      "samples": [
+        0.107,
+        0.098,
+        0.097,
+        0.094,
+        0.088
+      ]
+    },
+    "delta_percent": 6.593406593406592
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_scan_slice_count",
+    "baseline": {
+      "median": 39.0,
+      "min": 39.0,
+      "max": 39.0,
+      "samples": [
+        39.0,
+        39.0,
+        39.0,
+        39.0,
+        39.0
+      ]
+    },
+    "fixed": {
+      "median": 39.0,
+      "min": 39.0,
+      "max": 39.0,
+      "samples": [
+        39.0,
+        39.0,
+        39.0,
+        39.0,
+        39.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_scan_slice_max_s",
+    "baseline": {
+      "median": 0.007,
+      "min": 0.007,
+      "max": 0.008,
+      "samples": [
+        0.007,
+        0.007,
+        0.008,
+        0.008,
+        0.007
+      ]
+    },
+    "fixed": {
+      "median": 0.009,
+      "min": 0.008,
+      "max": 0.011,
+      "samples": [
+        0.011,
+        0.009,
+        0.008,
+        0.009,
+        0.008
+      ]
+    },
+    "delta_percent": 28.57142857142856
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_scan_slice_mean_s",
+    "baseline": {
+      "median": 0.000948718,
+      "min": 0.000871795,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.000974359,
+        0.000948718,
+        0.000948718,
+        0.000871795
+      ]
+    },
+    "fixed": {
+      "median": 0.001025641,
+      "min": 0.000897436,
+      "max": 0.001102564,
+      "samples": [
+        0.001102564,
+        0.001051282,
+        0.001,
+        0.001025641,
+        0.000897436
+      ]
+    },
+    "delta_percent": 8.108099561724359
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_scan_slice_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_scan_slice_p95_s",
+    "baseline": {
+      "median": 0.007,
+      "min": 0.006,
+      "max": 0.007,
+      "samples": [
+        0.007,
+        0.007,
+        0.007,
+        0.007,
+        0.006
+      ]
+    },
+    "fixed": {
+      "median": 0.006,
+      "min": 0.006,
+      "max": 0.007,
+      "samples": [
+        0.006,
+        0.007,
+        0.006,
+        0.006,
+        0.006
+      ]
+    },
+    "delta_percent": -14.28571428571429
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_scan_slice_p99_s",
+    "baseline": {
+      "median": 0.007,
+      "min": 0.007,
+      "max": 0.008,
+      "samples": [
+        0.007,
+        0.007,
+        0.008,
+        0.008,
+        0.007
+      ]
+    },
+    "fixed": {
+      "median": 0.009,
+      "min": 0.008,
+      "max": 0.011,
+      "samples": [
+        0.011,
+        0.009,
+        0.008,
+        0.009,
+        0.008
+      ]
+    },
+    "delta_percent": 28.57142857142856
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_tick_count",
+    "baseline": {
+      "median": 390.0,
+      "min": 390.0,
+      "max": 390.0,
+      "samples": [
+        390.0,
+        390.0,
+        390.0,
+        390.0,
+        390.0
+      ]
+    },
+    "fixed": {
+      "median": 390.0,
+      "min": 390.0,
+      "max": 390.0,
+      "samples": [
+        390.0,
+        390.0,
+        390.0,
+        390.0,
+        390.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_tick_max_s",
+    "baseline": {
+      "median": 0.008,
+      "min": 0.007,
+      "max": 0.008,
+      "samples": [
+        0.008,
+        0.007,
+        0.008,
+        0.008,
+        0.008
+      ]
+    },
+    "fixed": {
+      "median": 0.009,
+      "min": 0.008,
+      "max": 0.011,
+      "samples": [
+        0.011,
+        0.009,
+        0.009,
+        0.009,
+        0.008
+      ]
+    },
+    "delta_percent": 12.5
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_tick_mean_s",
+    "baseline": {
+      "median": 0.000207692,
+      "min": 0.000202564,
+      "max": 0.000238462,
+      "samples": [
+        0.000238462,
+        0.000225641,
+        0.000202564,
+        0.000205128,
+        0.000207692
+      ]
+    },
+    "fixed": {
+      "median": 0.000233333,
+      "min": 0.000215385,
+      "max": 0.000258974,
+      "samples": [
+        0.000258974,
+        0.000238462,
+        0.000233333,
+        0.000225641,
+        0.000215385
+      ]
+    },
+    "delta_percent": 12.345684956570313
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_tick_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_tick_p95_s",
+    "baseline": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.001
+      ]
+    },
+    "fixed": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.001
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_s_tick_p99_s",
+    "baseline": {
+      "median": 0.007,
+      "min": 0.006,
+      "max": 0.007,
+      "samples": [
+        0.007,
+        0.007,
+        0.007,
+        0.007,
+        0.006
+      ]
+    },
+    "fixed": {
+      "median": 0.006,
+      "min": 0.006,
+      "max": 0.008,
+      "samples": [
+        0.008,
+        0.006,
+        0.006,
+        0.007,
+        0.006
+      ]
+    },
+    "delta_percent": -14.28571428571429
+  },
+  {
+    "case": "split_reopen",
+    "metric": "cover_ticks",
+    "baseline": {
+      "median": 390.0,
+      "min": 390.0,
+      "max": 390.0,
+      "samples": [
+        390.0,
+        390.0,
+        390.0,
+        390.0,
+        390.0
+      ]
+    },
+    "fixed": {
+      "median": 390.0,
+      "min": 390.0,
+      "max": 390.0,
+      "samples": [
+        390.0,
+        390.0,
+        390.0,
+        390.0,
+        390.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "events",
+    "baseline": {
+      "median": 128.0,
+      "min": 128.0,
+      "max": 128.0,
+      "samples": [
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0
+      ]
+    },
+    "fixed": {
+      "median": 128.0,
+      "min": 128.0,
+      "max": 128.0,
+      "samples": [
+        128.0,
+        128.0,
+        128.0,
+        128.0,
+        128.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s",
+    "baseline": {
+      "median": 0.014,
+      "min": 0.012,
+      "max": 0.019,
+      "samples": [
+        0.019,
+        0.014,
+        0.014,
+        0.012,
+        0.016
+      ]
+    },
+    "fixed": {
+      "median": 0.015,
+      "min": 0.013,
+      "max": 0.018,
+      "samples": [
+        0.018,
+        0.015,
+        0.013,
+        0.015,
+        0.014
+      ]
+    },
+    "delta_percent": 7.14285714285714
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_scan_slice_count",
+    "baseline": {
+      "median": 12.0,
+      "min": 12.0,
+      "max": 12.0,
+      "samples": [
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0
+      ]
+    },
+    "fixed": {
+      "median": 12.0,
+      "min": 12.0,
+      "max": 12.0,
+      "samples": [
+        12.0,
+        12.0,
+        12.0,
+        12.0,
+        12.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_scan_slice_max_s",
+    "baseline": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.003,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.003
+      ]
+    },
+    "fixed": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.002,
+      "samples": [
+        0.002,
+        0.001,
+        0.002,
+        0.001,
+        0.001
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_scan_slice_mean_s",
+    "baseline": {
+      "median": 0.000166667,
+      "min": 8.3333e-05,
+      "max": 0.00025,
+      "samples": [
+        0.000166667,
+        0.000166667,
+        0.000166667,
+        8.3333e-05,
+        0.00025
+      ]
+    },
+    "fixed": {
+      "median": 0.000166667,
+      "min": 8.3333e-05,
+      "max": 0.00025,
+      "samples": [
+        0.00025,
+        0.000166667,
+        0.000166667,
+        0.00025,
+        8.3333e-05
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_scan_slice_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_scan_slice_p95_s",
+    "baseline": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.003,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.003
+      ]
+    },
+    "fixed": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.002,
+      "samples": [
+        0.002,
+        0.001,
+        0.002,
+        0.001,
+        0.001
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_scan_slice_p99_s",
+    "baseline": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.003,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.003
+      ]
+    },
+    "fixed": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.002,
+      "samples": [
+        0.002,
+        0.001,
+        0.002,
+        0.001,
+        0.001
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_tick_count",
+    "baseline": {
+      "median": 121.0,
+      "min": 121.0,
+      "max": 121.0,
+      "samples": [
+        121.0,
+        121.0,
+        121.0,
+        121.0,
+        121.0
+      ]
+    },
+    "fixed": {
+      "median": 121.0,
+      "min": 121.0,
+      "max": 121.0,
+      "samples": [
+        121.0,
+        121.0,
+        121.0,
+        121.0,
+        121.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_tick_max_s",
+    "baseline": {
+      "median": 0.002,
+      "min": 0.002,
+      "max": 0.003,
+      "samples": [
+        0.003,
+        0.002,
+        0.002,
+        0.002,
+        0.003
+      ]
+    },
+    "fixed": {
+      "median": 0.002,
+      "min": 0.001,
+      "max": 0.002,
+      "samples": [
+        0.002,
+        0.001,
+        0.002,
+        0.002,
+        0.002
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_tick_mean_s",
+    "baseline": {
+      "median": 0.000115702,
+      "min": 9.9174e-05,
+      "max": 0.000132231,
+      "samples": [
+        0.000132231,
+        9.9174e-05,
+        0.000115702,
+        9.9174e-05,
+        0.000115702
+      ]
+    },
+    "fixed": {
+      "median": 0.000107438,
+      "min": 0.000107438,
+      "max": 0.000132231,
+      "samples": [
+        0.000132231,
+        0.000107438,
+        0.000107438,
+        0.000115702,
+        0.000107438
+      ]
+    },
+    "delta_percent": -7.142486733159325
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_tick_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_tick_p95_s",
+    "baseline": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.001
+      ]
+    },
+    "fixed": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.001,
+      "samples": [
+        0.001,
+        0.001,
+        0.001,
+        0.001,
+        0.001
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_s_tick_p99_s",
+    "baseline": {
+      "median": 0.001,
+      "min": 0.001,
+      "max": 0.002,
+      "samples": [
+        0.002,
+        0.001,
+        0.002,
+        0.001,
+        0.001
+      ]
+    },
+    "fixed": {
+      "median": 0.002,
+      "min": 0.001,
+      "max": 0.002,
+      "samples": [
+        0.002,
+        0.001,
+        0.002,
+        0.002,
+        0.002
+      ]
+    },
+    "delta_percent": 100.0
+  },
+  {
+    "case": "split_reopen",
+    "metric": "reopen_ticks",
+    "baseline": {
+      "median": 121.0,
+      "min": 121.0,
+      "max": 121.0,
+      "samples": [
+        121.0,
+        121.0,
+        121.0,
+        121.0,
+        121.0
+      ]
+    },
+    "fixed": {
+      "median": 121.0,
+      "min": 121.0,
+      "max": 121.0,
+      "samples": [
+        121.0,
+        121.0,
+        121.0,
+        121.0,
+        121.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "events",
+    "baseline": {
+      "median": 2048.0,
+      "min": 2048.0,
+      "max": 2048.0,
+      "samples": [
+        2048.0,
+        2048.0,
+        2048.0,
+        2048.0,
+        2048.0
+      ]
+    },
+    "fixed": {
+      "median": 2048.0,
+      "min": 2048.0,
+      "max": 2048.0,
+      "samples": [
+        2048.0,
+        2048.0,
+        2048.0,
+        2048.0,
+        2048.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s",
+    "baseline": {
+      "median": 0.871,
+      "min": 0.804,
+      "max": 0.888,
+      "samples": [
+        0.804,
+        0.879,
+        0.861,
+        0.871,
+        0.888
+      ]
+    },
+    "fixed": {
+      "median": 0.846,
+      "min": 0.809,
+      "max": 0.947,
+      "samples": [
+        0.809,
+        0.835,
+        0.846,
+        0.947,
+        0.889
+      ]
+    },
+    "delta_percent": -2.870264064293915
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_scan_slice_count",
+    "baseline": {
+      "median": 126.0,
+      "min": 126.0,
+      "max": 126.0,
+      "samples": [
+        126.0,
+        126.0,
+        126.0,
+        126.0,
+        126.0
+      ]
+    },
+    "fixed": {
+      "median": 126.0,
+      "min": 126.0,
+      "max": 126.0,
+      "samples": [
+        126.0,
+        126.0,
+        126.0,
+        126.0,
+        126.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_scan_slice_max_s",
+    "baseline": {
+      "median": 0.014,
+      "min": 0.013,
+      "max": 0.019,
+      "samples": [
+        0.014,
+        0.016,
+        0.013,
+        0.019,
+        0.013
+      ]
+    },
+    "fixed": {
+      "median": 0.016,
+      "min": 0.016,
+      "max": 0.018,
+      "samples": [
+        0.016,
+        0.017,
+        0.016,
+        0.018,
+        0.016
+      ]
+    },
+    "delta_percent": 14.28571428571428
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_scan_slice_mean_s",
+    "baseline": {
+      "median": 0.00465873,
+      "min": 0.004238095,
+      "max": 0.004738095,
+      "samples": [
+        0.004238095,
+        0.00468254,
+        0.0045,
+        0.00465873,
+        0.004738095
+      ]
+    },
+    "fixed": {
+      "median": 0.004547619,
+      "min": 0.00434127,
+      "max": 0.005063492,
+      "samples": [
+        0.004373016,
+        0.004547619,
+        0.00434127,
+        0.005063492,
+        0.004674603
+      ]
+    },
+    "delta_percent": -2.3850062141398953
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_scan_slice_p50_s",
+    "baseline": {
+      "median": 0.004,
+      "min": 0.004,
+      "max": 0.005,
+      "samples": [
+        0.004,
+        0.004,
+        0.004,
+        0.005,
+        0.004
+      ]
+    },
+    "fixed": {
+      "median": 0.004,
+      "min": 0.004,
+      "max": 0.005,
+      "samples": [
+        0.004,
+        0.004,
+        0.004,
+        0.005,
+        0.004
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_scan_slice_p95_s",
+    "baseline": {
+      "median": 0.009,
+      "min": 0.008,
+      "max": 0.01,
+      "samples": [
+        0.008,
+        0.009,
+        0.009,
+        0.008,
+        0.01
+      ]
+    },
+    "fixed": {
+      "median": 0.009,
+      "min": 0.007,
+      "max": 0.01,
+      "samples": [
+        0.008,
+        0.009,
+        0.007,
+        0.009,
+        0.01
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_scan_slice_p99_s",
+    "baseline": {
+      "median": 0.012,
+      "min": 0.011,
+      "max": 0.016,
+      "samples": [
+        0.011,
+        0.013,
+        0.012,
+        0.016,
+        0.012
+      ]
+    },
+    "fixed": {
+      "median": 0.015,
+      "min": 0.014,
+      "max": 0.017,
+      "samples": [
+        0.015,
+        0.014,
+        0.014,
+        0.017,
+        0.015
+      ]
+    },
+    "delta_percent": 25.0
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_tick_count",
+    "baseline": {
+      "median": 1260.0,
+      "min": 1260.0,
+      "max": 1260.0,
+      "samples": [
+        1260.0,
+        1260.0,
+        1260.0,
+        1260.0,
+        1260.0
+      ]
+    },
+    "fixed": {
+      "median": 1260.0,
+      "min": 1260.0,
+      "max": 1260.0,
+      "samples": [
+        1260.0,
+        1260.0,
+        1260.0,
+        1260.0,
+        1260.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_tick_max_s",
+    "baseline": {
+      "median": 0.094,
+      "min": 0.082,
+      "max": 0.106,
+      "samples": [
+        0.082,
+        0.106,
+        0.1,
+        0.094,
+        0.09
+      ]
+    },
+    "fixed": {
+      "median": 0.101,
+      "min": 0.083,
+      "max": 0.105,
+      "samples": [
+        0.083,
+        0.085,
+        0.103,
+        0.101,
+        0.105
+      ]
+    },
+    "delta_percent": 7.446808510638303
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_tick_mean_s",
+    "baseline": {
+      "median": 0.000686508,
+      "min": 0.000636508,
+      "max": 0.000700794,
+      "samples": [
+        0.000636508,
+        0.000696825,
+        0.000680952,
+        0.000686508,
+        0.000700794
+      ]
+    },
+    "fixed": {
+      "median": 0.000669048,
+      "min": 0.000638889,
+      "max": 0.00075,
+      "samples": [
+        0.000638889,
+        0.000661111,
+        0.000669048,
+        0.00075,
+        0.000703175
+      ]
+    },
+    "delta_percent": -2.5433061231624365
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_tick_p50_s",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_tick_p95_s",
+    "baseline": {
+      "median": 0.005,
+      "min": 0.004,
+      "max": 0.005,
+      "samples": [
+        0.004,
+        0.005,
+        0.005,
+        0.005,
+        0.005
+      ]
+    },
+    "fixed": {
+      "median": 0.004,
+      "min": 0.004,
+      "max": 0.005,
+      "samples": [
+        0.004,
+        0.005,
+        0.004,
+        0.005,
+        0.004
+      ]
+    },
+    "delta_percent": -19.999999999999996
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "lifecycle_s_tick_p99_s",
+    "baseline": {
+      "median": 0.007,
+      "min": 0.006,
+      "max": 0.008,
+      "samples": [
+        0.006,
+        0.007,
+        0.007,
+        0.007,
+        0.008
+      ]
+    },
+    "fixed": {
+      "median": 0.007,
+      "min": 0.006,
+      "max": 0.008,
+      "samples": [
+        0.006,
+        0.007,
+        0.006,
+        0.008,
+        0.007
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "overwritten",
+    "baseline": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "fixed": {
+      "median": 0.0,
+      "min": 0.0,
+      "max": 0.0,
+      "samples": [
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "delta_percent": null
+  },
+  {
+    "case": "mixed_backlog_scan",
+    "metric": "ticks",
+    "baseline": {
+      "median": 1260.0,
+      "min": 1260.0,
+      "max": 1260.0,
+      "samples": [
+        1260.0,
+        1260.0,
+        1260.0,
+        1260.0,
+        1260.0
+      ]
+    },
+    "fixed": {
+      "median": 1260.0,
+      "min": 1260.0,
+      "max": 1260.0,
+      "samples": [
+        1260.0,
+        1260.0,
+        1260.0,
+        1260.0,
+        1260.0
+      ]
+    },
+    "delta_percent": 0.0
+  },
+  {
+    "case": "pumps_1024_many_lakes",
+    "metric": "collect_s",
+    "baseline": {
+      "median": 0.257,
+      "min": 0.25,
+      "max": 0.258,
+      "samples": [
+        0.258,
+        0.25,
+        0.257
+      ]
+    },
+    "fixed": {
+      "median": 0.26,
+      "min": 0.229,
+      "max": 0.282,
+      "samples": [
+        0.26,
+        0.229,
+        0.282
+      ]
+    },
+    "delta_percent": 1.1673151750972721
+  },
+  {
+    "case": "pumps_1024_many_lakes",
+    "metric": "pump_samples",
+    "baseline": {
+      "median": 1024000.0,
+      "min": 1024000.0,
+      "max": 1024000.0,
+      "samples": [
+        1024000.0,
+        1024000.0,
+        1024000.0
+      ]
+    },
+    "fixed": {
+      "median": 1024000.0,
+      "min": 1024000.0,
+      "max": 1024000.0,
+      "samples": [
+        1024000.0,
+        1024000.0,
+        1024000.0
+      ]
+    },
+    "delta_percent": 0.0
+  }
+]

@@ -53,3 +53,12 @@ These are mock CPU measurements including Lua mock API, deterministic `pairs`,
 instrumentation and GC costs. They cannot predict Factorio UPS, native `set_tiles`
 costs, save serialization or a different machine. No fragile percentage timing
 threshold is used as a correctness gate.
+
+## 2.0.5 / 2.1.1 scan and upgrade regressions
+
+`dry_merge_16384` retains a 128×128 depleted lake, seven pumps and a gradual
+cut through dry terrain. It measures the fixed lifecycle window, merge count,
+dry-count gap and remaining visual work. `repair_wet_262144` and
+`repair_dry_65536` separately measure the one-time affected-save repair, excluding
+fixture setup. These run with the optional suite, independently of fast mocks.
+See [the measured comparison and limits](COUNTER-FIX-2026-10-25.md).
