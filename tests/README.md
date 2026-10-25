@@ -84,3 +84,18 @@ entity destruction, real robot scheduling or native save serialization.
 mock LuaObject identities, rejects stored functions, and reloads runtime modules.
 It is a queued-state persistence check, not certification of a real save file.
 Real Factorio acceptance remains necessary for those engine behaviors.
+
+## Scan/merge accounting regressions (2.0.5 / 2.1.1)
+
+- `test_scan_merge_counters.lua`: wet/depleted gradual cuts with multiple pump
+  scan seeds; count, search area and geometry invariants checked after every tick,
+  with both current-ID-preserving and ID-changing merges.
+- `test_landfill_geometry.lua`: cover removes wet/dry tile count and coordinate
+  sums from geometry.
+- `test_scan_accounting_upgrade.lua`: repair derived saved state while preserving
+  reserve, pending FIFO and exactly-once removal. Both affected version families.
+- `test_landfill_scan_ownership.lua`: scanners must not clear ownership before
+  pending landfill accounting removes grid membership.
+
+All are discovered by `lua tests/run.lua`; optional native acceptance and
+performance suites remain independently runnable.

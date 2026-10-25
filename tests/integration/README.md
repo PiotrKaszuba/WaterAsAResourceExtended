@@ -22,7 +22,7 @@ From the repository root, PowerShell builds and tests the candidate ZIP:
 To test an existing exact artifact, without rebuilding it:
 
 ```text
-python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.1.0.zip
+python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.1.1.zip
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario landfill
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario resume --timeout 120
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario upgrade
@@ -33,7 +33,7 @@ Use the ZIP's actual version in the path. A local manifest override is preserved
 testing a differently versioned archive does not certify the intended final artifact.
 Rebuild and rerun after finalizing release metadata or changing production code.
 
-## Eight base-game profiles and actual partners
+## Nine base-game profiles and actual partners
 
 | Profile | Native behavior checked |
 | --- | --- |
@@ -45,6 +45,7 @@ Rebuild and rerun after finalizing release metadata or changing production code.
 | `pump-transitions` | A real wired circuit, deconstruction/cancellation, a bounded noncompeting script stop, output blocking and restart. A per-tick trace compares lake debit with actual fluid removed plus receiver-buffer changes, independently of Water's sampling predicate. |
 | `upgrade` | Opens the retained genuine 2.0.77 / Water 2.0.4 checkpoint, verifies the actual configuration-change versions and pre-tick queue/capacity state, settles the original brush, saves the converted world and reloads it in another 2.1 process. |
 | `persist` | Extends the wet/dry landfill/robot trial with nondefault regeneration settings and threshold, native research completion, a depleted lake with its stopped pump, a covered typed dry bed, actual save/restart and robot mining after reload. This state is created in 2.1, not represented as a second 2.0 upgrade fixture. |
+| `scan_merge` | Seven native pumps fully deplete a 48×32 lake. A 32-tile announced dry enclosure triggers successor scans/merges; dry membership/count, discovered area, geometry count/sums and landfill retention are checked throughout, including normal tiny-pond cleanup. |
 
 With explicit `--partner-mod` ZIPs, the default selection is `partners` plus
 `landfill`. Repeat the option for all required dependencies. The runner stages
@@ -87,6 +88,14 @@ without fabricating an `old_tile` field or invoking Water handlers directly.
 
 ## Boundaries
 
+The user-reported dry-bed enclosure defect now also has a separate [native
+inventory replay](repros/dry-bed-loop/README.md). Released 2.1.0 is a negative control; current source passes with
+`--require-clean`. This local personal-world fixture remains separate from
+the distributable acceptance profiles. Its
+exact user checkpoint stays in local artifacts; the schedule, observer and
+runner are tracked. It supplements the earlier mock reproduction and checks
+the dry-count invariant throughout native scan/merge work.
+
 This suite complements the mock accounting/split/merge/family tests. It does not
 repeat their topology matrix, certify all native interleavings, test rendering/UI
 or native player cursor actions. `upgrade` converts the retained synthetic old
@@ -104,3 +113,11 @@ has run, not an extra "revealed tile" field invented in the event payload.
 The Python isolation/process approach was adapted from the local
 PoweredBeltsExtended harness. Mod-specific scenarios remain here; no shared
 framework repository or dependency was introduced.
+
+## Bugfix release verification
+
+See [2.0.5 / 2.1.1 verification](BUGFIX-2.0.5-2.1.1.md) for exact artifact
+hashes, completed native profiles, saved-state recovery and performance results.
+The Linux headless runner uses benchmark execution for non-server trials and
+explicitly disables bundled expansion mods. `resume` still uses actual server
+save/restart. The Windows runner retains its normal launch route.

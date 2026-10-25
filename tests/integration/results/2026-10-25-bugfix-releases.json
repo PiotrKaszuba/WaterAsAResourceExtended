@@ -1,0 +1,431 @@
+{
+  "date": "2026-10-25",
+  "native": {
+    "2.0.5": {
+      "status": "passed",
+      "engine": "2.0.77",
+      "mod_version": "2.0.5",
+      "sha256": "14f80c7eab962fdb9617e9bb22b2126a38fe054d1ede5aedd36163e615583b1a",
+      "source_commit": "352b20e913d96bba5eb789f43993d8a8f1133e03",
+      "source_dirty": true,
+      "artifact_run": "20261025-190401-b0fddd",
+      "profiles": [
+        {
+          "name": "prototypes",
+          "checks_by_phase": [
+            13
+          ]
+        },
+        {
+          "name": "prototypes-disabled",
+          "checks_by_phase": [
+            11
+          ]
+        },
+        {
+          "name": "pumping",
+          "checks_by_phase": [
+            25
+          ]
+        },
+        {
+          "name": "landfill",
+          "checks_by_phase": [
+            28
+          ]
+        },
+        {
+          "name": "resume",
+          "checks_by_phase": [
+            5,
+            11
+          ]
+        },
+        {
+          "name": "scan_merge",
+          "checks_by_phase": [
+            14
+          ]
+        }
+      ],
+      "all_phase_checks": 107
+    },
+    "2.1.1": {
+      "status": "passed",
+      "engine": "2.1.23",
+      "mod_version": "2.1.1",
+      "sha256": "c65d861d2a74424ae80cf522a7843faf0e5bd3052baf92379c4bc01f33791890",
+      "source_commit": "7b08c902b36a565c189e9e8e5db48ff9c967ad51",
+      "source_dirty": true,
+      "artifact_run": "20261025-185632-7efa6a",
+      "profiles": [
+        {
+          "name": "prototypes",
+          "checks_by_phase": [
+            13
+          ]
+        },
+        {
+          "name": "prototypes-disabled",
+          "checks_by_phase": [
+            11
+          ]
+        },
+        {
+          "name": "pumping",
+          "checks_by_phase": [
+            25
+          ]
+        },
+        {
+          "name": "landfill",
+          "checks_by_phase": [
+            28
+          ]
+        },
+        {
+          "name": "resume",
+          "checks_by_phase": [
+            5,
+            11
+          ]
+        },
+        {
+          "name": "pump-transitions",
+          "checks_by_phase": [
+            19
+          ]
+        },
+        {
+          "name": "upgrade",
+          "checks_by_phase": [
+            12,
+            19
+          ]
+        },
+        {
+          "name": "persist",
+          "checks_by_phase": [
+            33,
+            49
+          ]
+        },
+        {
+          "name": "scan_merge",
+          "checks_by_phase": [
+            14
+          ]
+        }
+      ],
+      "all_phase_checks": 239
+    }
+  },
+  "mock": {
+    "2.0.5": {
+      "files": 37,
+      "pass_assertions": 1016,
+      "all_passed": true
+    },
+    "2.1.1": {
+      "files": 37,
+      "pass_assertions": 1022,
+      "all_passed": true
+    }
+  },
+  "local_native_replays": {
+    "exact-dry-bed-49c3a154": {
+      "engine": "Version: 2.1.23 (build 87750, win64, steam)\nVersion: 64\nMap input version: 1.0.0-0\nMap output version: 2.1.23-2\n",
+      "checkpoint_sha256": "b2bbeb5af5fae290243cd249ee019f95bfa7af90d62561b801d10cf74b935aff",
+      "runs": [
+        {
+          "case": "closed",
+          "variant": "current",
+          "events": 9,
+          "expected_events": 9,
+          "covered": 36,
+          "lost": 0,
+          "before_differences": {},
+          "settled": true,
+          "final": {
+            "tick": 9876,
+            "periodic": 9876,
+            "bodies": [
+              {
+                "id": 9,
+                "area": 1803,
+                "capacity": 150850,
+                "remaining": 32.47791321919067,
+                "finished": true,
+                "actual_dry": 1801,
+                "recorded_dry": 1801,
+                "gap": 0,
+                "wet": 2,
+                "duplicates": 0,
+                "to_dry": 0,
+                "depleted": true,
+                "pumps": 7
+              }
+            ],
+            "queued": 0,
+            "counts": {
+              "scans": 42,
+              "edges": 1918,
+              "split_checks": 29,
+              "splits": 1,
+              "merges": 7,
+              "new_bodies": 9
+            }
+          },
+          "harness_valid": true,
+          "invariant_passed": true
+        },
+        {
+          "case": "open",
+          "variant": "current",
+          "events": 8,
+          "expected_events": 8,
+          "covered": 32,
+          "lost": 0,
+          "before_differences": {},
+          "settled": true,
+          "final": {
+            "tick": 9876,
+            "periodic": 9876,
+            "bodies": [
+              {
+                "id": 1,
+                "area": 1811,
+                "capacity": 152050,
+                "remaining": 185.12742845670437,
+                "finished": true,
+                "actual_dry": 1799,
+                "recorded_dry": 1799,
+                "gap": 0,
+                "wet": 12,
+                "duplicates": 0,
+                "to_dry": 0,
+                "depleted": true,
+                "pumps": 7
+              }
+            ],
+            "queued": 0,
+            "counts": {
+              "scans": 0,
+              "edges": 117,
+              "split_checks": 32,
+              "splits": 0,
+              "merges": 0,
+              "new_bodies": 0
+            }
+          },
+          "harness_valid": true,
+          "invariant_passed": true
+        }
+      ]
+    },
+    "exact-dry-bed-39dc6da7": {
+      "engine": "Version: 2.1.23 (build 87750, win64, steam)\nVersion: 64\nMap input version: 1.0.0-0\nMap output version: 2.1.23-2\n",
+      "checkpoint_sha256": "a16a3b3030a87dd42c71e9b32879568a9b0f4e6ee668b2578ab53102b15b69bb",
+      "runs": [
+        {
+          "variant": "released",
+          "case": "recovery",
+          "harness_valid": true,
+          "initial": {
+            "tick": 9153,
+            "periodic": 9153,
+            "bodies": [
+              {
+                "id": 10,
+                "area": 1803,
+                "capacity": 150850,
+                "remaining": -74.48531926469877,
+                "finished": true,
+                "actual_dry": 1803,
+                "recorded_dry": 1674,
+                "gap": 129,
+                "wet": 0,
+                "duplicates": 0,
+                "to_dry": 129,
+                "depleted": true,
+                "pumps": 7
+              }
+            ],
+            "queued": 0,
+            "counts": {
+              "scans": 0,
+              "edges": 0,
+              "split_checks": 0,
+              "splits": 0,
+              "merges": 0,
+              "new_bodies": 0
+            }
+          },
+          "events": 0,
+          "expected_events": 0,
+          "covered": 36,
+          "lost": 0,
+          "first_gap": {
+            "tick": 9153,
+            "periodic": 9153,
+            "bodies": [
+              {
+                "id": 10,
+                "area": 1803,
+                "capacity": 150850,
+                "remaining": -74.48531926469877,
+                "finished": true,
+                "actual_dry": 1803,
+                "recorded_dry": 1674,
+                "gap": 129,
+                "wet": 0,
+                "duplicates": 0,
+                "to_dry": 129,
+                "depleted": true,
+                "pumps": 7
+              }
+            ],
+            "queued": 0,
+            "counts": {
+              "scans": 0,
+              "edges": 0,
+              "split_checks": 0,
+              "splits": 0,
+              "merges": 0,
+              "new_bodies": 0
+            }
+          },
+          "before_differences": {},
+          "settled": true,
+          "final": {
+            "tick": 9753,
+            "periodic": 9753,
+            "bodies": [
+              {
+                "id": 10,
+                "area": 1803,
+                "capacity": 150850,
+                "remaining": 15.669450087094447,
+                "finished": true,
+                "actual_dry": 1803,
+                "recorded_dry": 1674,
+                "gap": 129,
+                "wet": 0,
+                "duplicates": 0,
+                "to_dry": 128,
+                "depleted": true,
+                "pumps": 7
+              }
+            ],
+            "queued": 0,
+            "counts": {
+              "scans": 0,
+              "edges": 0,
+              "split_checks": 0,
+              "splits": 0,
+              "merges": 0,
+              "new_bodies": 0
+            }
+          },
+          "invariant_passed": false
+        },
+        {
+          "variant": "current",
+          "case": "recovery",
+          "harness_valid": true,
+          "initial": {
+            "tick": 9153,
+            "periodic": 9153,
+            "bodies": [
+              {
+                "id": 10,
+                "area": 1803,
+                "capacity": 150850,
+                "remaining": -74.48531926469877,
+                "finished": true,
+                "actual_dry": 1803,
+                "recorded_dry": 1803,
+                "gap": 0,
+                "wet": 0,
+                "duplicates": 0,
+                "to_dry": 0,
+                "depleted": true,
+                "pumps": 7
+              }
+            ],
+            "queued": 0,
+            "counts": {
+              "scans": 0,
+              "edges": 0,
+              "split_checks": 0,
+              "splits": 0,
+              "merges": 0,
+              "new_bodies": 0
+            }
+          },
+          "configuration_change": {
+            "old_version": "2.1.0",
+            "new_version": "2.1.1"
+          },
+          "events": 0,
+          "expected_events": 0,
+          "covered": 36,
+          "lost": 0,
+          "before_differences": {},
+          "settled": true,
+          "final": {
+            "tick": 9753,
+            "periodic": 9753,
+            "bodies": [
+              {
+                "id": 10,
+                "area": 1803,
+                "capacity": 150850,
+                "remaining": 15.669450087094447,
+                "finished": true,
+                "actual_dry": 1802,
+                "recorded_dry": 1802,
+                "gap": 0,
+                "wet": 1,
+                "duplicates": 0,
+                "to_dry": 0,
+                "depleted": true,
+                "pumps": 7
+              }
+            ],
+            "queued": 0,
+            "counts": {
+              "scans": 0,
+              "edges": 0,
+              "split_checks": 0,
+              "splits": 0,
+              "merges": 0,
+              "new_bodies": 0
+            }
+          },
+          "invariant_passed": true
+        }
+      ]
+    }
+  },
+  "package_validation": [
+    {
+      "version": "2.0.5",
+      "sha256": "14f80c7eab962fdb9617e9bb22b2126a38fe054d1ede5aedd36163e615583b1a",
+      "files": 29,
+      "size": 280478,
+      "all_packaged_sources_identical": true,
+      "portable_separators": true,
+      "crc_ok": true
+    },
+    {
+      "version": "2.1.1",
+      "sha256": "c65d861d2a74424ae80cf522a7843faf0e5bd3052baf92379c4bc01f33791890",
+      "files": 29,
+      "size": 280726,
+      "all_packaged_sources_identical": true,
+      "portable_separators": true,
+      "crc_ok": true
+    }
+  ]
+}
