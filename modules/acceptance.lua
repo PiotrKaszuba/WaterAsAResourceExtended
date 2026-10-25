@@ -2,7 +2,7 @@
 -- reserve setters or direct access to mutable production tables are exposed.
 local M = {}
 
-function M.snapshot()
+function M.snapshot(include_membership)
     local result = { bodies = {}, pumps = {}, forces = {}, queued = storage.TileEventQueue.size,
         pending = 0, tick = game.tick, settings = {
             regeneration = settings.global["Waterbody-Regen-Rate"].value,
@@ -26,6 +26,24 @@ function M.snapshot()
             uncollected = state.TempUsedWater, depleted = state.Depleted,
             dried = state.DriedTiles, to_dry = state.ToDryTiles, pumps = #state.Pumps,
         }
+        if include_membership then
+            local entry, grids = result.bodies[#result.bodies], body.gridsData
+            local seen, count, dry, sx, sy = {}, 0, 0, 0, 0
+            local function add(grid, is_dry)
+                for key, tile in pairs(grid) do
+                    assert(not seen[key], "Duplicate acceptance grid membership")
+                    seen[key] = true; count = count + 1; dry = dry + (is_dry and 1 or 0)
+                    sx = sx + tile.position.x; sy = sy + tile.position.y
+                end
+            end
+            add(grids.waterGridWithData, false); add(grids.driedTilesGridWithData, true)
+            for _, grid in ipairs(grids.lazyWaterGridWithData) do add(grid, false) end
+            for _, grid in ipairs(grids.lazyDriedTilesGridWithData) do add(grid, true) end
+            entry.members, entry.actual_dry = count, dry
+            entry.search_area = body.searchData.totalArea
+            local shape = body.waterBodyShapeData
+            entry.geometry_ok = shape.TileCount == count and shape.SumX == sx and shape.SumY == sy
+        end
     end
     table.sort(result.bodies, function(a, b) return a.id < b.id end)
     for id, pump in pairs(storage.TrackedEntities) do

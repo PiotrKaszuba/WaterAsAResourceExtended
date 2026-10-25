@@ -20,7 +20,7 @@ import uuid
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-BASE_CASES = ("prototypes", "prototypes-disabled", "pumping", "landfill", "resume", "pump-transitions", "upgrade", "persist")
+BASE_CASES = ("prototypes", "prototypes-disabled", "pumping", "landfill", "resume", "pump-transitions", "upgrade", "persist", "scan_merge")
 CASES = (*BASE_CASES, "partners")
 
 

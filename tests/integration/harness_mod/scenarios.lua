@@ -241,4 +241,50 @@ end
 S["pump-transitions"] = require("pump_transitions")
 S.partners = require("partners")
 function S.persist(H) return persistence(H, S.landfill) end
+function S.scan_merge(H)
+    if storage.phase == "setup" then
+        local surface = W.prepare(H)
+        W.rectangle(surface, 0, 0, 48, 32, "water")
+        storage.pumps, storage.extracted, storage.drain = {}, {}, true
+        for i = 1, 7 do
+            storage.pumps[i] = W.pump(H, surface, 0, 0, 48, 32)
+            storage.extracted[i] = 0
+        end
+        H.phase("draining")
+        return
+    end
+    W.sample_pumps()
+    local raw = remote.call("water_acceptance", "snapshot", true)
+    local dry, members = 0, 0
+    for _, b in ipairs(raw.bodies) do
+        assert(b.actual_dry == b.dried, "Native dry counter differs from grid membership")
+        assert(b.search_area == b.members and b.geometry_ok, "Native scan area/geometry differs from membership")
+        dry, members = dry + b.actual_dry, members + b.members
+    end
+    local view = W.snapshot(H)
+    if storage.phase == "draining" then
+        if not view.finished or not view.depleted or dry < 1536 then return end
+        H.check(true, "Seven native pumps fully drain and physically dry the lake")
+        storage.drain = false
+        storage.edits = {}
+        for x = 20, 25 do for y = 10, 15 do
+            if x < 22 or x >= 24 or y < 12 or y >= 14 then
+                storage.edits[#storage.edits + 1] = { name = "landfill", position = { x = x, y = y } }
+            end
+        end end
+        game.surfaces.nauvis.set_tiles(storage.edits, false, false, false, true)
+        H.check(H.snapshot().queued == 32, "Announced native dry enclosure queues 32 removals")
+        H.phase("reconstructing")
+    elseif storage.phase == "reconstructing" then
+        assert(W.all_tiles(game.surfaces.nauvis, storage.edits, "landfill"), "Native dry enclosure was overwritten")
+        if H.elapsed() < 600 or not view.finished or raw.queued > 0 then return end
+        H.check(#raw.bodies == 2, "Dry enclosure reconstructs outer lake and four-tile inner bed")
+        H.check(members == 1504, "Reconstruction retains exactly the uncovered memberships")
+        H.check(true, "Dry counts, discovered area and centroid geometry stayed consistent through native merges")
+        H.check(raw.pending == 0, "Enclosure accounting and pending index settle")
+        storage.trials = { scan_merge = raw }
+        H.finish()
+    end
+end
+
 return S
