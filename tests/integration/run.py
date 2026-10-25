@@ -108,12 +108,15 @@ def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
         {"name": n, "enabled": True} for n in sorted(names)
     ]}), encoding="utf-8")
     config = output / "factorio.ini"
-    config.write_text("[path]\nwrite-data=" + user.as_posix() + "\n", encoding="utf-8")
+    config.write_text("[path]\nread-data=" + (binary.parents[2] / "data").as_posix()
+                      + "\nwrite-data=" + user.as_posix() + "\n", encoding="utf-8")
     map_settings = output / "map-gen.json"
     map_settings.write_text(json.dumps({"seed": 51773, "width": 256, "height": 256,
                                        "water": "none", "starting_area": "none",
                                        "peaceful_mode": True}), encoding="utf-8")
-    common = ["--mod-directory", str(mods), "--config", str(config), "--disable-audio"]
+    common = ["--mod-directory", str(mods), "--config", str(config)]
+    if os.name == "nt":
+        common.append("--disable-audio")
     save = output / "initial.zip"
     if case == "upgrade":
         shutil.copy2(original, save)
@@ -142,7 +145,9 @@ def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
             serve_until_result(binary, common + launch, output / f"phase-{phase}.log",
                                result_file, user / "saves", timeout)
         else:
-            invoke(binary, common + launch + ["--until-tick", str(18000 * phase)],
+            trial = (launch + ["--until-tick", str(18000 * phase)] if os.name == "nt" else
+                     ["--benchmark", str(save), "--benchmark-ticks", str(18000 * phase), "--benchmark-runs", "1"])
+            invoke(binary, common + trial,
                    output / f"phase-{phase}.log", timeout)
         if not result_file.exists():
             raise RuntimeError(f"Harness did not finish {case}; see {output / f'phase-{phase}.log'}")

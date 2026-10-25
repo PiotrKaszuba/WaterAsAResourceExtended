@@ -277,9 +277,16 @@ function S.scan_merge(H)
         H.phase("reconstructing")
     elseif storage.phase == "reconstructing" then
         assert(W.all_tiles(game.surfaces.nauvis, storage.edits, "landfill"), "Native dry enclosure was overwritten")
+        if view.finished and #raw.bodies == 2 then
+            for _, b in ipairs(raw.bodies) do
+                if b.members == 4 then storage.saw_inner = true end
+            end
+        end
         if H.elapsed() < 600 or not view.finished or raw.queued > 0 then return end
-        H.check(#raw.bodies == 2, "Dry enclosure reconstructs outer lake and four-tile inner bed")
-        H.check(members == 1504, "Reconstruction retains exactly the uncovered memberships")
+        H.check(storage.saw_inner, "Dry enclosure reconstructs outer lake and four-tile inner bed")
+        H.check(#raw.bodies == 1 and members == 1500, "Normal unnamed-pond cleanup leaves the correct outer lake")
+        H.check(game.surfaces.nauvis.get_tile(22, 12).name == "lake-dry-water",
+            "Cleaned-up inner bed remains physically dry")
         H.check(true, "Dry counts, discovered area and centroid geometry stayed consistent through native merges")
         H.check(raw.pending == 0, "Enclosure accounting and pending index settle")
         storage.trials = { scan_merge = raw }
