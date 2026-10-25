@@ -1,5 +1,34 @@
 # Native acceptance result: 25 October 2026
 
+## Final 2.0.4 upload artifact
+
+**Passed again: five profiles, 88 checks, Factorio 2.0.77, base only.**
+The final `releases/WaterAsAResourceExtended_2.0.4.zip` declares mod version
+2.0.4 and Factorio 2.0. It was rebuilt after the committed version bump
+`bff2792` and the packaging-only correction `56383b8`, which excludes hidden
+Windows `Thumbs.db` files from the copied release directory.
+
+```text
+SHA-256: e5ce762578e3882e540bb1a91b2b303bb6a50f1e8a2c738c8a1633e2759c9c6c
+```
+
+Raw evidence: `tests/artifacts/20261025-030238-4f2437/report.json` and its
+per-profile logs, results and native checkpoint. All 29 archived files match
+the committed source, allowing Git's checkout line-ending conversion. ZIP CRCs,
+unique paths, the versioned root directory, forward-slash separators and the
+absence of Windows thumbnail caches were checked. WSL was not required.
+The complete independent mock suite passed again: 33 files, 938 passed
+assertion lines, zero failures. Both focused pending-visual diagnostics passed.
+The report's dirty flag reflects the preserved pre-existing untracked files;
+none is present in this archive.
+
+This closes the manifest/build/retest gate for the planned final Factorio 2.0
+release. It does not claim a successful Mod Portal upload, external partner-mod
+certification or a previous-published-save upgrade. Those coverage boundaries
+remain as described below. The separate 2.1 migration has not started.
+
+## Earlier acceptance run with the local manifest override
+
 **Passed: five profiles, 88 checks, Factorio 2.0.77, base only.**
 
 | Profile | Checks | Completion tick |
@@ -64,7 +93,7 @@ The complete mock suite also passed: **33 files, 938 passed assertions, zero
 failures**. Both separate pending-visual diagnostics passed. Larger performance
 workloads were retained unchanged and were not rerun for this harness-only work.
 
-## Remaining release work
+## Release gate recorded after the earlier run (now completed above)
 
 Finalize manifest/changelog metadata, rebuild the intended release ZIP and rerun
 the same command against that final artifact. Native player cursor/UI behavior,
