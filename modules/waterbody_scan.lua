@@ -561,7 +561,7 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local IsDryTile = utils.IsDryTile
 	local IsWaterTile = utils.IsWaterTile
 	local addNewWaterTile = hot_utils.addNewWaterTile
-	local mergeWaterBody = waterbody_merge.mergeWaterBody
+	local mergeWaterBodies = waterbody_merge.mergeWaterBody
 	local ValidWaterBodies = storage.ValidWaterBodies
 	local OrphanedDryTilesOriginalName = storage.OrphanedDryTilesOriginalName
 	local lazyOrphanedDryTilesOriginalName = storage.lazyOrphanedDryTilesOriginalName
@@ -604,6 +604,24 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 	local huge_val = math.huge
 	local batchMinX, batchMaxX, batchMinY, batchMaxY, batchSumX, batchSumY, batchTileCount = huge_val, -huge_val,
 		huge_val, -huge_val, 0, 0, 0
+
+	-- A merge consumes stored counters and geometry, including this scan's batch.
+	-- Keep the ordinary tile path batched; publish/reload only at an actual merge.
+	local function mergeWaterBody(other, current)
+		searchData.totalArea = totalArea
+		state.DriedTiles = dried_tiles
+		if batchTileCount > 0 then
+			waterbodies.updateGeometry(current.waterBodyShapeData, nil,
+				batchMinX, batchMaxX, batchMinY, batchMaxY, batchSumX, batchSumY, batchTileCount)
+			batchMinX, batchMaxX, batchMinY, batchMaxY = huge_val, -huge_val, huge_val, -huge_val
+			batchSumX, batchSumY, batchTileCount = 0, 0, 0
+		end
+		local id = mergeWaterBodies(other, current)
+		local survivor = getWaterBody(id)
+		totalArea = survivor.searchData.totalArea
+		dried_tiles = survivor.waterBodyStateData.DriedTiles
+		return id
+	end
 
 	local out_of_map_tile_name = "out-of-map"
 
@@ -686,8 +704,6 @@ function waterbody_scan.ScanWaterArea(water_body, search_amount, updateBudget)
 				end
 				totalArea = totalArea + total_area_increase
 				dried_tiles = dried_tiles + dried_tiles_increase
-				-- TODO - should we reset batch values if waterbody changed?
-				-- the question is how merge will behave under the hood
 				if added_tile then
 					-- this is hardcoded in place for performance
 					local x, y = search_position.x, search_position.y
