@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-25",
+  "runtime": "Native Windows Lua 5.2.4; os.clock CPU time, approximately 1 ms clock resolution",
+  "counter_boundary_baseline": "9432b11 (ownership + geometry fixes, before scan batch boundary fix)",
+  "complete_release_baseline": "4ef5a4d (v2.0.4)",
+  "fixed_runtime": "7791b41 (2.0 production fixes; subsequent commits change metadata, packaging or tests)",
+  "order": "Alternating baseline/fixed, separate process per sample, one discarded warmup per process",
+  "command": "lua tests/performance/run.lua 1 CASE LABEL",
+  "setup": "Same selected workload implementations copied into both exported trees. Fixture setup excluded from measured phases. GC enabled; warnings silenced. No native acceptance engines running concurrently.",
+  "repair_command": "lua tests/performance/run.lua 3 repair_ fixed",
+  "repair_scope": "One-time direct repair; lake construction/scanning/drying excluded. Allocation is live Lua heap growth after call, not peak RSS.",
+  "limits": "Mock CPU including instrumentation and deterministic mock iteration; not Factorio UPS, native tile API cost, or a guaranteed worst-case bound. Compare within paired sessions only."
+}
