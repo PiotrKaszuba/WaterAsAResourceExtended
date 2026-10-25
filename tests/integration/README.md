@@ -121,3 +121,7 @@ hashes, completed native profiles, saved-state recovery and performance results.
 The Linux headless runner uses benchmark execution for non-server trials and
 explicitly disables bundled expansion mods. `resume` still uses actual server
 save/restart. The Windows runner retains its normal launch route.
+
+Fresh acceptance of the rebuilt 2.1.1 lineage is recorded in
+[the 26 October history-rebuild verification](../HISTORY-REBUILD-RESULTS-2026-10-26.md).
+Earlier dated 2.1.0/bugfix evidence retains its original artifact and source hashes.
