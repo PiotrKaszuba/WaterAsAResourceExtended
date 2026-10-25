@@ -1,0 +1,13 @@
+label,case,sample,metric,value
+api_normalized_2_0,pumps_256,1,collect_s,0.266000000
+api_normalized_2_0,pumps_256,1,pump_samples,512000.000000000
+api_normalized_2_0,pumps_256,2,collect_s,0.306000000
+api_normalized_2_0,pumps_256,2,pump_samples,512000.000000000
+api_normalized_2_0,pumps_256,3,collect_s,0.305000000
+api_normalized_2_0,pumps_256,3,pump_samples,512000.000000000
+api_normalized_2_0,pumps_1024_many_lakes,1,collect_s,0.754000000
+api_normalized_2_0,pumps_1024_many_lakes,1,pump_samples,1024000.000000000
+api_normalized_2_0,pumps_1024_many_lakes,2,collect_s,0.753000000
+api_normalized_2_0,pumps_1024_many_lakes,2,pump_samples,1024000.000000000
+api_normalized_2_0,pumps_1024_many_lakes,3,collect_s,0.730000000
+api_normalized_2_0,pumps_1024_many_lakes,3,pump_samples,1024000.000000000

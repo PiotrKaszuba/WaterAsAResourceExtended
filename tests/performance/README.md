@@ -59,3 +59,7 @@ dry-count gap and remaining visual work. `repair_wet_262144` and
 `repair_dry_65536` separately measure the one-time affected-save repair, excluding
 fixture setup. These run with the optional suite, independently of fast mocks.
 See [the measured comparison and limits](COUNTER-FIX-2026-10-25.md).
+
+Historical 2.1 API-port evidence is retained in [PORT_2_1_REPORT.md](PORT_2_1_REPORT.md).
+Its original revision/artifact labels are preserved; shared final bugfix comparisons
+remain inherited from the 2.0.5 baseline.

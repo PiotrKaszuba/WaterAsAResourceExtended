@@ -1,0 +1,3 @@
+label,case,sample,metric,value
+baseline,pumps_1024_many_lakes,1,collect_s,0.575000000
+baseline,pumps_1024_many_lakes,1,pump_samples,1024000.000000000

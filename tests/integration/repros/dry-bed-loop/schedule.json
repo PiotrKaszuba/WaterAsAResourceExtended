@@ -1,0 +1,620 @@
+{
+  "origin": "GUI inventory brushes on TEST_SAVE_2, recorded 2026-10-25. Companion on_tick runs after Water; actions replay on the captured GUI tick.",
+  "checkpoint_tick": 7376,
+  "checkpoint_sha256": "b2bbeb5af5fae290243cd249ee019f95bfa7af90d62561b801d10cf74b935aff",
+  "actions": [
+    {
+      "tick": 8453,
+      "position": {
+        "x": -8,
+        "y": -74
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -75,
+            "x": -9
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -75,
+            "x": -8
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -74,
+            "x": -9
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -74,
+            "x": -8
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8453,
+        "periodic": 8453,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1843,
+            "capacity": 156850,
+            "remaining": 6720.121586009598,
+            "finished": true,
+            "actual_dry": 1267,
+            "recorded_dry": 1267,
+            "gap": 0,
+            "wet": 576,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": false,
+            "pumps": 7
+          }
+        ],
+        "queued": 4,
+        "counts": {
+          "scans": 0,
+          "edges": 0,
+          "split_checks": 0,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 30
+        }
+      }
+    },
+    {
+      "tick": 8573,
+      "position": {
+        "x": -3,
+        "y": -68
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -69,
+            "x": -4
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -69,
+            "x": -3
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -68,
+            "x": -4
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -68,
+            "x": -3
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8573,
+        "periodic": 8573,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1839,
+            "capacity": 156250,
+            "remaining": -15.044089892471675,
+            "finished": true,
+            "actual_dry": 1839,
+            "recorded_dry": 1839,
+            "gap": 0,
+            "wet": 0,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": true,
+            "pumps": 7
+          }
+        ],
+        "queued": 4,
+        "counts": {
+          "scans": 0,
+          "edges": 20,
+          "split_checks": 4,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 45
+        }
+      }
+    },
+    {
+      "tick": 8573,
+      "position": {
+        "x": -1,
+        "y": -68
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -69,
+            "x": -2
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -69,
+            "x": -1
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -68,
+            "x": -2
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -68,
+            "x": -1
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8573,
+        "periodic": 8573,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1839,
+            "capacity": 156250,
+            "remaining": -15.044089892471675,
+            "finished": true,
+            "actual_dry": 1839,
+            "recorded_dry": 1839,
+            "gap": 0,
+            "wet": 0,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": true,
+            "pumps": 7
+          }
+        ],
+        "queued": 8,
+        "counts": {
+          "scans": 0,
+          "edges": 20,
+          "split_checks": 4,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 45
+        }
+      }
+    },
+    {
+      "tick": 8573,
+      "position": {
+        "x": 1,
+        "y": -68
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -69,
+            "x": 0
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -69,
+            "x": 1
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -68,
+            "x": 0
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -68,
+            "x": 1
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8573,
+        "periodic": 8573,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1839,
+            "capacity": 156250,
+            "remaining": -15.044089892471675,
+            "finished": true,
+            "actual_dry": 1839,
+            "recorded_dry": 1839,
+            "gap": 0,
+            "wet": 0,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": true,
+            "pumps": 7
+          }
+        ],
+        "queued": 12,
+        "counts": {
+          "scans": 0,
+          "edges": 20,
+          "split_checks": 4,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 45
+        }
+      }
+    },
+    {
+      "tick": 8633,
+      "position": {
+        "x": 1,
+        "y": -66
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -67,
+            "x": 0
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -67,
+            "x": 1
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -66,
+            "x": 0
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -66,
+            "x": 1
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8633,
+        "periodic": 8633,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1827,
+            "capacity": 154450,
+            "remaining": -5.909089892462362,
+            "finished": true,
+            "actual_dry": 1827,
+            "recorded_dry": 1827,
+            "gap": 0,
+            "wet": 0,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": true,
+            "pumps": 7
+          }
+        ],
+        "queued": 4,
+        "counts": {
+          "scans": 0,
+          "edges": 64,
+          "split_checks": 16,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 45
+        }
+      }
+    },
+    {
+      "tick": 8633,
+      "position": {
+        "x": 1,
+        "y": -64
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -65,
+            "x": 0
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -65,
+            "x": 1
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -64,
+            "x": 0
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -64,
+            "x": 1
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8633,
+        "periodic": 8633,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1827,
+            "capacity": 154450,
+            "remaining": -5.909089892462362,
+            "finished": true,
+            "actual_dry": 1827,
+            "recorded_dry": 1827,
+            "gap": 0,
+            "wet": 0,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": true,
+            "pumps": 7
+          }
+        ],
+        "queued": 8,
+        "counts": {
+          "scans": 0,
+          "edges": 64,
+          "split_checks": 16,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 45
+        }
+      }
+    },
+    {
+      "tick": 8633,
+      "position": {
+        "x": -1,
+        "y": -64
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -65,
+            "x": -2
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -65,
+            "x": -1
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -64,
+            "x": -2
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -64,
+            "x": -1
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8633,
+        "periodic": 8633,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1827,
+            "capacity": 154450,
+            "remaining": -5.909089892462362,
+            "finished": true,
+            "actual_dry": 1827,
+            "recorded_dry": 1827,
+            "gap": 0,
+            "wet": 0,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": true,
+            "pumps": 7
+          }
+        ],
+        "queued": 12,
+        "counts": {
+          "scans": 0,
+          "edges": 64,
+          "split_checks": 16,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 45
+        }
+      }
+    },
+    {
+      "tick": 8693,
+      "position": {
+        "x": -3,
+        "y": -64
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -65,
+            "x": -4
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -65,
+            "x": -3
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -64,
+            "x": -4
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -64,
+            "x": -3
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8693,
+        "periodic": 8693,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1815,
+            "capacity": 152650,
+            "remaining": 3.16591010754928,
+            "finished": true,
+            "actual_dry": 1814,
+            "recorded_dry": 1814,
+            "gap": 0,
+            "wet": 1,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": true,
+            "pumps": 7
+          }
+        ],
+        "queued": 4,
+        "counts": {
+          "scans": 0,
+          "edges": 101,
+          "split_checks": 28,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 46
+        }
+      }
+    },
+    {
+      "tick": 8693,
+      "position": {
+        "x": -3,
+        "y": -66
+      },
+      "expected_tiles": [
+        {
+          "position": {
+            "y": -67,
+            "x": -4
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -67,
+            "x": -3
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -66,
+            "x": -4
+          },
+          "old": "lake-dry-deepwater"
+        },
+        {
+          "position": {
+            "y": -66,
+            "x": -3
+          },
+          "old": "lake-dry-deepwater"
+        }
+      ],
+      "expected_before": {
+        "tick": 8693,
+        "periodic": 8693,
+        "bodies": [
+          {
+            "id": 1,
+            "area": 1815,
+            "capacity": 152650,
+            "remaining": 3.16591010754928,
+            "finished": true,
+            "actual_dry": 1814,
+            "recorded_dry": 1814,
+            "gap": 0,
+            "wet": 1,
+            "duplicates": 0,
+            "to_dry": 0,
+            "depleted": true,
+            "pumps": 7
+          }
+        ],
+        "queued": 8,
+        "counts": {
+          "scans": 0,
+          "edges": 101,
+          "split_checks": 28,
+          "splits": 0,
+          "merges": 0,
+          "new_bodies": 0,
+          "visual_calls": 46
+        }
+      }
+    }
+  ],
+  "recovery_checkpoint_sha256": "a16a3b3030a87dd42c71e9b32879568a9b0f4e6ee668b2578ab53102b15b69bb"
+}
