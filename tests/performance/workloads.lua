@@ -104,12 +104,49 @@ M.cases = {
     "pumps_256", "pumps_1024_many_lakes", "visual_cycles", "visual_16384",
     "queue_unique_8192", "queue_repeated_8192", "shoreline_brush", "split_reopen",
     "pending_sparse", "pending_dense_1024", "pending_dense_4096", "pending_dense_16384",
-    "pending_drying_4096", "mixed_backlog_scan", "pending_reload_8192",
+    "pending_drying_4096", "mixed_backlog_scan", "pending_reload_8192", "dry_merge_16384",
 }
 
 function M.run(name)
     local result = {}
-    if name:match("^scan_") then
+    if name == "dry_merge_16384" then
+        local world, surface, body = ready(128)
+        settings.global["Cleanup-Remove-Depleted-Orphaned"].value = false
+        for _, x in ipairs({ 16, 32, 48, 80, 96, 127 }) do
+            world:build_entity({ name = "offshore-pump", type = "offshore-pump", surface = surface,
+                position = { x = x, y = -1 }, input_position = { x = x, y = 0 } })
+        end
+        body.waterBodyStateData.WaterUsed = body.waterAreaData.AmountWtr * 0.98
+        env.run_ticks(600)
+        local original, merges = waterbody_merge.mergeWaterBody, 0
+        waterbody_merge.mergeWaterBody = function(...)
+            merges = merges + 1
+            return original(...)
+        end
+        result.ticks = measure(result, "lifecycle_s", function()
+            for y = 0, 127 do
+                world:build_tiles(surface, { { x = 63, y = y }, { x = 64, y = y } }, "landfill")
+                env.run_ticks(7)
+            end
+            -- Fixed window: broken counters may leave impossible visual work,
+            -- so waiting for ToDryTiles == 0 would conceal the baseline cost.
+            env.run_ticks(4000)
+            return 4896
+        end)
+        waterbody_merge.mergeWaterBody = original
+        result.merges, result.counter_gap, result.visual_work_left = merges, 0, 0
+        for _, b in pairs(storage.ValidWaterBodies) do
+            local count, seen = 0, {}
+            local function add(grid) for key in pairs(grid) do
+                if not seen[key] then seen[key] = true; count = count + 1 end
+            end end
+            add(b.gridsData.driedTilesGridWithData)
+            for _, grid in ipairs(b.gridsData.lazyDriedTilesGridWithData) do add(grid) end
+            result.counter_gap = result.counter_gap + math.abs(count - b.waterBodyStateData.DriedTiles)
+            result.visual_work_left = result.visual_work_left + math.abs(b.waterBodyStateData.ToDryTiles)
+            assert(b.searchData.finished, "large dry merge scans must settle")
+        end
+    elseif name:match("^scan_") then
         local side = math.sqrt(tonumber(name:match("%d+")))
         fixture(side)
         result.ticks = measure(result, "scan_s", settle)
