@@ -22,7 +22,7 @@ From the repository root, PowerShell builds and tests the candidate ZIP:
 To test an existing exact artifact, without rebuilding it:
 
 ```text
-python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.0.4.zip
+python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.0.5.zip
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario landfill
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario resume --timeout 120
 ```
@@ -31,7 +31,7 @@ Use the ZIP's actual version in the path. A local manifest override is preserved
 testing an archive named 2.0.0 does not prepare or certify a final 2.0.4 artifact.
 Rebuild and rerun after finalizing release metadata or changing production code.
 
-## Five profiles
+## Six profiles
 
 | Profile | Native behavior checked |
 | --- | --- |
@@ -40,6 +40,7 @@ Rebuild and rerun after finalizing release metadata or changing production code.
 | `pumping` | Three separate 64-tile lakes finish ordinary scans. Native pumps fill connected output pipes and stop consuming reserves when blocked. Burner/electric fixtures need fuel/power; a real electric outage stops extraction. All three lakes deplete, pumps deactivate, size-mask settings suppress regeneration, and real setting changes refresh existing lakes and reactivate pumps. Reserve debit agrees with native extraction samples. |
 | `landfill` | Real construction robots build landfill over tracked mixed-capacity terrain and an orphan dry bed. Native hidden layers preserve terrain identity. Pavement removal reveals landfill without restoring capacity. Robots mine the landfill, return its items, restore capacity with zero added reserve, and reveal the orphan's exact dry identity. The built-in scripted waterfill placer then adds 100 capacity and 100 reserve. |
 | `resume` | Three native pumps drain a 512-tile lake until physical drying is active. A 128-tile announced script brush creates a real budgeted backlog. A localhost server explicitly saves that state, exits, and a new process reloads it. Queue/index persistence, protected physical landfill throughout settlement, final capacity, no reserve creation and an empty pending index are checked. |
+| `scan_merge` | Seven native pumps fully deplete a 48×32 lake. A 32-tile announced dry enclosure triggers successor scans/merges; dry membership/count, discovered area, geometry count/sums and landfill retention are checked throughout, including normal tiny-pond cleanup. |
 
 The 512-tile trial is a queue/persistence acceptance case, not a performance
 benchmark. Larger scaling coverage remains in `tests/performance/`.
@@ -88,3 +89,11 @@ has run, not an extra "revealed tile" field invented in the event payload.
 The Python isolation/process approach was adapted from the local
 PoweredBeltsExtended harness. Mod-specific scenarios remain here; no shared
 framework repository or dependency was introduced.
+
+## Bugfix release verification
+
+See [2.0.5 / 2.1.1 verification](BUGFIX-2.0.5-2.1.1.md) for exact artifact
+hashes, completed native profiles, saved-state recovery and performance results.
+The Linux headless runner uses benchmark execution for non-server trials and
+explicitly disables bundled expansion mods. `resume` still uses actual server
+save/restart. The Windows runner retains its normal launch route.
