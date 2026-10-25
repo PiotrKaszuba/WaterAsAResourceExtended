@@ -4,7 +4,7 @@ Small, deterministic trials of engine behavior that the mock suite cannot prove.
 The mock suite (`lua tests/run.lua`) and larger performance workloads remain
 independently runnable. This suite does not import or replace their mock world.
 The [2.0 acceptance record](RESULTS.md) is historical evidence for `v2.0.4`;
-2.1 results are recorded separately when completed.
+2.1 results are recorded separately in [RESULTS-2.1.md](RESULTS-2.1.md).
 
 ## Run
 
@@ -25,13 +25,15 @@ To test an existing exact artifact, without rebuilding it:
 python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.1.0.zip
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario landfill
 python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario resume --timeout 120
+python tests/integration/run.py --mod-zip PATH_TO_ZIP --scenario upgrade
+python tests/integration/run.py --mod-zip PATH_TO_ZIP --partner-mod ../aai-industry_0.7.5.zip
 ```
 
 Use the ZIP's actual version in the path. A local manifest override is preserved;
 testing a differently versioned archive does not certify the intended final artifact.
 Rebuild and rerun after finalizing release metadata or changing production code.
 
-## Five profiles
+## Eight base-game profiles and actual partners
 
 | Profile | Native behavior checked |
 | --- | --- |
@@ -40,6 +42,18 @@ Rebuild and rerun after finalizing release metadata or changing production code.
 | `pumping` | Three separate 64-tile lakes finish ordinary scans. Native pumps fill connected output pipes and stop consuming reserves when blocked. Burner/electric fixtures need fuel/power; a real electric outage stops extraction. All three lakes deplete, pumps deactivate, size-mask settings suppress regeneration, and real setting changes refresh existing lakes and reactivate pumps. Reserve debit agrees with native extraction samples. |
 | `landfill` | Real construction robots build landfill over tracked mixed-capacity terrain and an orphan dry bed. Native hidden layers preserve terrain identity. Pavement removal reveals landfill without restoring capacity. Robots mine the landfill, return its items, restore capacity with zero added reserve, and reveal the orphan's exact dry identity. The built-in scripted waterfill placer then adds 100 capacity and 100 reserve. |
 | `resume` | Three native pumps drain a 512-tile lake until physical drying is active. A 128-tile announced script brush creates a real budgeted backlog. A localhost server explicitly saves that state, exits, and a new process reloads it. Queue/index persistence, protected physical landfill throughout settlement, final capacity, no reserve creation and an empty pending index are checked. |
+| `pump-transitions` | A real wired circuit, deconstruction/cancellation, a bounded noncompeting script stop, output blocking and restart. A per-tick trace compares lake debit with actual fluid removed plus receiver-buffer changes, independently of Water's sampling predicate. |
+| `upgrade` | Opens the retained genuine 2.0.77 / Water 2.0.4 checkpoint, verifies the actual configuration-change versions and pre-tick queue/capacity state, settles the original brush, saves the converted world and reloads it in another 2.1 process. |
+| `persist` | Extends the wet/dry landfill/robot trial with nondefault regeneration settings and threshold, native research completion, a covered typed dry bed, actual save/restart and robot mining after reload. This state is created in 2.1, not represented as a second 2.0 upgrade fixture. |
+
+With explicit `--partner-mod` ZIPs, the default selection is `partners` plus
+`landfill`. Repeat the option for all required dependencies. The runner stages
+those archives unchanged, enables only the supplied mods and records their
+versions/hashes. `partners` uses actual AAI/Enhanced Offshore Pumps entities when
+installed, exercises energy/fuel, depletion/regeneration, the Water technology
+prerequisites and unlock, and crafts the migrated recipe in a native assembler.
+Alien Biomes profiles also exercise the existing robot landfill/mining trial.
+The ordinary full base suite does not require external mods.
 
 The 512-tile trial is a queue/persistence acceptance case, not a performance
 benchmark. Larger scaling coverage remains in `tests/performance/`.
@@ -52,7 +66,8 @@ without fabricating an `old_tile` field or invoking Water handlers directly.
 
 - Every run and profile gets unique directories under `tests/artifacts/` (ignored
   by Git), with separate config, base-only mod list, settings and disposable saves.
-  The candidate ZIP is copied unchanged. Your normal mod directory, configuration
+  The candidate ZIP is frozen once per run and copied unchanged to each profile.
+  Your normal mod directory, configuration
   and saves are not used. Startup variants change defaults in a companion mod.
 - `report.json` records engine/mod versions, candidate SHA-256, source commit and
   source dirty status, and all completed checks. Individual phase JSON, full
@@ -68,17 +83,18 @@ without fabricating an `old_tile` field or invoking Water handlers directly.
   mutable production table, forced scan or update-loop invocation. Ordinary games
   get no interface or additional per-tick test hooks.
 - Controlled burner/electric prototype fixtures test generic energy-source handling.
-  They are not the published Enhanced Offshore Pumps ZIP or an AAI integration test.
+  They are distinct from the explicit actual-partner profiles described above.
 
 ## Boundaries
 
 This suite complements the mock accounting/split/merge/family tests. It does not
 repeat their topology matrix, certify all native interleavings, test rendering/UI
-or native player cursor actions, or upgrade a previous published/user save. The
-restart test uses an actual newly generated candidate save with pending work.
-Partner-mod profiles and previous-release save fixtures can be added separately
-when they address a concrete risk. Space Age and performance redesign remain out
-of scope.
+or native player cursor actions. `upgrade` converts the retained synthetic old
+save; it does not certify an arbitrary personal save or every old settings
+combination. The old save is checksum-verified and bundled under
+`fixtures/2.0.4/`, with provenance and historical results. Only disposable copies
+are loaded. The local default binary need only be 2.1; a second 2.0 install is not
+required. Space Age and performance redesign remain out of scope.
 
 Tests use a real engine and supported script actions. In particular, mining
 events identify the removed tile; the visible resulting tile is read from the

@@ -49,9 +49,9 @@ function W.pump(H, surface, x, y, width, height, name)
                             script.raise_script_built({ entity = pump })
                             H.check(pump.valid, "Native shoreline placement succeeds for " .. spec.name)
                             local connection = pump.get_fluid_box_pipe_connections(1)[1]
-                            assert(surface.create_entity({ name = "pipe", position = connection.target_position,
+                            local pipe = assert(surface.create_entity({ name = "pipe", position = connection.target_position,
                                 force = "player" }), "Cannot create native output pipe")
-                            return pump
+                            return pump, pipe
                         end
                         pump.destroy()
                     end

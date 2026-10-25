@@ -3,8 +3,17 @@
 local M = {}
 
 function M.snapshot()
-    local result = { bodies = {}, pumps = {}, queued = storage.TileEventQueue.size,
-        pending = 0, tick = game.tick }
+    local result = { bodies = {}, pumps = {}, forces = {}, queued = storage.TileEventQueue.size,
+        pending = 0, tick = game.tick, settings = {
+            regeneration = settings.global["Waterbody-Regen-Rate"].value,
+            regen_mask = settings.global["Waterbody-Regen-Enabled-By-Size"].value,
+            reactivation = settings.global["Pumps-Reactivation-LevelPerThousand"].value,
+            yield_cap = settings.startup["Yield-Boost-Max-Level"].value,
+            infinite_yield = settings.startup["Enable-Infinite-Yield-Research"].value,
+        } }
+    for name, force in pairs(storage.PlayerForces) do
+        result.forces[name] = force.water_usage_multiplier
+    end
     for _, positions in pairs(storage.PendingTileChanges or {}) do
         for _, count in pairs(positions) do result.pending = result.pending + count end
     end
