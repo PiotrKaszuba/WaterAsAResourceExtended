@@ -850,6 +850,39 @@ function waterbodies.refreshRegeneration()
 	end
 end
 
+-- Upgrade-only repair of derived scan data. Membership includes queued terrain
+-- edits until FIFO accounting removes them; do not infer membership from terrain.
+function waterbodies.repairScanAccounting()
+	for _, body in pairs(storage.ValidWaterBodies) do
+		local grids, seen, drySeen = body.gridsData, {}, {}
+		local count, dry, sx, sy = 0, 0, 0, 0
+		local minX, maxX, minY, maxY = math.huge, -math.huge, math.huge, -math.huge
+		local function visit(grid, isDry)
+			for key, tile in pairs(grid) do
+				if isDry and not drySeen[key] then drySeen[key] = true; dry = dry + 1 end
+				if not seen[key] then
+					seen[key] = true
+					local x, y = tile.position.x, tile.position.y
+					count, sx, sy = count + 1, sx + x, sy + y
+					minX, maxX = math.min(minX, x), math.max(maxX, x)
+					minY, maxY = math.min(minY, y), math.max(maxY, y)
+				end
+			end
+		end
+		visit(grids.waterGridWithData, false)
+		for _, grid in ipairs(grids.lazyWaterGridWithData) do visit(grid, false) end
+		visit(grids.driedTilesGridWithData, true)
+		for _, grid in ipairs(grids.lazyDriedTilesGridWithData) do visit(grid, true) end
+		body.waterBodyStateData.DriedTiles = dry
+		body.waterBodyStateData.ToDryTiles = 0 -- Recomputed from actual counts on the next big update.
+		body.waterBodyStateData.ToCalculate = true
+		body.searchData.totalArea = count
+		local shape = waterbodies.initShapeData()
+		waterbodies.updateGeometry(shape, nil, minX, maxX, minY, maxY, sx, sy, count)
+		body.waterBodyShapeData = shape
+	end
+end
+
 function waterbodies.CalculateAndUpdateWaterBodyAreaData(waterBody)
 	local area_data = waterBody.waterAreaData
 

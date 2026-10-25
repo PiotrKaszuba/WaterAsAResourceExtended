@@ -133,6 +133,10 @@ function control.VersionChanged(event)
 		end
 	end
 	control.reconcileSurfaceScope()
+	if mod_changed and mod_changed.old_version and
+		(utils.version_less_than(mod_changed.old_version, "2.0.5") or mod_changed.old_version == "2.1.0") then
+		waterbodies.repairScanAccounting()
+	end
 	event_handlers.scanForExistingPumps()
 	entities.blacklistTrackedPumps()
 	forces.refreshYieldBoosts()
