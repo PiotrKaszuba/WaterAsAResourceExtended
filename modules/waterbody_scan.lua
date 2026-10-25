@@ -3,6 +3,7 @@ require("modules.hot_utils")
 require("modules.waterbodies")
 require("modules.waterbody_merge")
 require("modules.split_families")
+local pending_tile_events = require("modules.pending_tile_events")
 
 waterbody_scan = {}
 
@@ -227,7 +228,9 @@ function waterbody_scan.EdgePattern(
 			if is_water_or_dry_tile then
 				search_queue_enqueue(searchQueue, position)
 			else
-				if tileWaterBodyId == nil then
+				if tile_name == "landfill" and pending_tile_events.has(surfaceName, gridKey) then
+					-- Its queued removal still needs the owner to find the wet/dry grid data.
+				elseif tileWaterBodyId == nil then
 					addNewWaterTile(gridKey, surfaceName, -1)
 				elseif tileWaterBodyId == waterBodyId then
 					utils.profile_hits("waterbody_scan.EdgePattern", "got non water tile of the same waterbody!")
@@ -377,6 +380,11 @@ function waterbody_scan.processWaterTile(
 	local is_tile_assigned_to_water_body = ValidWaterBodies[tile_waterBodyId] ~= nil
 
 	if not (is_water_tile or is_dry_tile) then
+		-- Another body's scan can reach landfill before its removal is accounted
+		-- for. Clearing the owner here would leave its visual grid entry behind.
+		if tile_name == "landfill" and pending_tile_events.has(surfaceName, gridKey) then
+			return water_body, false, 0, 0, false
+		end
 		-- not a water (or dry) tile - it could have been added to search queue
 		-- when a tile wasn't generated yet through EdgePattern
 		if is_tile_assigned_to_water_body then
