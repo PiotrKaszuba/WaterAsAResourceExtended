@@ -1,5 +1,8 @@
 # Performance workloads
 
+The [2.1 port comparison](PORT_2_1_REPORT.md) records a focused check using the same
+mock API on both sides. The earlier guard report remains a separate experiment.
+
 Run from the mod root using native Lua 5.2:
 
 ```text

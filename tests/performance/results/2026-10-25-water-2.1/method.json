@@ -1,0 +1,22 @@
+{
+  "baseline": "v2.0.4",
+  "candidate": "ab4f614b8da26cc2e56ba1f9e1bed624337905a2",
+  "shared_test_fixture": "current 2.1 mocks/helpers/performance",
+  "normalization": "Three 2.0 active writes translated to inverse disabled_by_script in the isolated benchmark baseline only; all compared runtime algorithm modules match current source",
+  "repetitions": 3,
+  "discarded_warmups": 1,
+  "filters": [
+    "pumps_",
+    "pending_dense_4096",
+    "mixed_backlog_scan"
+  ],
+  "paired_1024_pump_repeat": {
+    "pairs": 7,
+    "measured_per_process": 1,
+    "warmups_per_process": 1,
+    "order": "baseline/candidate, then candidate/baseline, alternating"
+  },
+  "exclusions": "Initial pilot overlapped a native trial; only quiet-* and pair-* CSVs are retained in this report.",
+  "candidate_runtime_commit": "ab4f614",
+  "shared_test_fixture_commit": "c4fe954"
+}
