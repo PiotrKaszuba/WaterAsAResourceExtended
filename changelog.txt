@@ -1,4 +1,10 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.0.5
+Date: 2026.10.25
+  Bugfixes:
+    - Fixed landfill being overwritten and incorrect depletion/regeneration after waterbody splits and merges.
+    - Corrected lake geometry after landfill and repaired affected counters in existing saves.
+---------------------------------------------------------------------------------------------------
 Version: 2.0.4
 Date: 2026.10.24
   Changes:
