@@ -1,16 +1,16 @@
 {
 	"name": "WaterAsAResourceExtended",
-	"version": "2.0.5",
-	"factorio_version": "2.0",
+	"version": "2.1.1",
+	"factorio_version": "2.1",
 	"title": "Water As A Resource Extended",
 	"author": "DiabolicWolf",
 	"contact": "https://mods.factorio.com/mod/WaterAsAResourceExtended/discussion",
 	"homepage": "https://mods.factorio.com/mod/WaterAsAResourceExtended",
 	"description": "Turns water into a finite resource. Offshore pumps deplete waterbodies based on actual fluid extraction, with per-pump tracking. Water tiles 'dry out' as waterbodies deplete, starting from edges toward the center. Waterbodies slowly regenerate over time. Features: 6-tier Yield Boost research, Waterfill item to extend water, automatic waterbody merging/splitting, map markers with real-time stats, and configurable depletion alarms. Fully rewritten for Factorio 2.0 with improved performance, budget-limited updates, and proper multi-surface/multi-force support.",
 	"dependencies": [
-		"base >= 2.0",
+		"base >= 2.1.23",
 
-		"? aai-industry >= 0.6.10",
+		"? aai-industry >= 0.7.5",
 
 		"! CanalBuilderMAV",
 		"! BurnerOffshorePump",

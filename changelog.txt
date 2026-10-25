@@ -1,4 +1,14 @@
 ---------------------------------------------------------------------------------------------------
+Version: 2.1.1
+Date: 2026.10.25
+  Changes:
+    - Updated for Factorio 2.1 based on version 2.0.5, including its landfill and depletion fixes.
+---------------------------------------------------------------------------------------------------
+Version: 2.1.0
+Date: 2026.10.25
+  Changes:
+    - Updated for Factorio 2.1, preserving the gameplay and settings of version 2.0.4.
+---------------------------------------------------------------------------------------------------
 Version: 2.0.5
 Date: 2026.10.25
   Bugfixes:
