@@ -3,6 +3,8 @@
 Small, deterministic trials of engine behavior that the mock suite cannot prove.
 The mock suite (`lua tests/run.lua`) and larger performance workloads remain
 independently runnable. This suite does not import or replace their mock world.
+See [the recorded native acceptance result](RESULTS.md) for the tested artifact
+and the findings from the first complete run.
 
 ## Run
 
