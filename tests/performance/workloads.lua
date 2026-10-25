@@ -105,11 +105,36 @@ M.cases = {
     "queue_unique_8192", "queue_repeated_8192", "shoreline_brush", "split_reopen",
     "pending_sparse", "pending_dense_1024", "pending_dense_4096", "pending_dense_16384",
     "pending_drying_4096", "mixed_backlog_scan", "pending_reload_8192", "dry_merge_16384",
+    "repair_wet_262144", "repair_dry_65536",
 }
 
 function M.run(name)
     local result = {}
-    if name == "dry_merge_16384" then
+    if name:match("^repair_") then
+        local dry = name:match("^repair_dry_") ~= nil
+        local area = tonumber(name:match("%d+"))
+        local _, _, body = ready(math.sqrt(area))
+        if not waterbodies.repairScanAccounting then
+            result.supported = 0
+            return result
+        end
+        if dry then
+            body.waterBodyStateData.WaterUsed = body.waterAreaData.AmountWtr
+            env.run_ticks(600)
+            assert(body.waterBodyStateData.DriedTiles == area, "repair fixture must be fully dry")
+        end
+        local remaining = waterbodies.calculateRemainingWater(body)
+        body.waterBodyStateData.DriedTiles = -1
+        body.searchData.totalArea = -1
+        collectgarbage("collect")
+        local memory = collectgarbage("count")
+        measure(result, "repair_s", waterbodies.repairScanAccounting)
+        result.allocated_kib = collectgarbage("count") - memory
+        result.tiles, result.supported = area, 1
+        assert(body.waterBodyStateData.DriedTiles == (dry and area or 0))
+        assert(body.searchData.totalArea == area and body.waterBodyShapeData.TileCount == area)
+        assert(waterbodies.calculateRemainingWater(body) == remaining, "repair must not change reserve")
+    elseif name == "dry_merge_16384" then
         local world, surface, body = ready(128)
         settings.global["Cleanup-Remove-Depleted-Orphaned"].value = false
         for _, x in ipairs({ 16, 32, 48, 80, 96, 127 }) do
