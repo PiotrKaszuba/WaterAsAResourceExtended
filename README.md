@@ -24,8 +24,7 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 - **Waterbody Tracking**: Connected water tiles form "waterbodies" with unique IDs, scanned asynchronously when pumps are placed
 - **Per-Pump Usage**: Each pump depletes its lake according to the water it actually extracts.
 - **Water Tile Capacity**: Startup settings default to 200 for normal water and
-  2,000 for deep water. Extra-shallow water holds half the normal amount and muddy
-  water holds one quarter, preserving their existing capacity multipliers.
+  2,000 for deep water. Extra-shallow and muddy water hold 50% and 25% of normal water capacity, respectively.
 
   | Tile | Default capacity | Assumed depth |
   |------|-----------------:|--------------:|
@@ -34,11 +33,8 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
   | Muddy water | 50 | 5 cm |
   | Deep water, including green deep water | 2,000 | 2 m |
 
-  These are depth assumptions chosen for this mod: treating a tile as 1 m² gives
-  `1 m² × 0.2 m × 1,000 L/m³ = 200 L`, and a 2 m depth gives 2,000 L.
-  They are not official Factorio water depths or fluid-unit conversions.
-  Existing saved startup choices are retained; this default change does not
-  rescale already tracked lakes. Keep existing values for an unchanged game.
+  The assumed depths treat each tile as 1 m² and each fluid unit as one litre,
+  for this mod's capacity calculations.
 
 ### Visual Depletion
 - Water tiles "dry out" as the waterbody depletes (starting at 80% depletion, configurable)
@@ -47,14 +43,14 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 
 ### Landfill and Depleted Beds
 - Ordinary landfill can cover wet water tiles and depleted beds. Covered positions
-  leave the lake's capacity and connectivity; a strip of landfill can split a lake.
+  are removed from the lake's capacity and connectivity; a strip of landfill can split a lake.
 - Landfill remains removable. Mining it exposes an **empty bed**, adding capacity
   but no water. Water lost when landfill was placed is not refunded by removing it.
-- Reopening a connection can merge lakes. Existing water is shared across the
+- Mining landfill can merge lakes. Existing water is shared across the
   combined area, so some empty beds may become wet again without creating water.
 - Keep landfill beneath buildings you want protected from reflooding. Unfilled
   beds, including beds exposed by mining landfill, can regenerate and flood again.
-- Built-in waterfill still cannot be placed directly on a depleted bed.
+- Built-in waterfill cannot be placed directly on a depleted bed.
 
 ### Regeneration
 - Waterbodies slowly regenerate water over time
@@ -62,7 +58,7 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
   - Best regeneration at 75% depleted (150% of base rate)
   - Reduced regeneration at 0% depleted (75% rate) and 100% depleted (50% rate)
 - Configurable base regeneration rate
-- **Regeneration enabled by size** accepts seven 0/1 digits in this order:
+- The **Regeneration enabled by size** setting accepts seven 0/1 digits in this order:
   Puddle, Well, Pond, Lake, Great Lake, Sea, Ocean. Default `1111111` enables all;
   `0000001` enables oceans only and `0000011` enables seas and oceans.
   Invalid strings fall back to `1111111` with a warning. While scanning, the
@@ -70,24 +66,20 @@ Offshore pumps now deplete the waterbodies they draw from. Waterbodies visually 
 
 ### Pump Behavior
 
-- **Manage only Nauvis** is enabled by default. Disable this startup setting to
-  manage supported water sources on other surfaces. Non-water fluids remain
-  unmanaged either way; this is not finite lava/oil or full Space Age support.
-- Changing scope releases previously tracked excluded pumps once and stops their
-  waterbody updates. Previously dried terrain is left as it is. New and already
-  untracked excluded pumps are not activated or disabled by this mod.
+- **Manage only Nauvis** is a startup setting enabled by default. Disable it to manage supported
+  water sources on other surfaces. Non-water fluids remain unmanaged.
+- Enabling this restriction stops management of previously tracked off-Nauvis waterbodies and
+  releases their pumps. Previously dried terrain remains unchanged.
 - Pumps remain non-movable with Picker/Even Pickier Dollies. The blacklist uses
   prototype names, so it can also restrict that pump type on ignored surfaces.
 
-- Burner and electric offshore pumps on supported water tiles use the same
-  per-pump extraction accounting. Non-water sources and custom water tiles
-  without a drying/restoration mapping are left unmanaged. Ordinary pipeline
-  pumps are not treated as waterbody extractors.
-- Enhanced Offshore Pumps (`offshore-burner`) uses the same finite-water accounting
-  for its burner and electric offshore water pumps.
+- Burner and electric offshore pumps drawing from supported water tiles are supported,
+  including those from Enhanced Offshore Pumps (`offshore-burner`).
+- Non-water sources and custom water tiles without a drying/restoration mapping are left unmanaged.
+- Ordinary pipeline pumps are not treated as waterbody extractors.
 - Pumps automatically deactivate when their waterbody reaches 100% depletion
 - Pumps reactivate when water returns above threshold (default: 99% depletion)
-- Water usage is multiplied by the force's technology bonus
+- Yield research reduces how much lake water each pump consumes.
 
 ## Technology Tree
 
@@ -112,9 +104,8 @@ ignores the finite maximum. The existing science requirements and costs are reta
 Changing either research setting updates your bonuses when the save loads with
 the new settings. Lowering the cap
 limits the applied bonus too; it does not refund science. Removed tiers may lose
-their saved progress, so use a backup before lowering the cap. Research already
-completed beyond level 6 starts applying its actual bonus if infinite research is
-enabled; previous versions did not apply those later improvements correctly.
+their saved progress. Research already completed beyond level 6
+starts applying its actual bonus if infinite research is enabled.
 
 ### Waterfill Technology
 - **Prerequisites**: Landfill, Explosives
@@ -129,37 +120,11 @@ capacities, three waterfill add 300 lake water, including when extending a partl
 depleted lake: `ceil(300 / 0.25) = 1,200` water consumed. Recipe productivity is
 disabled. Custom capacity settings automatically change the recipe cost.
 
-**Balance warning:** higher waterfill efficiency or stronger yield research can
-turn relocation into water generation and trivialize finite-water gameplay.
-This efficiency compares crafted waterfill with fluid consumed by its recipe.
-Yield research separately reduces lake depletion when pumping that fluid. The
-default 25% keeps the full pump–craft–place cycle lossy with the default finite
-research cap of 6. Values of 38–100% can allow net reserve gains after research;
-at level 6, 50% adds about 74 more lake water than pumping its input removes, and
-100% adds about 187 more per batch at default capacities. Raising the research
-cap to 9 or above, or enabling infinite research and completing level 9, allows
-reserve gains even with 25% efficiency. Other mods changing recipe output or
-water accounting can also change this balance.
-
-For a completed yield level `L`, pumping removes `0.85^L` lake water per fluid
-unit. A conservative no-generation condition is `efficiency <= 100 * 0.85^L` percent
-(rounding the recipe input upward can only increase its cost):
-
-| Completed yield level | Lake depletion per pumped unit | Conservative whole-percent efficiency ceiling | Default 25% |
-| --- | ---: | ---: | --- |
-| 6 (default cap) | 0.37715 | 37% | Loses water |
-| 8 | 0.27249 | 27% | Loses water |
-| 9 | 0.23162 | 23% | Can generate water |
-
-At default tile capacities, a 25% batch adds 300 water while its 1,200-water
-input removes about 452.58 at level 6 (net loss 152.58). At level 9 it removes
-about 277.94 (net gain 22.06). These comparisons exclude natural regeneration,
-other water-production recipes and changes made by other mods.
+**Balance warning:** default settings—25% waterfill efficiency and a level-6 research cap—prevent infinite water generation through pumping and waterfill. At level 6, efficiency of 38% or higher can generate water. At level 9 or higher, even the default 25% can generate water.
 
 **Enable Waterfill** is a startup setting in this mod's settings, enabled by default.
 Disabling it removes the built-in waterfill technology, recipe, item and placer.
-Existing waterfill items can be removed without conversion or refund. Ordinary
-tile-change tracking remains enabled for depletion, merging and splitting.
+Existing waterfill items can be removed without conversion or refund.
 
 **CanalBuilderMAV is incompatible.** Its terrain changes bypass finite-water
 accounting. Disabling built-in waterfill does not make the combination compatible.
