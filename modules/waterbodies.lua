@@ -399,7 +399,7 @@ function waterbodies.updateGeometry(
 	batchMinY, batchMaxY,
 	batchSumX, batchSumY, batchTileCount
 )
-	if other_shape_data == nil and batchTileCount <= 0 then
+	if other_shape_data == nil and batchTileCount == 0 then
 		return
 	end
 	local values = waterbodies.getGeometryValuesArray(
