@@ -106,7 +106,8 @@ def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
         + "}}\n", encoding="utf-8")
     (mods / "mod-list.json").write_text(json.dumps({"mods": [
         {"name": n, "enabled": True} for n in sorted(names)
-    ]}), encoding="utf-8")
+    ] + [{"name": n, "enabled": False} for n in ("space-age", "quality", "elevated-rails")
+         if n not in names]}), encoding="utf-8")
     config = output / "factorio.ini"
     config.write_text("[path]\nread-data=" + (binary.parents[2] / "data").as_posix()
                       + "\nwrite-data=" + user.as_posix() + "\n", encoding="utf-8")
