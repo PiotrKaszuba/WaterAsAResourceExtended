@@ -166,3 +166,7 @@ script.on_event(defines.events.on_runtime_mod_setting_changed, function(event)
 		waterbodies.refreshRegeneration()
 	end
 end)
+
+if script.active_mods and script.active_mods["WaterAcceptanceHarness"] then
+	require("modules.acceptance")
+end

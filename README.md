@@ -227,6 +227,9 @@ This section is repository documentation and is not part of the mod-portal descr
 ### Tests and engine acceptance
 
 Run `lua tests/run.lua` from the mod directory. See [test coverage and limitations](tests/README.md).
+Run `./scripts/test-integration.ps1` for the separate
+[native Factorio 2.0 acceptance suite](tests/integration/README.md), which builds
+and tests the actual candidate ZIP in isolated profiles.
 The suite uses a mock Factorio world and exercises event handlers, accounting,
 scanning, splits/merges, visual work and queued-state reload together. It does not
 certify native collision handling, real robot scheduling or actual saved-game loading.

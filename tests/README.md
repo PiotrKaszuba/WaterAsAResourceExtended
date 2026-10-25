@@ -62,6 +62,12 @@ existing whole-waterbody visual model.
 
 ## Limits
 
+The separate [native acceptance suite](integration/README.md) exercises exact-ZIP
+loading, startup variants, real pumping and setting changes, robot wet/dry-bed
+landfill/mining and native save/restart with queued visual work. Run
+`./scripts/test-integration.ps1` from the repository root. It does not replace or
+require changes to this mock runner; each layer remains independently runnable.
+
 For larger repeatable workloads, CPU phase/cycle timings and tick/scan-slice
 distributions, see [performance/README.md](performance/README.md). Run this suite
 separately from the fast regressions; it includes mid/late-game stress scales.
