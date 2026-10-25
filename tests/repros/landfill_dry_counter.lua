@@ -1,4 +1,6 @@
--- Diagnostic regression: currently fails on factorio-2.1 / v2.1.0.
+-- Historical diagnostic regression: fails on v2.1.0, fixed in 2.0.5 / 2.1.1.
+-- The default test_scan_merge_counters.lua additionally checks discovered area,
+-- centroid geometry and both possible merge survivors through every tick.
 -- Run separately from the passing suite:
 --   lua tests/repros/landfill_dry_counter.lua
 -- Wet-only control (same geometry and event timing): append --wet.
