@@ -1,0 +1,9 @@
+{
+  "origin": "tests/artifacts/20261025-030238-4f2437",
+  "engine": "2.0.77",
+  "mod_version": "2.0.4",
+  "save_sha256": "8da2b0b96e5ed80f46787f1528938633b56c29c89b95bdceaac4d51b9e790370",
+  "save_is_original_unconverted": true,
+  "expected_settled_remaining": 11213.493975902995,
+  "purpose": "Native scripted 2.0 to 2.1 upgrade acceptance; preserve source and load disposable copies only"
+}

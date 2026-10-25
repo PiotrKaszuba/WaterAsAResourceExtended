@@ -21,11 +21,22 @@ function H.result(status, extra)
         status = status, scenario = config.scenario, tick = game.tick,
         checks = storage.checks, events = storage.events, extra = extra,
         mined_samples = storage.mined_samples, trials = storage.trials,
+        trace = storage.trace, upgrade = storage.upgrade_preflight,
         snapshot = H.snapshot(),
     }), false)
 end
 
 function H.finish()
+    if config.scenario == "persist" and not storage.persist_prepared then
+        storage.persist_prepared = true
+        H.phase("persist-prepare")
+        return
+    end
+    if config.scenario == "upgrade" and not storage.upgrade_complete then
+        storage.upgrade_complete = H.snapshot()
+        H.checkpoint()
+        return
+    end
     storage.done = true
     H.result("passed")
 end
@@ -51,6 +62,21 @@ script.on_init(function()
     if config.scenario == "resume" then game.speed = 8 end
 end)
 script.on_load(function() loaded = true end)
+
+script.on_configuration_changed(function(event)
+    if config.scenario ~= "upgrade" or storage.upgrade_preflight then return end
+    storage.checks, storage.events = {}, {}
+    local change = event.mod_changes["WaterAsAResourceExtended"]
+    H.check(change and change.old_version == "2.0.4" and change.new_version == config.target_version,
+        "Native configuration change upgrades Water 2.0.4 to the candidate version", change)
+    local snapshot = H.snapshot()
+    storage.upgrade_preflight = { snapshot = snapshot, change = change, engine = script.active_mods.base }
+    H.check(script.active_mods.base:match("^2%.1%."), "Original 2.0 fixture is opened by the target 2.1 engine")
+    H.near(snapshot.queued, 128, 0, "Upgrade retains the original pending tile queue before ticking")
+    H.near(snapshot.pending, 128, 0, "Upgrade retains the original pending-position counts")
+    H.near(snapshot.bodies[1].capacity, 102400, 0, "Upgrade retains old lake capacity before ticking")
+    H.near(snapshot.bodies[1].area, 512, 0, "Upgrade retains old lake membership before ticking")
+end)
 
 for _, event in ipairs({ defines.events.on_robot_built_tile, defines.events.on_robot_mined_tile,
     defines.events.on_player_mined_tile, defines.events.script_raised_set_tiles }) do

@@ -1,4 +1,6 @@
 local W = require("world")
+local persistence = require("persistence")
+local config = require("config")
 local S = {}
 
 function S.prototypes(H)
@@ -214,6 +216,31 @@ function S.resume(H)
     end
 end
 
+function S.upgrade(H)
+    if storage.upgrade_complete then
+        H.check(storage.phase == "resumed" and storage.restarted, "Converted save reloads in another 2.1 process")
+        local view = W.snapshot(H)
+        H.near(view.capacity, storage.upgrade_complete.bodies[1].capacity, 0.01,
+            "Converted-save reload retains settled capacity")
+        H.near(view.remaining, storage.upgrade_complete.bodies[1].remaining
+            - storage.upgrade_complete.bodies[1].uncollected, 0.01,
+            "Converted-save reload retains settled water reserves")
+        H.near(view.remaining, config.reference_remaining, 0.01,
+            "Converted-save settled reserve matches the original 2.0 continuation")
+        H.near(view.raw.queued, 0, 0, "Converted-save reload retains the empty queue")
+        H.near(view.raw.pending, 0, 0, "Converted-save reload retains the empty pending index")
+        H.check(W.all_tiles(game.surfaces.nauvis, storage.edits, "landfill"),
+            "Converted-save reload preserves the physical landfill brush")
+        H.finish()
+    else
+        assert(storage.upgrade_preflight ~= nil, "Actual old-save configuration change was not observed")
+        S.resume(H)
+    end
+end
+
+S["pump-transitions"] = require("pump_transitions")
+S.partners = require("partners")
+function S.persist(H) return persistence(H, S.landfill) end
 function S.scan_merge(H)
     if storage.phase == "setup" then
         local surface = W.prepare(H)

@@ -20,7 +20,8 @@ import uuid
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-CASES = ("prototypes", "prototypes-disabled", "pumping", "landfill", "resume", "scan_merge")
+BASE_CASES = ("prototypes", "prototypes-disabled", "pumping", "landfill", "resume", "pump-transitions", "upgrade", "persist", "scan_merge")
+CASES = (*BASE_CASES, "partners")
 
 
 def invoke(binary: Path, args: list[str], log: Path, timeout: int) -> None:
@@ -70,24 +71,43 @@ def serve_until_result(binary: Path, args: list[str], log: Path, result: Path,
 
 
 def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
-             timeout: int) -> dict:
+             timeout: int, partner_mods: list[Path]) -> dict:
     output.mkdir()
+    fixture = None
+    if case == "upgrade":
+        origin = ROOT / "tests/integration/fixtures/2.0.4"
+        fixture = json.loads((origin / "provenance.json").read_text(encoding="utf-8"))
+        original = origin / "water-acceptance-checkpoint.zip"
+        if hashlib.sha256(original.read_bytes()).hexdigest() != fixture["save_sha256"]:
+            raise ValueError("Old-engine fixture checksum mismatch")
     mods, user = output / "mods", output / "user-data"
     mods.mkdir()
     user.mkdir()
     (user / "saves").mkdir()
     shutil.copy2(archive, mods / f"{info['name']}_{info['version']}.zip")
+    partners = []
+    names = {"base", info["name"], "WaterAcceptanceHarness"}
+    for partner in partner_mods:
+        metadata = archive_info(partner)
+        if metadata["name"] in names:
+            raise ValueError(f"Duplicate staged mod: {metadata['name']}")
+        names.add(metadata["name"])
+        shutil.copy2(partner, mods / f"{metadata['name']}_{metadata['version']}.zip")
+        partners.append({"name": metadata["name"], "version": metadata["version"],
+            "sha256": hashlib.sha256(partner.read_bytes()).hexdigest()})
     harness = mods / "WaterAcceptanceHarness_0.1.0"
     shutil.copytree(ROOT / "tests/integration/harness_mod", harness)
     setting_overrides = {"Enable-Waterfill": False} if case == "prototypes-disabled" else {}
     scenario = "prototypes" if case == "prototypes-disabled" else case
     (harness / "config.lua").write_text(
-        "return {scenario=" + json.dumps(scenario) + ", settings={"
+        "return {scenario=" + json.dumps(scenario) + ", target_version=" + json.dumps(info["version"])
+        + ", reference_remaining=" + (str(fixture["expected_settled_remaining"]) if fixture else "nil") + ", settings={"
         + ",".join(f"[{json.dumps(k)}]={json.dumps(v)}" for k, v in setting_overrides.items())
         + "}}\n", encoding="utf-8")
     (mods / "mod-list.json").write_text(json.dumps({"mods": [
-        {"name": n, "enabled": True} for n in ("base", info["name"], "WaterAcceptanceHarness")
-    ] + [{"name": n, "enabled": False} for n in ("space-age", "quality", "elevated-rails")]}), encoding="utf-8")
+        {"name": n, "enabled": True} for n in sorted(names)
+    ] + [{"name": n, "enabled": False} for n in ("space-age", "quality", "elevated-rails")
+         if n not in names]}), encoding="utf-8")
     config = output / "factorio.ini"
     config.write_text("[path]\nread-data=" + (binary.parents[2] / "data").as_posix()
                       + "\nwrite-data=" + user.as_posix() + "\n", encoding="utf-8")
@@ -99,13 +119,16 @@ def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
     if os.name == "nt":
         common.append("--disable-audio")
     save = output / "initial.zip"
-    invoke(binary, common + ["--create", str(save), "--map-gen-settings", str(map_settings)],
-           output / "create.log", timeout)
+    if case == "upgrade":
+        shutil.copy2(original, save)
+    else:
+        invoke(binary, common + ["--create", str(save), "--map-gen-settings", str(map_settings)],
+               output / "create.log", timeout)
     result_file = user / "script-output/water-result.json"
     phases = []
     for phase in (1, 2):
         launch = ["--load-game", str(save)]
-        if case == "resume":
+        if case in {"resume", "upgrade", "persist"}:
             server_settings = output / "server-settings.json"
             example = binary.parents[2] / "data/server-settings.example.json"
             server_config = json.loads(example.read_text(encoding="utf-8-sig"))
@@ -119,7 +142,7 @@ def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
                 port = sock.getsockname()[1]
             launch = ["--start-server", str(save), "--server-settings", str(server_settings),
                       "--bind", "127.0.0.1", "--port", str(port)]
-        if case == "resume":
+        if case in {"resume", "upgrade", "persist"}:
             serve_until_result(binary, common + launch, output / f"phase-{phase}.log",
                                result_file, user / "saves", timeout)
         else:
@@ -133,7 +156,8 @@ def run_case(binary: Path, archive: Path, info: dict, case: str, output: Path,
         phases.append(result)
         result_file.rename(output / f"phase-{phase}.json")
         if result["status"] == "passed":
-            return {"case": case, "status": "passed", "phases": phases}
+            return {"case": case, "status": "passed", "phases": phases,
+                    "fixture": fixture, "partners": partners}
         if result["status"] != "checkpoint" or phase != 1:
             raise RuntimeError(f"{case}: {result.get('extra')}; see {output}")
         saves = list((user / "saves").glob("*water-acceptance-checkpoint*.zip"))
@@ -150,6 +174,8 @@ def main() -> int:
     parser.add_argument("--scenario", choices=CASES, action="append")
     parser.add_argument("--artifacts-dir", type=Path, default=ROOT / "tests/artifacts")
     parser.add_argument("--timeout", type=int, default=120)
+    parser.add_argument("--partner-mod", type=Path, action="append", default=[],
+                        help="Stage an actual partner ZIP unchanged; repeat for its dependencies")
     args = parser.parse_args()
     binary = args.factorio_bin or Path("C:/Program Files (x86)/Steam/steamapps/common/Factorio/bin/x64/factorio.exe")
     binary, archive = binary.resolve(), args.mod_zip.resolve()
@@ -157,21 +183,29 @@ def main() -> int:
     output.mkdir(parents=True)
     report = {"status": "failed", "archive": str(archive), "cases": []}
     try:
+        # Rebuilding the source archive during a long run cannot change later
+        # cases or make their bytes disagree with the recorded candidate hash.
+        staged_archive = output / archive.name
+        shutil.copy2(archive, staged_archive)
+        archive = staged_archive
         version = subprocess.check_output([str(binary), "--version"], text=True, timeout=30)
         match = re.search(r"Version:\s*(\d+\.\d+\.\d+)", version)
-        if not match or not match[1].startswith("2.0."):
-            raise RuntimeError(f"This suite requires Factorio 2.0; binary reports {version.strip()}")
+        if not match or not match[1].startswith("2.1."):
+            raise RuntimeError(f"This suite requires Factorio 2.1; binary reports {version.strip()}")
         report["engine"] = match[1]
         info = archive_info(archive)
-        if info["name"] != "WaterAsAResourceExtended" or info["factorio_version"] != "2.0":
-            raise ValueError("Expected a WaterAsAResourceExtended Factorio 2.0 candidate")
+        if info["name"] != "WaterAsAResourceExtended" or info["factorio_version"] != "2.1":
+            raise ValueError("Expected a WaterAsAResourceExtended Factorio 2.1 candidate")
         report["mod_version"] = info["version"]
         report["sha256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
         report["source_commit"] = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
         report["source_dirty"] = bool(subprocess.check_output(
             ["git", "status", "--porcelain"], cwd=ROOT, text=True).strip())
-        for case in args.scenario or CASES:
-            result = run_case(binary, archive, info, case, output / case, args.timeout)
+        cases = args.scenario or (("partners", "landfill") if args.partner_mod else BASE_CASES)
+        if "partners" in cases and not args.partner_mod:
+            raise ValueError("The partners scenario needs explicit --partner-mod ZIPs")
+        for case in cases:
+            result = run_case(binary, archive, info, case, output / case, args.timeout, args.partner_mod)
             report["cases"].append(result)
             print(f"PASS {case}: {len(result['phases'][-1]['checks'])} checks", flush=True)
         report["status"] = "passed"
