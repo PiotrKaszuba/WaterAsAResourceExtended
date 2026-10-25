@@ -36,4 +36,16 @@ pumps[2].pumped_last_tick = 0
 pumps[3].pumped_last_tick = 2
 waterbody_update.collectWaterUsageStats()
 t.eq(body.waterBodyStateData.TempUsedWater - before, 3, "uses reported extraction, including zero-output pump")
+
+local pump_data = entities.getTrackedEntity(pumps[1].unit_number)
+t.eq(pcall(function() pumps[1].active = false end), false, "mock rejects the removed active setter")
+entities.deactivatePump(pump_data)
+t.eq(pumps[1].disabled_by_script, true, "Water deactivation sets the script stop")
+t.eq(pumps[1].active, false, "script stop is reflected in aggregate active")
+pumps[1].disabled_by_control_behavior = true
+entities.activatePump(pump_data)
+t.eq(pumps[1].disabled_by_script, false, "reactivation releases only the script stop")
+t.eq(pumps[1].active, false, "reactivation does not bypass an engine circuit stop")
+pumps[1].disabled_by_control_behavior = false
+t.eq(pumps[1].active, true, "removing both stop reasons permits activation")
 t.finish("Generic water pump recognition")

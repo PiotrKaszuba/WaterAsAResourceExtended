@@ -48,10 +48,10 @@ function W.pump(H, surface, x, y, width, height, name)
                             and not surface.get_tile(pump.position).prototype.fluid then
                             script.raise_script_built({ entity = pump })
                             H.check(pump.valid, "Native shoreline placement succeeds for " .. spec.name)
-                            local connection = pump.fluidbox.get_pipe_connections(1)[1]
-                            assert(surface.create_entity({ name = "pipe", position = connection.target_position,
+                            local connection = pump.get_fluid_box_pipe_connections(1)[1]
+                            local pipe = assert(surface.create_entity({ name = "pipe", position = connection.target_position,
                                 force = "player" }), "Cannot create native output pipe")
-                            return pump
+                            return pump, pipe
                         end
                         pump.destroy()
                     end
@@ -90,7 +90,7 @@ function W.sample_pumps()
         -- Factorio retains the last sample while a pump is script-inactive.
         -- Only an active pump supplies a new extraction sample.
         if pump.active then storage.extracted[i] = storage.extracted[i] + pump.pumped_last_tick end
-        if storage.drain then pump.fluidbox[1] = nil end
+        if storage.drain then pump.clear_fluid(1) end
     end
 end
 

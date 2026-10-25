@@ -24,7 +24,7 @@ local tracked = entities.getTrackedEntity(ignored.unit_number)
 t.ok(tracked ~= nil, "disabling restriction discovers existing other-surface pump")
 local body_id = tracked.waterBodyId
 env.run_ticks(120)
-ignored.active = false
+ignored.disabled_by_script = true
 tracked.disabled = true
 mock.raise_event(defines.events.script_raised_set_tiles, {
     surface_index = other.index,
@@ -37,7 +37,7 @@ t.eq(entities.getTrackedEntity(ignored.unit_number), nil, "scope change detaches
 t.eq(ignored.active, true, "scope change releases this mod's previous disable")
 t.eq(storage.ValidWaterBodies[body_id], nil, "excluded waterbody leaves update set")
 t.eq(tiles.getTileEventQueue().size, 0, "excluded queued tile work discarded")
-ignored.active = false
+ignored.disabled_by_script = true
 env.run_ticks(120)
 t.eq(ignored.active, false, "ignored pump is not repeatedly activated by later updates")
 
