@@ -20,7 +20,7 @@ import uuid
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-CASES = ("prototypes", "prototypes-disabled", "pumping", "landfill", "resume")
+CASES = ("prototypes", "prototypes-disabled", "pumping", "landfill", "resume", "scan_merge")
 
 
 def invoke(binary: Path, args: list[str], log: Path, timeout: int) -> None:
