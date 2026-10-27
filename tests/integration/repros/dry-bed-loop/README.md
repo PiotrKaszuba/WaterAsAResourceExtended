@@ -58,6 +58,6 @@ version change to force a real configuration event. The result records the
 actual Water version transition, pre-tick count/reserve and post-update state.
 The released baseline retains its 129-tile gap; 2.1.1 repairs it before ticking,
 without adding reserve. Historical counter-proof mutation results remain in
-the investigation report; the maintained runner no longer rewrites that code.
+Git at `b445cd3`; the maintained runner no longer rewrites that code.
 
-Final evidence: [`../../BUGFIX-2.0.5-2.1.1.md`](../../BUGFIX-2.0.5-2.1.1.md).
+Release evidence: [release verification](../../../VERIFICATION.md).

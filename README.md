@@ -208,21 +208,21 @@ certify native collision handling, real robot scheduling or actual saved-game lo
 
 Native acceptance targets the exact ZIP and includes a retained 2.0.4 save upgrade,
 settings/research persistence, robot terrain operations, and explicit actual-partner
-profiles. See the [2.1 evidence and boundaries](tests/integration/RESULTS-2.1.md).
+profiles. See the [2.1 evidence and boundaries](tests/VERIFICATION.md).
 Runtime pump registration includes announced script builds/revives and clone destinations;
 each pump's actual extraction is read from `pumped_last_tick`.
 
 ### Pending terrain-event safeguard
 
-The pending-event visual guard is enabled on development. Per-surface/position
+The pending-event visual guard is enabled. Per-surface/position
 event counts prevent physical drying/reflooding and associated grid transfers
 from overtaking queued terrain accounting. Candidate attempts remain bounded by
 the existing visual work quota. Regeneration amounts, extraction and ordinary
 topology/accounting processing retain their existing behavior.
 
 Two separately runnable diagnostics in `tests/deferred/` reproduce the race on
-the pre-guard baseline and pass on current development. Their historical paths
-are retained. See [feature scope and verification](tests/PENDING_VISUAL_GUARD.md).
+the pre-guard baseline and pass on the maintained release. Their historical paths
+are retained. See [feature scope and verification](tests/performance/PERFORMANCE_REPORT.md).
 Passing mocks do not certify every native engine interleaving.
 
 ### Performance testing
@@ -249,4 +249,4 @@ Shared fixes, regression/performance sources and combined release evidence live
 on the 2.0.5 maintenance baseline. The rebuilt 2.1 lineage inherits that baseline
 and adds only its API adaptation, engine-specific coverage and release guidance.
 The original 2.1 history and published `v2.1.0` remain available. See
-[history cleanup and provenance](tests/HISTORY-REBUILD-2026-10-26.md).
+[history cleanup and provenance](tests/VERIFICATION.md).

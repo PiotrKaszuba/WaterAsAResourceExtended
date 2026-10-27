@@ -1,3 +1,0 @@
-label,case,sample,metric,value
-candidate,pumps_1024_many_lakes,1,collect_s,0.589000000
-candidate,pumps_1024_many_lakes,1,pump_samples,1024000.000000000

@@ -1,5 +1,0 @@
-label,case,sample,metric,value
-control-main,pumps_1024_many_lakes,1,collect_s,0.203000000
-control-main,pumps_1024_many_lakes,1,pump_samples,1024000.000000000
-control-main,pumps_1024_many_lakes,2,collect_s,0.194000000
-control-main,pumps_1024_many_lakes,2,pump_samples,1024000.000000000

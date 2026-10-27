@@ -44,7 +44,7 @@ event routes and production accounting. It covers:
 
 ## Pending-terrain diagnostics
 
-Queued terrain protection is enabled on development. The default suite does not
+Queued terrain protection is enabled in the maintained release. The default suite does not
 claim that every interleaving of visual work and pending terrain edits is safe.
 Additional diagnostics retain their historical `tests/deferred/` paths and are
 not discovered by the default runner. Both should pass with the merged guard:
@@ -64,6 +64,10 @@ Natural regeneration and extraction are disabled in conservation comparisons.
 The primary invariant is total remaining water, rather than a tile's appearance:
 an empty tile joining a partly full lake can legitimately become wet through the
 existing whole-waterbody visual model.
+
+The guard uses counted per-position hash lookups; each attempted visual candidate
+consumes its quota even when skipped. It does not block regeneration amounts,
+pump extraction or ordered accounting. See [performance rationale](performance/PERFORMANCE_REPORT.md).
 
 ## Limits
 

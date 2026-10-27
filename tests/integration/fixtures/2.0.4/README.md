@@ -23,7 +23,7 @@ by the 2.1-created `persist` profile; they are not all present in this old save.
 Run from the repository root:
 
 ```text
-python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.1.0.zip --scenario upgrade
+python tests/integration/run.py --mod-zip releases/WaterAsAResourceExtended_2.1.1.zip --scenario upgrade
 ```
 
 The old engine is not required. Neither this save nor the test companion is

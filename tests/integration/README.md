@@ -3,8 +3,7 @@
 Small, deterministic trials of engine behavior that the mock suite cannot prove.
 The mock suite (`lua tests/run.lua`) and larger performance workloads remain
 independently runnable. This suite does not import or replace their mock world.
-The [2.0 acceptance record](RESULTS.md) is historical evidence for `v2.0.4`;
-2.1 results are recorded separately in [RESULTS-2.1.md](RESULTS-2.1.md).
+See [released baselines and verification](../VERIFICATION.md) for both engine families.
 
 ## Run
 
@@ -114,14 +113,11 @@ The Python isolation/process approach was adapted from the local
 PoweredBeltsExtended harness. Mod-specific scenarios remain here; no shared
 framework repository or dependency was introduced.
 
-## Bugfix release verification
+## Runner portability
 
-See [2.0.5 / 2.1.1 verification](BUGFIX-2.0.5-2.1.1.md) for exact artifact
-hashes, completed native profiles, saved-state recovery and performance results.
 The Linux headless runner uses benchmark execution for non-server trials and
-explicitly disables bundled expansion mods. `resume` still uses actual server
-save/restart. The Windows runner retains its normal launch route.
+explicitly disables bundled expansion mods. Save/restart profiles use actual
+server saves. The Windows runner retains its normal launch route.
 
-Fresh acceptance of the rebuilt 2.1.1 lineage is recorded in
-[the 26 October history-rebuild verification](../HISTORY-REBUILD-RESULTS-2026-10-26.md).
-Earlier dated 2.1.0/bugfix evidence retains its original artifact and source hashes.
+Historical full reports are available in Git; current evidence and limits are
+summarized in [VERIFICATION.md](../VERIFICATION.md).

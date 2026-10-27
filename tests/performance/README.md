@@ -60,6 +60,8 @@ dry-count gap and remaining visual work. `repair_wet_262144` and
 fixture setup. These run with the optional suite, independently of fast mocks.
 See [the measured comparison and limits](COUNTER-FIX-2026-10-25.md).
 
-Historical 2.1 API-port evidence is retained in [PORT_2_1_REPORT.md](PORT_2_1_REPORT.md).
-Its original revision/artifact labels are preserved; shared final bugfix comparisons
-remain inherited from the 2.0.5 baseline.
+The original 2.1 API-normalized port comparison found no reproduced large pump
+collection regression: seven alternating pairs measured 0.572 / 0.584 s for
+1024000 mixed pump samples, with overlapping ranges. This compares algorithms
+against the same mock API, not native engine versions. Historical raw port samples
+are available at `b445cd3`; final bugfix data remain linked above.
